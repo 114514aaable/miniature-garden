@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://newworld.dev/spec/0.1/manifest.schema.json",
+  "title": "World Pack Manifest",
+  "description": "世界包清单：描述一个世界包的元信息、入口文件与出生点。",
+  "type": "object",
+  "required": ["spec_version", "id", "name", "version", "authors", "license", "files", "start"],
+  "additionalProperties": false,
+  "properties": {
+    "spec_version": {
+      "const": "0.1.0",
+      "description": "所遵循的世界包规范版本。规范不兼容变更时递增。"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{2,47}$",
+      "description": "全局唯一标识，小写字母开头，可含数字与连字符。"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "一句话简介，用于列表页。"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$",
+      "description": "世界包自身的语义化版本。"
+    },
+    "authors": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1, "maxLength": 80 }
+    },
+    "license": {
+      "enum": ["CC-BY-SA-4.0", "CC-BY-4.0", "CC0-1.0"],
+      "description": "世界包内容的许可。发布到 itch.io 时必须在页面注明。"
+    },
+    "engine": {
+      "type": "string",
+      "pattern": "^>=\\d+\\.\\d+\\.\\d+$",
+      "description": "要求的最低引擎版本，例如 \">=0.1.0\"。"
+    },
+    "language": {
+      "type": "string",
+      "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+      "default": "zh-CN"
+    },
+    "tags": {
+      "type": "array",
+      "maxItems": 12,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 24 }
+    },
+    "homepage": {
+      "type": "string",
+      "format": "uri",
+      "description": "世界包主页（通常是 itch.io 项目页）。"
+    },
+    "files": {
+      "type": "object",
+      "required": ["regions", "entities", "knowledge"],
+      "additionalProperties": false,
+      "properties": {
+        "regions": { "type": "string" },
+        "entities": { "type": "string" },
+        "knowledge": { "type": "string" }
+      },
+      "description": "相对世界包根目录的文件路径。"
+    },
+    "start": {
+      "type": "object",
+      "required": ["region"],
+      "additionalProperties": false,
+      "properties": {
+        "region": { "type": "string", "description": "初始区域 id。" },
+        "spawn": { "type": "string", "description": "初始出生点实体 id（可选）。" }
+      }
+    },
+    "default_tier": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2,
+      "default": 0,
+      "description": "该世界默认的 AI 分级：0 纯规则、1 本地小模型、2 云端关键 NPC。"
+    }
+  }
+}

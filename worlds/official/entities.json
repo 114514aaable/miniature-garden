@@ -1,0 +1,162 @@
+{
+  "entities": [
+    {
+      "id": "loc_dock_gate",
+      "kind": "location",
+      "name": "码头闸口",
+      "summary": "进港的第一道门，两个收钱的人，一个记账的本子。",
+      "region": "dock",
+      "tags": ["入口"],
+      "location": {
+        "services": ["rumor"],
+        "exits": ["loc_dock_tavern", "loc_chapel"]
+      }
+    },
+    {
+      "id": "loc_dock_tavern",
+      "kind": "location",
+      "name": "断缆酒馆",
+      "summary": "名字不吉利，酒更不吉利，但它是全港消息最快的地方。",
+      "region": "dock",
+      "tags": ["酒馆", "情报"],
+      "location": {
+        "services": ["rest", "trade", "rumor"],
+        "exits": ["loc_dock_gate", "loc_mine_entrance"]
+      }
+    },
+    {
+      "id": "loc_chapel",
+      "kind": "location",
+      "name": "潮汐教堂中殿",
+      "summary": "长椅被潮气泡得发黑，祭坛上摆着一只没有指针的钟。",
+      "region": "chapel",
+      "tags": ["庇护", "治疗"],
+      "location": {
+        "services": ["heal", "rest"],
+        "exits": ["loc_dock_gate"]
+      }
+    },
+    {
+      "id": "loc_mine_entrance",
+      "kind": "location",
+      "name": "斜井口",
+      "summary": "铁栅栏被剪开一个口子，边缘还很亮。",
+      "region": "mine",
+      "tags": ["入口", "危险"],
+      "location": {
+        "services": [],
+        "exits": ["loc_dock_tavern", "loc_mine_shaft"]
+      }
+    },
+    {
+      "id": "loc_mine_shaft",
+      "kind": "location",
+      "name": "第三层巷道",
+      "summary": "塌方压住了旧主道，旁边被人重新刨出一条窄缝。",
+      "region": "mine",
+      "tags": ["深处", "危险"],
+      "location": {
+        "services": [],
+        "exits": ["loc_mine_entrance"]
+      }
+    },
+    {
+      "id": "fac_harbor_office",
+      "kind": "faction",
+      "name": "港务局",
+      "summary": "名义上管着灰港的一切，实际上只管收钱和记账。",
+      "region": "dock",
+      "tags": ["官方", "腐败"],
+      "faction": {
+        "creed": "秩序就是账目对得上。",
+        "wants": ["把走私份额抽成提到三成", "找个人替塌方的事背锅"],
+        "seats": ["dock"]
+      }
+    },
+    {
+      "id": "fac_scavengers",
+      "kind": "faction",
+      "name": "拾荒帮",
+      "summary": "在废矿里讨生活的人，什么都捡，包括不该捡的。",
+      "region": "mine",
+      "tags": ["帮派", "矿工"],
+      "faction": {
+        "creed": "地上的人不要的，地下的人接着用。",
+        "wants": ["打通第三层主道", "把港务局的探子撵出去"],
+        "seats": ["mine"]
+      }
+    },
+    {
+      "id": "npc_salt",
+      "kind": "npc",
+      "name": "老盐",
+      "summary": "码头工头，左手少了三根手指，说话像在报数。",
+      "region": "dock",
+      "tags": ["工头", "线人"],
+      "npc": {
+        "persona": {
+          "role": "码头工头",
+          "voice": "沙哑、短句、句尾常带「听着」，不爱解释。",
+          "traits": ["多疑", "讲义气", "怕水"],
+          "wants": ["还清欠港务局的钱", "把弟弟从矿里弄出来"],
+          "fears": ["被记账的人找上门", "涨潮的钟声"]
+        },
+        "faction": "fac_harbor_office",
+        "tier": 1,
+        "knowledge": ["k_salt_debt", "k_gate_tax"]
+      }
+    },
+    {
+      "id": "npc_tina",
+      "kind": "npc",
+      "name": "缇娜",
+      "summary": "潮汐教堂的修女，替人保管秘密，也替人保管尸体。",
+      "region": "chapel",
+      "tags": ["神职", "知情者"],
+      "npc": {
+        "persona": {
+          "role": "修女",
+          "voice": "温和、句子长、喜欢用潮水打比方，从不直接回答。",
+          "traits": ["耐心", "敏锐", "不撒谎但会省略"],
+          "wants": ["让教堂的钟重新走起来", "把账本交到对的人手里"],
+          "fears": ["钟声停下来", "有人翻开地板"]
+        },
+        "faction": null,
+        "tier": 2,
+        "knowledge": ["k_chapel_ledger", "k_tide_bell", "k_mine_collapse"]
+      }
+    },
+    {
+      "id": "npc_finger",
+      "kind": "npc",
+      "name": "断指",
+      "summary": "拾荒帮在斜井口的看门人，笑起来比不笑更吓人。",
+      "region": "mine",
+      "tags": ["帮派", "看门人"],
+      "npc": {
+        "persona": {
+          "role": "看门人",
+          "voice": "轻快、爱开玩笑、玩笑里全是威胁。",
+          "traits": ["贪财", "记仇", "懂矿道"],
+          "wants": ["攒够钱离开灰港", "弄清塌方那晚谁在场"],
+          "fears": ["被埋在下面", "老盐的沉默"]
+        },
+        "faction": "fac_scavengers",
+        "tier": 1,
+        "knowledge": ["k_mine_collapse"]
+      }
+    },
+    {
+      "id": "item_lamp",
+      "kind": "item",
+      "name": "快没油的灯",
+      "summary": "灯罩上有一道裂纹，火苗会往一个方向偏。",
+      "region": "dock",
+      "tags": ["初始物品", "照明"],
+      "item": {
+        "price": 0,
+        "effects": ["在矿道中提供有限视野", "油尽后熄灭"]
+      }
+    }
+  ]
+}

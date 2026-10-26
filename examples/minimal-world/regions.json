@@ -1,0 +1,17 @@
+{
+  "regions": [
+    {
+      "id": "room",
+      "name": "空房间",
+      "summary": "一张桌子，一把椅子，一扇关着的窗。",
+      "cluster": "town",
+      "parent": null,
+      "grid": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "terrain": "building",
+      "danger": 0,
+      "factions": [],
+      "tags": ["示例"],
+      "ambient": ["窗外的光在桌面上挪了一寸。"]
+    }
+  ]
+}

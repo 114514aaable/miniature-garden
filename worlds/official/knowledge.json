@@ -1,0 +1,59 @@
+{
+  "knowledge": [
+    {
+      "id": "k_gate_tax",
+      "title": "闸口的过路钱",
+      "body": "任何从码头闸口进港的人都要交一笔「装卸费」，没有收据，记账的人姓什么没人知道。交不出钱的人会被记上名字，名字比钱贵。",
+      "visibility": "public",
+      "regions": ["dock"],
+      "factions": ["fac_harbor_office"],
+      "source": "hand",
+      "tags": ["规矩", "钱"],
+      "refs": ["loc_dock_gate", "fac_harbor_office"]
+    },
+    {
+      "id": "k_tide_bell",
+      "title": "涨潮的钟",
+      "body": "潮汐教堂的钟只在涨潮时响，响声次数对应当天的潮高。本地人说，钟响得不对的那天，海里就会多一个人。",
+      "visibility": "public",
+      "regions": ["chapel", "dock"],
+      "source": "hand",
+      "tags": ["传闻", "迷信"],
+      "refs": ["loc_chapel"]
+    },
+    {
+      "id": "k_mine_collapse",
+      "title": "十七年前的塌方",
+      "body": "旧矿道的主道不是自己塌的，是港务局为了封住下面挖到的东西，从上面炸的。当时还有人在下面，名单被抽走了三页。",
+      "visibility": "faction",
+      "regions": ["mine"],
+      "factions": ["fac_scavengers"],
+      "holders": ["npc_tina", "npc_finger"],
+      "source": "hand",
+      "tags": ["真相", "危险"],
+      "refs": ["loc_mine_shaft", "fac_harbor_office", "fac_scavengers"]
+    },
+    {
+      "id": "k_salt_debt",
+      "title": "老盐的债",
+      "body": "老盐欠港务局四十枚银角，利滚利已经变成一百二十枚。他弟弟替他还了一半，然后在第三层巷道里「失踪」了。",
+      "visibility": "personal",
+      "regions": ["dock", "mine"],
+      "holders": ["npc_salt"],
+      "source": "hand",
+      "tags": ["个人", "债务"],
+      "refs": ["npc_salt", "fac_harbor_office"]
+    },
+    {
+      "id": "k_chapel_ledger",
+      "title": "教堂地板下的账本",
+      "body": "缇娜在中殿地板下藏了一本账，记的是十七年来每一笔「装卸费」的去向。账本最后三页，是港务局三个人的名字。",
+      "visibility": "secret",
+      "regions": ["chapel"],
+      "holders": ["npc_tina"],
+      "source": "hand",
+      "tags": ["秘密", "证据"],
+      "refs": ["npc_tina", "k_gate_tax", "fac_harbor_office"]
+    }
+  ]
+}

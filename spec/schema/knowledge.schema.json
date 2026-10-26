@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://newworld.dev/spec/0.1/knowledge.schema.json",
+  "title": "Knowledge File",
+  "description": "知识文件：世界里的「谁知道什么」。运行时由知识解析器按区域、势力、保密级与预算挑选注入。",
+  "type": "object",
+  "required": ["knowledge"],
+  "additionalProperties": false,
+  "properties": {
+    "knowledge": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/entry" }
+    }
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "required": ["id", "title", "body", "visibility"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{2,63}$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "body": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1200,
+          "description": "条目正文。应是不依赖上下文的完整陈述，便于单独注入。"
+        },
+        "visibility": {
+          "enum": ["public", "faction", "personal", "secret"],
+          "description": "public 人人可知；faction 需同势力；personal 需在 holders 中；secret 只能由事件揭示。"
+        },
+        "regions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string" },
+          "description": "相关区域 id，用于空间检索。"
+        },
+        "factions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string" },
+          "description": "掌握此知识的势力 id。"
+        },
+        "holders": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string" },
+          "description": "明确持有者 NPC id，用于 personal 级知识。"
+        },
+        "source": {
+          "enum": ["hand", "worldgen", "event"],
+          "default": "hand",
+          "description": "hand 手写；worldgen 生成器产出；event 由运行时事件写入存档。"
+        },
+        "tags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 24 }
+        },
+        "refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string" },
+          "description": "引用到的实体 / 区域 / 知识 id，用于图谱检索。"
+        }
+      }
+    }
+  }
+}

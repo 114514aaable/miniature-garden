@@ -1,0 +1,53 @@
+{
+  "regions": [
+    {
+      "id": "dock",
+      "name": "灰港码头",
+      "summary": "咸风、烂木板和两排不知道在等谁的货箱。",
+      "cluster": "harbor",
+      "parent": null,
+      "grid": { "x": 0, "y": 0, "w": 24, "h": 16 },
+      "terrain": "street",
+      "danger": 1,
+      "factions": ["fac_harbor_office", "fac_scavengers"],
+      "tags": ["港口", "交易", "人流"],
+      "ambient": [
+        "远处有缆绳绷紧的吱呀声。",
+        "一个搬运工看了你一眼，又低下头去。",
+        "潮水拍在桩子上，节奏不太对。"
+      ]
+    },
+    {
+      "id": "mine",
+      "name": "旧矿道",
+      "summary": "封了十七年的斜井，如今又开始往外运东西。",
+      "cluster": "under",
+      "parent": null,
+      "grid": { "x": 32, "y": 0, "w": 20, "h": 20 },
+      "terrain": "underground",
+      "danger": 3,
+      "factions": ["fac_scavengers"],
+      "tags": ["矿道", "黑暗", "走私"],
+      "ambient": [
+        "风从深处吹上来，带着铁锈味。",
+        "支撑木上留着一道很新的凿痕。"
+      ]
+    },
+    {
+      "id": "chapel",
+      "name": "潮汐教堂",
+      "summary": "建在礁石上的小教堂，钟声只在涨潮时响。",
+      "cluster": "harbor",
+      "parent": null,
+      "grid": { "x": 0, "y": 24, "w": 12, "h": 12 },
+      "terrain": "building",
+      "danger": 0,
+      "factions": [],
+      "tags": ["宗教", "庇护", "秘密"],
+      "ambient": [
+        "烛火被穿堂风吹得偏了一点。",
+        "地板下传来很轻的水声。"
+      ]
+    }
+  ]
+}

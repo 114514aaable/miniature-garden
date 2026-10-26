@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://newworld.dev/spec/0.1/region.schema.json",
+  "title": "Regions File",
+  "description": "区域文件：世界的地理与信息圈划分。区域是知识聚类的第一层键。",
+  "type": "object",
+  "required": ["regions"],
+  "additionalProperties": false,
+  "properties": {
+    "regions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/region" }
+    }
+  },
+  "$defs": {
+    "region": {
+      "type": "object",
+      "required": ["id", "name", "cluster"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{2,47}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 400,
+          "description": "玩家进入时看到的一句话。"
+        },
+        "cluster": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{1,31}$",
+          "description": "知识聚类键。同一 cluster 的区域共享传闻、方言与势力认知。"
+        },
+        "parent": {
+          "type": ["string", "null"],
+          "description": "上级区域 id，用于层级（城 → 街区 → 建筑）。"
+        },
+        "grid": {
+          "type": "object",
+          "required": ["x", "y", "w", "h"],
+          "additionalProperties": false,
+          "properties": {
+            "x": { "type": "integer", "minimum": 0 },
+            "y": { "type": "integer", "minimum": 0 },
+            "w": { "type": "integer", "minimum": 1 },
+            "h": { "type": "integer", "minimum": 1 }
+          },
+          "description": "在全局方格地图上的矩形范围，单元格为单位。"
+        },
+        "terrain": {
+          "enum": ["street", "building", "wilderness", "underground", "water", "ruin"],
+          "default": "street"
+        },
+        "danger": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "default": 0,
+          "description": "0 安全 … 5 致命。用于生成遭遇与调整叙述语气。"
+        },
+        "factions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string" },
+          "description": "在此区域有存在的势力 id。"
+        },
+        "tags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 24 }
+        },
+        "ambient": {
+          "type": "array",
+          "maxItems": 8,
+          "items": { "type": "string", "maxLength": 160 },
+          "description": "无 LLM 时的氛围片段，轮换展示。"
+        }
+      }
+    }
+  }
+}

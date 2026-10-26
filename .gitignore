@@ -1,0 +1,39 @@
+# build / runtime
+bin/
+obj/
+build/
+dist/
+out/
+*.user
+*.suo
+.vs/
+.idea/
+*.swp
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# node (if a web client appears later)
+node_modules/
+.pnpm-store/
+
+# os
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# local game data
+saves/
+*.log
+*.tmp
+
+# local env / secrets — never commit API keys
+.env
+.env.*
+!.env.example
