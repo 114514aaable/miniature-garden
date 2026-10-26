@@ -2,52 +2,71 @@
 // SPDX-License-Identifier: MIT
 
 /**
- * 第 1 步的可运行示例：一个 8×6 的格子世界，一个「@」，走几步给你看。
+ * 第 2 步的可运行示例：三个单位，按先攻轮流行动，每回合发 3 AP。
  *
  * 运行：
  *   node engine/core/src/main.ts
- *
- * 不需要编译，也不需要装任何东西——Node 24 能直接跑 .ts 文件。
  */
 
 import { Grid, type Point } from "./grid.ts";
+import { TurnOrder, makeUnit, type Unit } from "./turn.ts";
 
-const grid = new Grid(8, 6);
-let player: Point = { x: 0, y: 0 };
+const grid = new Grid(10, 6);
 
-/** 把当前世界画成字符画。真正做游戏时，这个函数会被换成 Canvas 渲染。 */
+const units: Unit[] = [
+  makeUnit("a-salt", "老盐", 4, "A", { x: 1, y: 1 }),
+  makeUnit("b-tina", "缇娜", 6, "T", { x: 4, y: 3 }),
+  makeUnit("c-finger", "断指", 4, "F", { x: 7, y: 1 }),
+];
+
 function render(): string {
   const rows: string[] = [];
   for (let y = 0; y < grid.height; y++) {
     let row = "";
     for (let x = 0; x < grid.width; x++) {
-      row += x === player.x && y === player.y ? "@" : ".";
+      const unit = units.find((u) => u.pos.x === x && u.pos.y === y);
+      row += unit ? unit.glyph : ".";
     }
     rows.push(row);
   }
   return rows.join("\n");
 }
 
-/** 每一步：中文标签、x 方向、y 方向。最后一步会撞墙。 */
-const moves: ReadonlyArray<readonly [string, number, number]> = [
-  ["右", 1, 0],
-  ["右", 1, 0],
-  ["下", 0, 1],
-  ["左", -1, 0],
-  ["上", 0, -1],
-  ["上", 0, -1],
-];
+/** 花 1 AP 向某个方向走一格；返回是否真的动了。 */
+function tryStep(unit: Unit, dx: number, dy: number): boolean {
+  if (unit.ap < 1) {
+    return false;
+  }
+  const next: Point = grid.step(unit.pos, dx, dy);
+  if (next === unit.pos) {
+    return false; // 撞墙不扣 AP
+  }
+  unit.pos = next;
+  unit.ap -= 1;
+  return true;
+}
 
-console.log("起点");
+const order = new TurnOrder(units);
+let current = order.start();
+
+console.log(`先攻顺序：${order.order.map((u) => `${u.name}(${u.speed})`).join(" → ")}`);
 console.log(render());
 
-for (const [label, dx, dy] of moves) {
-  const before = player;
-  player = grid.step(player, dx, dy);
+for (let turn = 1; turn <= 9; turn++) {
+  if (turn > 1) {
+    current = order.next();
+  }
 
-  const moved = player.x !== before.x || player.y !== before.y;
-  const note = moved ? "" : "  ← 被边界挡住了";
+  console.log(
+    `\n第 ${order.roundNumber} 轮 · 第 ${turn} 回合 · ${current.name}` +
+      `  AP=${current.ap}  反应=${current.reactions}`,
+  );
 
-  console.log(`\n向${label}走一步，位置 (${player.x}, ${player.y})${note}`);
+  // 演示：把自己的 AP 花在「向右走」上，能走几步走几步。
+  while (tryStep(current, 1, 0)) {
+    /* 一直走到 AP 用完或撞墙 */
+  }
+
+  console.log(`  剩余 AP=${current.ap}，位置 (${current.pos.x}, ${current.pos.y})`);
   console.log(render());
 }
