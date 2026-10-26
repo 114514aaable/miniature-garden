@@ -1,0 +1,10 @@
+{
+  "name": "@newworld/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "新世界的规则核心：纯逻辑，不依赖任何渲染。",
+  "scripts": {
+    "demo": "node src/main.ts"
+  }
+}
