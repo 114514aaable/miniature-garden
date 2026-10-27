@@ -33,6 +33,10 @@ saves/
 *.log
 *.tmp
 
+# tooling artifacts
+.dsh-vision-router/
+.vscode/
+
 # local env / secrets — never commit API keys
 .env
 .env.*
