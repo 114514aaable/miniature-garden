@@ -2,15 +2,23 @@
 // SPDX-License-Identifier: MIT
 
 /**
- * 空间：一个网格容器。
+ * 空间：一个网格容器，属于数据层。
  *
- * 它不知道「墙」是什么，也不知道「谁」在里面。
- * 它只知道两件事：
- *   1. 每个格子存一个地形编号（纯数字）；
- *   2. 每个格子可以挂若干个「占用者」句柄（也是纯数字）。
+ * 它只负责三件事：
+ *   1. 存：地形（稠密）与占用者（稀疏）；
+ *   2. 取：按坐标拿下标、拿内容；
+ *   3. 遍历接口：给一组「偏移」，按偏移访问格子。
  *
- * 所以「能不能走过去」「这个人是不是敌人」这些判断，全部属于上层。
- * 内核只回答「哪里有什么」，不回答「那意味着什么」。
+ * 它**不存遍历规则** —— 四邻接、八邻接、骑士步、锥形视野，全部是上层给的偏移集。
+ * 空间负责「能不能找到」，规则负责「算不算邻居」。
+ *
+ * ── 已知限制 ────────────────────────────────────────────
+ * 当前只有二维。要加第三维，需要改三处：
+ *   1. `strides` 追加一项 width * height；
+ *   2. `index()` 改成按坐标点乘 strides；
+ *   3. 遍历用的偏移集换成六邻接或二十六邻接。
+ * 但寻路与视野是**另一个故事**：它们不是通用的，三维要重写。
+ * ────────────────────────────────────────────────────────
  */
 
 /** 空间句柄。v0 直接是数字，将来由解析器分配。 */
@@ -25,8 +33,14 @@ export interface Cell {
   readonly y: number;
 }
 
-/** 邻接方式：十字还是米字。 */
-export type NeighborMode = "orthogonal" | "diagonal";
+/** 相对偏移。规则层用它描述「什么算相邻」。 */
+export interface Offset {
+  readonly dx: number;
+  readonly dy: number;
+}
+
+/** 遍历回调。返回 false 表示提前结束（射线、视线会用）。 */
+export type Visitor = (cell: Cell, index: number) => void | boolean;
 
 /** 地形 0 = 空地。将来由世界包定义每个数字的含义。 */
 export const EMPTY_TERRAIN = 0;
@@ -41,14 +55,19 @@ export class Space {
   readonly cellSize: number;
 
   /**
-   * 地形表：定长整数数组，下标 = y * width + x。
-   * 用 Int32Array 而不是普通数组，因为它像 C 的数组：连续内存、定长、没有额外包装。
+   * 索引步长。v0 是 [1, width]；加第三维就追加一项 width * height。
+   * 把维度信息放在数据里，而不是写在公式里。
+   */
+  private readonly strides: readonly number[];
+
+  /**
+   * 地形表：定长整数数组，下标 = x * strides[0] + y * strides[1]。
+   * Int32Array 像 C 的数组：连续内存、定长、没有额外包装。
    */
   private readonly terrain: Int32Array;
 
   /**
    * 占用者：稀疏。大多数格子是空的，用 Map 只给有东西的格子分配内存。
-   * 键是格子下标，值是句柄数组。
    */
   private readonly occupants = new Map<number, EntityHandle[]>();
 
@@ -67,6 +86,7 @@ export class Space {
     this.width = width;
     this.height = height;
     this.cellSize = cellSize;
+    this.strides = [1, width];
     this.terrain = new Int32Array(width * height).fill(EMPTY_TERRAIN);
   }
 
@@ -77,14 +97,13 @@ export class Space {
 
   /**
    * 把二维坐标压成一维下标。
-   * 越界直接抛错——这是「非法状态当场爆炸」，不要悄悄返回 -1，
-   * 否则错误会带着一个假坐标在系统里跑很远。
+   * 越界直接抛错——「非法状态当场爆炸」，不要悄悄返回 -1。
    */
   index(cell: Cell): number {
     if (!this.inBounds(cell)) {
       throw new Error(`坐标越界：(${cell.x}, ${cell.y})，空间 ${this.width}x${this.height}`);
     }
-    return cell.y * this.width + cell.x;
+    return this.indexAt(cell.x, cell.y);
   }
 
   terrainAt(cell: Cell): number {
@@ -97,8 +116,7 @@ export class Space {
 
   /**
    * 这个格子里有谁。
-   * 返回副本而不是内部数组——类型上的 readonly 只是编译期的，运行时可被改。
-   * 现在的格子最多几个人，拷贝很便宜；将来要省，再换成只读视图。
+   * 返回副本而不是内部数组——类型上的 readonly 只是编译期的。
    */
   occupantsAt(cell: Cell): readonly EntityHandle[] {
     const list = this.occupants.get(this.index(cell));
@@ -136,36 +154,28 @@ export class Space {
   }
 
   /**
-   * 相邻的格子。越界的方向直接不返回，所以角落只有 2 或 3 个邻居。
-   * 返回新对象，调用方改它不会影响空间。
+   * 遍历接口：以 origin 为中心，按 offsets 依次访问。
+   *
+   * 偏移由调用方给——所以「什么算相邻」是规则层的事，空间不认识它。
+   * 越界的偏移直接跳过，不报错：范围法术扫到墙外是正常的。
+   * 顺序严格按 offsets 的顺序，保证可复现。
    */
-  neighbors(cell: Cell, mode: NeighborMode = "orthogonal"): Cell[] {
-    const offsets =
-      mode === "orthogonal"
-        ? [
-            [0, -1],
-            [1, 0],
-            [0, 1],
-            [-1, 0],
-          ]
-        : [
-            [0, -1],
-            [1, -1],
-            [1, 0],
-            [1, 1],
-            [0, 1],
-            [-1, 1],
-            [-1, 0],
-            [-1, -1],
-          ];
-
-    const result: Cell[] = [];
-    for (const [dx, dy] of offsets) {
-      const next: Cell = { x: cell.x + dx, y: cell.y + dy };
-      if (this.inBounds(next)) {
-        result.push(next);
+  each(origin: Cell, offsets: readonly Offset[], visit: Visitor): void {
+    const ox = origin.x;
+    const oy = origin.y;
+    for (const { dx, dy } of offsets) {
+      const x = ox + dx;
+      const y = oy + dy;
+      if (x < 0 || y < 0 || x >= this.width || y >= this.height) {
+        continue;
+      }
+      if (visit({ x, y }, this.indexAt(x, y)) === false) {
+        return;
       }
     }
-    return result;
+  }
+
+  private indexAt(x: number, y: number): number {
+    return x * this.strides[0] + y * this.strides[1];
   }
 }
