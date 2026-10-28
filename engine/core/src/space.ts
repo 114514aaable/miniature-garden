@@ -42,8 +42,14 @@ export interface Offset {
 /** 遍历回调。返回 false 表示提前结束（射线、视线会用）。 */
 export type Visitor = (cell: Cell, index: number) => void | boolean;
 
-/** 地形 0 = 空地。将来由世界包定义每个数字的含义。 */
-export const EMPTY_TERRAIN = 0;
+/**
+ * 空气：一个正经注册的地形，编号 0。
+ *
+ * 它不是「没有地形」的哨兵值，而是地形表里的第一项。
+ * 所以代码里不要写 `if (terrain === 0)` 这种特判——语义交给注册表，代码只认数字。
+ * 另外注意：越界 ≠ 空气。空间外是「不存在」，会抛错。
+ */
+export const AIR = 0;
 
 export class Space {
   readonly id: SpaceId;
@@ -87,7 +93,7 @@ export class Space {
     this.height = height;
     this.cellSize = cellSize;
     this.strides = [1, width];
-    this.terrain = new Int32Array(width * height).fill(EMPTY_TERRAIN);
+    this.terrain = new Int32Array(width * height).fill(AIR);
   }
 
   /** 是否在范围内。所有「边界」判断都从这里出发。 */

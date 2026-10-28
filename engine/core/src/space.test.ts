@@ -12,7 +12,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { EMPTY_TERRAIN, type Cell, Space } from "./space.ts";
+import { AIR, type Cell, Space } from "./space.ts";
 import { DIAGONAL, ORTHOGONAL, line, rect, ring } from "./stencils.ts";
 
 function room(): Space {
@@ -30,7 +30,7 @@ function collect(space: Space, origin: Cell, offsets: readonly { dx: number; dy:
 
 test("新空间全是空地", () => {
   const s = room();
-  assert.equal(s.terrainAt({ x: 0, y: 0 }), EMPTY_TERRAIN);
+  assert.equal(s.terrainAt({ x: 0, y: 0 }), AIR);
   assert.deepEqual(s.occupantsAt({ x: 3, y: 2 }), []);
 });
 
@@ -54,7 +54,7 @@ test("地形可读可写", () => {
   const s = room();
   s.setTerrain({ x: 1, y: 1 }, 7);
   assert.equal(s.terrainAt({ x: 1, y: 1 }), 7);
-  assert.equal(s.terrainAt({ x: 2, y: 1 }), EMPTY_TERRAIN);
+  assert.equal(s.terrainAt({ x: 2, y: 1 }), AIR);
 });
 
 test("同一个句柄不会重复占用同一格", () => {
