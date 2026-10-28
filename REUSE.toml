@@ -1,7 +1,7 @@
 version = 1
 
 # REUSE 按顺序匹配，后面的条目覆盖前面的。
-# 默认 MIT（仓库配置、根目录杂项），再按目录覆盖。
+# 当前仓库只有内核、规范、文档三块；世界包与工具将来加回来时，在这里补各自的许可。
 
 [[annotations]]
 path = ["**"]
@@ -10,25 +10,7 @@ SPDX-FileCopyrightText = "2026 newworld contributors"
 SPDX-License-Identifier = "MIT"
 
 [[annotations]]
-path = ["tools/**"]
-precedence = "aggregate"
-SPDX-FileCopyrightText = "2026 newworld contributors"
-SPDX-License-Identifier = "AGPL-3.0-or-later"
-
-[[annotations]]
 path = ["spec/**", "docs/**"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 newworld contributors"
 SPDX-License-Identifier = "CC-BY-4.0"
-
-[[annotations]]
-path = ["worlds/**", "content/**", "assets/**"]
-precedence = "aggregate"
-SPDX-FileCopyrightText = "2026 newworld contributors"
-SPDX-License-Identifier = "CC-BY-SA-4.0"
-
-[[annotations]]
-path = ["examples/**"]
-precedence = "aggregate"
-SPDX-FileCopyrightText = "2026 newworld contributors"
-SPDX-License-Identifier = "CC0-1.0"

@@ -30,11 +30,8 @@ my-world/
 
 ## 校验
 
-```bash
-python tools/validate/validate.py <世界包目录> [更多目录...]
-```
-
-校验内容：JSON Schema、id 唯一性、跨文件引用完整性、`exits` 双向性、出生点存在性。
+校验器尚未实现（随内核的解析器一起长出来，见 [docs/requirements.md](../docs/requirements.md)）。
+在它出现之前，所有引用闭合靠人工检查——这也是为什么规范里把「引用必须闭合」写在四条约定里。
 
 ## 版本策略
 
