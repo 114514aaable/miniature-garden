@@ -14,6 +14,9 @@ declare module "node:test" {
   export function test(name: string, fn: () => void | Promise<void>): void;
 }
 
+/** 演示脚本会用它设置退出码。装了 @types/node 后删掉。 */
+declare const process: { exitCode?: number };
+
 declare module "node:assert/strict" {
   interface Assert {
     (value: unknown, message?: string): asserts value;

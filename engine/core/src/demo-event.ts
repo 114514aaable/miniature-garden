@@ -17,7 +17,7 @@ import { Space } from "./space.ts";
 import { Store } from "./store.ts";
 import { type JsonValue } from "./time.ts";
 import { collectEffects, submitEffects } from "./event/effects.ts";
-import { type Envelope, evaluate, type HandlerMap } from "./event/evaluate.ts";
+import { type Envelope, evaluate, type EvaluateContext, type HandlerMap } from "./event/evaluate.ts";
 import { Registry } from "./event/registry.ts";
 import { createWorldView } from "./event/view.ts";
 
@@ -74,7 +74,7 @@ const handlers: HandlerMap = new Map([
   ],
   [
     link.tags.get("core.paint2") as number,
-    (_params: JsonValue, context): JsonValue => {
+    (_params: JsonValue, context: EvaluateContext): JsonValue => {
       // 父节点把子节点的效果合并起来——这是「效果是数据」的意义。
       const merged: JsonValue[] = [];
       for (const child of context.children) {
