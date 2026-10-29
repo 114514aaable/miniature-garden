@@ -150,7 +150,11 @@ export class Store {
     }
   }
 
-  private record(effect: Effect, kind = effect.kind): LogEntry {
+  /**
+   * 记账。kind 显式标成 string，而不是从 effect.kind 推断——
+   * 否则类型会被收窄成那三种变更，连 "inject" 都传不进来。
+   */
+  private record(effect: Effect, kind: string = effect.kind): LogEntry {
     const at = { space: effect.space, x: effect.cell.x, y: effect.cell.y };
     const data = effect.kind === "terrain" ? { ...at, value: effect.value } : { ...at, handle: effect.handle };
     return this.timeline.append({

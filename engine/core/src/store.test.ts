@@ -13,7 +13,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { AIR, Space } from "./space.ts";
-import { Store, type Effect } from "./store.ts";
+import { Store } from "./store.ts";
 
 function world(): { store: Store; space: Space } {
   const space = new Space(1, 4, 3);

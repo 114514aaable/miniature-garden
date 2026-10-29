@@ -6,6 +6,7 @@
   "description": "新世界的规则核心：纯逻辑，不依赖任何渲染。",
   "scripts": {
     "demo": "node src/demo-sum.ts",
-    "test": "node --test --test-isolation=none"
+    "test": "node --test --test-isolation=none",
+    "typecheck": "node ../../tools/typecheck.mjs"
   }
 }
