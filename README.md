@@ -18,18 +18,22 @@ docs/          架构与需求（CC-BY-4.0）
 
 ## 进度
 
-- [x] 空间：格子、地形、占用者、邻居 —— 13 个测试
-- [ ] 时间：单调 tick
-- [ ] 事件契约：结构、追加、哈希
-- [ ] 句柄：id → 整数
-- [ ] store：唯一写入口 + 只读视图
-- [ ] 解析器：世界包 → World + 诊断
+- [x] 空间：格子、地形、占用者、按偏移遍历 —— 20 个测试
+- [x] 时间线：单调 tick + 记录 + 哈希链 —— 19 个测试
+- [x] store：唯一写入口、批量原子应用、回滚 —— 12 个测试
+- [x] 第一条规则：求和（校验 → 纯函数 → Effect）
+- [x] Event 管线：schema / registry / evaluate / effects / view —— 41 个测试
+- [ ] 实体层：id + 位置 + 索引同步
+- [ ] 世界包加载器：JSON → 链接表 + 世界
+- [ ] 世界生成器：离线跑一次，产出世界包
 
 ## 跑起来
 
 ```bash
 cd engine/core
-npm test
+npm test          # 92 个测试
+npm run demo      # 端到端：信封 → 求值 → 效果 → 落地
+npm run typecheck # 需要 typescript，或设置 TSC_PATH
 ```
 
 Node 24 能直接运行 `.ts`，不需要编译，零依赖。
