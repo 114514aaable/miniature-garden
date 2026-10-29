@@ -35,7 +35,13 @@ export type JsonValue =
   | JsonValue[]
   | { readonly [key: string]: JsonValue };
 
-export interface Event {
+/**
+ * 落地记录（LogEntry）：世界真的发生过一件事之后留下的痕迹。
+ *
+ * 区别于 Event 管线里的 Envelope——那个是「请求」，这个才是「结果」。
+ * 请求可能失败、可能被丢弃；记录一旦写入就不会变。
+ */
+export interface LogEntry {
   /** 全局自增编号，从 1 开始。 */
   readonly id: number;
   /** 落地在哪个逻辑步。 */
@@ -52,7 +58,7 @@ export interface Event {
   readonly hash: string;
 }
 
-export interface EventInput {
+export interface LogEntryInput {
   readonly kind: string;
   readonly actor?: Handle | null;
   readonly targets?: readonly Handle[];
@@ -86,7 +92,7 @@ export function hashText(text: string): string {
 }
 
 /** 校验一条哈希链，返回第一条对不上的下标；全对返回 -1。 */
-export function verifyChain(events: readonly Event[]): number {
+export function verifyChain(events: readonly LogEntry[]): number {
   let prev = "0";
   for (let i = 0; i < events.length; i++) {
     const { prevHash, hash, ...body } = events[i];
@@ -104,7 +110,7 @@ export function verifyChain(events: readonly Event[]): number {
 export class Timeline {
   private tick: Tick;
   private seq = 0;
-  private readonly events: Event[] = [];
+  private readonly events: LogEntry[] = [];
   private head = "0";
   private nextId = 1;
 
@@ -139,7 +145,7 @@ export class Timeline {
   }
 
   /** 深拷贝——外面的改动碰不到日志内部。 */
-  all(): readonly Event[] {
+  all(): readonly LogEntry[] {
     return structuredClone(this.events);
   }
 
@@ -147,7 +153,7 @@ export class Timeline {
    * 写入一条事件。时间由时间线自己盖：lTick = now()，seq = 本 tick 内的第几条。
    * 调用方给不了时间，也就伪造不了顺序。
    */
-  append(input: EventInput): Event {
+  append(input: LogEntryInput): LogEntry {
     this.seq += 1;
 
     const body = {
@@ -161,7 +167,7 @@ export class Timeline {
     };
 
     const hash = hashText(this.head + canonicalize(body as unknown as JsonValue));
-    const event: Event = { ...body, prevHash: this.head, hash };
+    const event: LogEntry = { ...body, prevHash: this.head, hash };
 
     this.events.push(event);
     this.head = hash;

@@ -11,7 +11,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { Timeline, type Event, canonicalize, hashText, verifyChain } from "./time.ts";
+import { Timeline, type LogEntry, canonicalize, hashText, verifyChain } from "./time.ts";
 
 // ── 时钟部分 ────────────────────────────────────────────
 
@@ -135,7 +135,7 @@ test("targets 是副本，外部改数组不影响已写入的事件", () => {
 test("all() 返回深拷贝，改它不影响日志", () => {
   const t = new Timeline();
   t.append({ kind: "a" });
-  const copy = t.all() as Event[];
+  const copy = t.all() as LogEntry[];
   copy[0] = { ...copy[0], kind: "tampered" };
   assert.equal(t.all()[0].kind, "a");
 });
@@ -156,7 +156,7 @@ test("篡改中间一条，verifyChain 指出它的位置", () => {
   t.advance();
   t.append({ kind: "c" });
 
-  const tampered = t.all() as Event[];
+  const tampered = t.all() as LogEntry[];
   tampered[1] = { ...tampered[1], kind: "b-tampered" };
   assert.equal(verifyChain(tampered), 1);
 });

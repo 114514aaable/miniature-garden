@@ -19,7 +19,7 @@
  */
 
 import { type Cell, type SpaceId, Space } from "./space.ts";
-import { type Event, type Handle, type Tick, Timeline } from "./time.ts";
+import { type LogEntry, type Handle, type Tick, Timeline } from "./time.ts";
 
 export type Effect =
   | { readonly kind: "terrain"; readonly space: SpaceId; readonly cell: Cell; readonly value: number }
@@ -74,7 +74,7 @@ export class Store {
    * 原子性做法是「先改、记下反操作、失败就倒着撤」。
    * 这样中途任何一个失败，状态回到进入 step 前的样子，日志也不会留下半截记录。
    */
-  step(): readonly Event[] {
+  step(): readonly LogEntry[] {
     const batch = this.pending;
     this.pending = [];
 
@@ -101,7 +101,7 @@ export class Store {
    * 越过 tick 的写入：编辑器、调试、迁移用。
    * 它照样记账，但 kind 会写明是注入的——这样回放时一眼能看出「这段不在时间线里」。
    */
-  inject(effect: Effect): Event {
+  inject(effect: Effect): LogEntry {
     const undo = this.applyOne(effect);
     try {
       return this.record(effect, "inject");
@@ -150,7 +150,7 @@ export class Store {
     }
   }
 
-  private record(effect: Effect, kind = effect.kind): Event {
+  private record(effect: Effect, kind = effect.kind): LogEntry {
     const at = { space: effect.space, x: effect.cell.x, y: effect.cell.y };
     const data = effect.kind === "terrain" ? { ...at, value: effect.value } : { ...at, handle: effect.handle };
     return this.timeline.append({
