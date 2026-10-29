@@ -14,8 +14,21 @@ declare module "node:test" {
   export function test(name: string, fn: () => void | Promise<void>): void;
 }
 
-/** 演示脚本会用它设置退出码。装了 @types/node 后删掉。 */
-declare const process: { exitCode?: number };
+/** 演示脚本会用到。装了 @types/node 后删掉。 */
+declare const process: {
+  exitCode?: number;
+  argv: string[];
+  stdin: unknown;
+  stdout: unknown;
+};
+
+declare module "node:readline/promises" {
+  export interface Interface {
+    question(query: string): Promise<string>;
+    close(): void;
+  }
+  export function createInterface(options: { input: unknown; output: unknown }): Interface;
+}
 
 declare module "node:assert/strict" {
   interface Assert {
