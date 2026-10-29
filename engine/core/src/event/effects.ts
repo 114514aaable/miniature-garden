@@ -72,6 +72,35 @@ function parseEffect(raw: JsonValue, path: string): Effect {
     };
   }
 
+  if (kind === "spawn") {
+    allowKeys(object, ["kind", "space", "cell", "template", "overrides"], path);
+    return {
+      kind: "spawn",
+      space: asInt(object.space, `${path}.space`) as SpaceId,
+      cell: asCell(object.cell, `${path}.cell`),
+      template: asStr(object.template, `${path}.template`),
+      overrides:
+        object.overrides === undefined
+          ? undefined
+          : asObject(object.overrides, `${path}.overrides`),
+    };
+  }
+
+  if (kind === "despawn") {
+    allowKeys(object, ["kind", "handle"], path);
+    return { kind: "despawn", handle: asInt(object.handle, `${path}.handle`) };
+  }
+
+  if (kind === "move") {
+    allowKeys(object, ["kind", "space", "handle", "to"], path);
+    return {
+      kind: "move",
+      space: asInt(object.space, `${path}.space`) as SpaceId,
+      handle: asInt(object.handle, `${path}.handle`),
+      to: asCell(object.to, `${path}.to`),
+    };
+  }
+
   throw new Error(`${path}.kind：未知的效果类型 ${JSON.stringify(kind)}`);
 }
 
@@ -94,10 +123,16 @@ function asCell(value: JsonValue | undefined, path: string): Cell {
   return { x: asInt(object.x, `${path}.x`), y: asInt(object.y, `${path}.y`) };
 }
 
+function asStr(value: JsonValue | undefined, path: string): string {
+  if (typeof value !== "string" || value.length === 0) {
+    throw new Error(`${path}：需要非空字符串`);
+  }
+  return value;
+}
+
 function allowKeys(object: Record<string, JsonValue>, allowed: readonly string[], path: string): void {
-  const ok = new Set([...allowed, ...allowed.map((k) => `x-${k}`)]);
   for (const key of Object.keys(object)) {
-    if (!ok.has(key) && !key.startsWith("x-")) {
+    if (!allowed.includes(key) && !key.startsWith("x-")) {
       throw new Error(`${path}：未知字段 "${key}"`);
     }
   }

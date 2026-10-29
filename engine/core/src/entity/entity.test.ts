@@ -4,9 +4,10 @@
 /**
  * 实体表的测试。
  *
- * 最关键的两条：
+ * 最关键的三条：
  *   1. 槽位复用之后，旧句柄必须失效（代数对不上）；
- *   2. 句柄永不复用同一个值。
+ *   2. 句柄永不复用同一个值；
+ *   3. 快照/恢复能把句柄序列也一起回滚。
  */
 
 import { test } from "node:test";
@@ -32,12 +33,13 @@ test("代数越界直接报错", () => {
   assert.throws(() => makeHandle(-1, 0), /索引/);
 });
 
-test("创建后能查到", () => {
+test("创建后能查到，空间与位置都记着", () => {
   const table = new EntityTable();
-  const handle = table.create("npc_guard", { x: 1, y: 2 });
+  const handle = table.create("npc_guard", 1, { x: 1, y: 2 });
 
   const entity = table.get(handle);
   assert.equal(entity.template, "npc_guard");
+  assert.equal(entity.space, 1);
   assert.deepEqual(entity.pos, { x: 1, y: 2 });
   assert.equal(table.size, 1);
 });
@@ -75,31 +77,33 @@ test("代数在销毁时递增", () => {
   assert.equal(handleGeneration(second), 1);
 });
 
-test("移动会更新位置，且旧句柄仍然有效", () => {
+test("移动会更新空间与位置，旧句柄仍然有效", () => {
   const table = new EntityTable();
-  const handle = table.create("npc_guard", { x: 0, y: 0 });
+  const handle = table.create("npc_guard", 1, { x: 0, y: 0 });
 
-  const moved = table.move(handle, { x: 3, y: 4 });
+  const moved = table.move(handle, 1, { x: 3, y: 4 });
   assert.deepEqual(moved.pos, { x: 3, y: 4 });
   assert.deepEqual(table.get(handle).pos, { x: 3, y: 4 });
 });
 
 test("移动不存在的实体会报错", () => {
   const table = new EntityTable();
-  assert.throws(() => table.move(123, { x: 0, y: 0 }), /不存在/);
+  assert.throws(() => table.move(123, 1, { x: 0, y: 0 }), /不存在/);
 });
 
-test("可以移出空间（pos = null）", () => {
+test("可以移出空间（space 与 pos 一起为 null）", () => {
   const table = new EntityTable();
-  const handle = table.create("item_lamp", { x: 1, y: 1 });
-  table.move(handle, null);
+  const handle = table.create("item_lamp", 1, { x: 1, y: 1 });
+  table.move(handle, null, null);
+
+  assert.equal(table.get(handle).space, null);
   assert.equal(table.get(handle).pos, null);
 });
 
 test("覆盖是副本，外部改不到内部", () => {
   const table = new EntityTable();
   const overrides = { "core.health": { hp: 7 } };
-  const handle = table.create("npc_guard", null, overrides);
+  const handle = table.create("npc_guard", null, null, overrides);
 
   overrides["core.health"] = { hp: 999 };
   assert.deepEqual(table.get(handle).overrides["core.health"], { hp: 7 });
@@ -108,4 +112,18 @@ test("覆盖是副本，外部改不到内部", () => {
 test("销毁不存在的实体会报错", () => {
   const table = new EntityTable();
   assert.throws(() => table.destroy(42), /销毁失败/);
+});
+
+test("快照/恢复：连代数一起回滚", () => {
+  const table = new EntityTable();
+  const before = table.snapshot();
+
+  const handle = table.create("npc_guard", 1, { x: 0, y: 0 });
+  table.destroy(handle);
+
+  table.restore(before);
+  assert.equal(table.size, 0);
+
+  const fresh = table.create("npc_salt");
+  assert.equal(handleGeneration(fresh), 0, "代数也回到了快照时的那一代");
 });

@@ -4,7 +4,7 @@
 /**
  * 实体：世界里「一个东西」的最小记录。
  *
- * 它只有四样：句柄、模板、位置、覆盖。
+ * 它只有五样：句柄、模板、所在空间、位置、覆盖。
  * 没有行为、没有方法、没有引用——行为在 Event 管线的 handler 里，
  * 这样存档、哈希、diff 都只是数据操作。
  *
@@ -15,7 +15,7 @@
  * 拿着已销毁实体的句柄去查，会当场报错，而不是悄悄返回一个陌生人。
  */
 
-import { type Cell } from "../space.ts";
+import { type Cell, type SpaceId } from "../space.ts";
 import { type JsonValue } from "../time.ts";
 
 export type Handle = number;
@@ -44,15 +44,22 @@ export function handleGeneration(handle: Handle): number {
 export interface Entity {
   readonly handle: Handle;
   readonly template: string;
-  /** 不在空间里时是 null（比如躺在背包里）。 */
+  /** 不在任何空间里时是 null（比如躺在背包里）。 */
+  readonly space: SpaceId | null;
+  /** 空间内的坐标；和 space 同时为 null 或同时不为 null。 */
   readonly pos: Cell | null;
   /** 只存和模板不一样的部分；读取时用 merge 合并出完整数据。 */
   readonly overrides: Readonly<Record<string, JsonValue>>;
 }
 
-interface Slot {
-  generation: number;
-  entity: Entity | null;
+export interface EntitySlot {
+  readonly generation: number;
+  readonly entity: Entity | null;
+}
+
+export interface EntityTableSnapshot {
+  readonly slots: readonly EntitySlot[];
+  readonly free: readonly number[];
 }
 
 /**
@@ -62,18 +69,23 @@ interface Slot {
  * 这样它就不会变成第二个写入口。
  */
 export class EntityTable {
-  private readonly slots: Slot[] = [];
-  private readonly free: number[] = [];
+  private slots: EntitySlot[] = [];
+  private free: number[] = [];
 
   /** 创建一个实体，返回它的句柄。 */
-  create(template: string, pos: Cell | null = null, overrides: Readonly<Record<string, JsonValue>> = {}): Handle {
+  create(
+    template: string,
+    space: SpaceId | null = null,
+    pos: Cell | null = null,
+    overrides: Readonly<Record<string, JsonValue>> = {},
+  ): Handle {
     const index = this.free.pop() ?? this.slots.length;
     const generation = this.slots[index]?.generation ?? 0;
     const handle = makeHandle(index, generation);
 
     this.slots[index] = {
       generation,
-      entity: { handle, template, pos, overrides: structuredClone(overrides) },
+      entity: { handle, template, space, pos, overrides: structuredClone(overrides) },
     };
     return handle;
   }
@@ -106,14 +118,11 @@ export class EntityTable {
     this.free.push(index);
   }
 
-  /** 移动。返回更新后的实体。 */
-  move(handle: Handle, pos: Cell | null): Entity {
+  /** 移动（可以换空间）。返回更新后的实体。 */
+  move(handle: Handle, space: SpaceId | null, pos: Cell | null): Entity {
     const current = this.get(handle);
-    const next: Entity = { ...current, pos };
-    this.slots[handleIndex(handle)] = {
-      generation: handleGeneration(handle),
-      entity: next,
-    };
+    const next: Entity = { ...current, space, pos };
+    this.slots[handleIndex(handle)] = { generation: handleGeneration(handle), entity: next };
     return next;
   }
 
@@ -121,15 +130,28 @@ export class EntityTable {
   setOverrides(handle: Handle, overrides: Readonly<Record<string, JsonValue>>): Entity {
     const current = this.get(handle);
     const next: Entity = { ...current, overrides: structuredClone(overrides) };
-    this.slots[handleIndex(handle)] = {
-      generation: handleGeneration(handle),
-      entity: next,
-    };
+    this.slots[handleIndex(handle)] = { generation: handleGeneration(handle), entity: next };
     return next;
   }
 
   /** 当前存活的实体数量。 */
   get size(): number {
-    return this.slots.filter((slot) => slot.entity !== null).length;
+    let count = 0;
+    for (const slot of this.slots) {
+      if (slot.entity !== null) count += 1;
+    }
+    return count;
+  }
+
+  /** 快照：回滚用。只在下一次失败时恢复，不做常规路径。 */
+  snapshot(): EntityTableSnapshot {
+    return structuredClone({ slots: this.slots, free: this.free });
+  }
+
+  /** 恢复快照。会连同「代数」一起回滚，所以句柄序列也是确定的。 */
+  restore(snapshot: EntityTableSnapshot): void {
+    const data = structuredClone(snapshot);
+    this.slots = [...data.slots];
+    this.free = [...data.free];
   }
 }
