@@ -14,6 +14,7 @@
 import { type JsonValue } from "../time.ts";
 import { type Signature } from "../event/registry.ts";
 import { type EvaluateContext } from "../event/evaluate.ts";
+import { blockersAt } from "./collision.ts";
 
 /** 地形能不能走由世界声明；规则不认数字，只问视图。 */
 
@@ -55,7 +56,8 @@ export function moveHandler(params: JsonValue, context: EvaluateContext): JsonVa
     return { ok: false, reason: "那里过不去" };
   }
 
-  if (space.occupantsAt(target).length > 0) {
+  const blocking = blockersAt(context.view, spaceId, target);
+  if (blocking.length > 0) {
     return { ok: false, reason: "那里已经有东西了" };
   }
 

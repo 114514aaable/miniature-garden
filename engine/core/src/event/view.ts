@@ -7,12 +7,17 @@
  * 为什么不直接把 Space / EntityTable 交出去：它们有写方法，
  * 规则拿到就能绕过 store 直接改世界，账本就废了。
  *
- * 视图还负责一件「语义」的事：某个格子能不能走。
- * 地形号只是数字，含义在世界里；规则不该自己判断「1 是不是墙」。
+ * 视图还负责两件「语义」的事：
+ *   1. 某个格子能不能走（地形含义在世界里，不在代码里）；
+ *   2. 实体的**合并后组件**（模板默认值 + 实例覆盖）。
+ *      规则要查 core.solid / core.body，必须看到合并后的数据。
  */
 
 import { type Entity, type Handle } from "../entity/entity.ts";
+import { type TemplateRegistry } from "../entity/template.ts";
+import { mergeDeep } from "../entity/merge.ts";
 import { type Cell, type Offset, Space, type SpaceId } from "../space.ts";
+import { type JsonValue } from "../time.ts";
 
 export interface TerrainRule {
   readonly passable: boolean;
@@ -29,6 +34,11 @@ export interface SpaceView {
   each(origin: Cell, offsets: readonly Offset[], visit: (cell: Cell) => void): void;
 }
 
+/** 实体的只读视图：加上「模板 + 覆盖」合并后的组件。 */
+export interface EntityView extends Entity {
+  readonly components: Readonly<Record<string, JsonValue>>;
+}
+
 /** 只要能按 handle 取实体就够了，不把实体表整个拖进来。 */
 export interface EntitySource {
   get(handle: Handle): Entity;
@@ -37,13 +47,15 @@ export interface EntitySource {
 export interface WorldView {
   readonly tick: number;
   space(id: SpaceId): SpaceView;
-  entity(handle: Handle): Entity;
+  entity(handle: Handle): EntityView;
 }
 
 export interface ViewOptions {
   readonly tick: number;
   readonly entities?: EntitySource;
   readonly terrains?: ReadonlyMap<number, TerrainRule>;
+  /** 没有模板表就看不到模板里的组件，只能看到覆盖。 */
+  readonly templates?: TemplateRegistry;
 }
 
 class SpaceViewImpl implements SpaceView {
@@ -92,10 +104,12 @@ class WorldViewImpl implements WorldView {
   readonly tick: number;
   private readonly spaces: Map<SpaceId, SpaceView>;
   private readonly entities: EntitySource | null;
+  private readonly templates: TemplateRegistry | null;
 
   constructor(spaces: Iterable<Space>, options: ViewOptions) {
     this.tick = options.tick;
     this.entities = options.entities ?? null;
+    this.templates = options.templates ?? null;
     this.spaces = new Map();
     const terrains = options.terrains ?? null;
     for (const space of spaces) {
@@ -111,16 +125,24 @@ class WorldViewImpl implements WorldView {
     return view;
   }
 
-  /** 返回副本：规则改不到实体表内部。 */
-  entity(handle: Handle): Entity {
+  entity(handle: Handle): EntityView {
     if (this.entities === null) {
       throw new Error("这个视图没有实体来源，无法查询实体");
     }
-    return structuredClone(this.entities.get(handle));
+
+    const entity = this.entities.get(handle);
+    const defaults = this.templates?.has(entity.template) === true
+      ? this.templates.get(entity.template).components
+      : {};
+
+    return {
+      ...structuredClone(entity),
+      components: mergeDeep(defaults as Record<string, JsonValue>, entity.overrides) as Record<string, JsonValue>,
+    };
   }
 }
 
-/** 构造只读视图。tick 是快照的时刻；实体与地形表可选。 */
+/** 构造只读视图。tick 是快照的时刻；实体、地形表、模板表可选。 */
 export function createWorldView(spaces: Iterable<Space>, options: ViewOptions): WorldView {
   return new WorldViewImpl(spaces, options);
 }

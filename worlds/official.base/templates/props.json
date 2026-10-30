@@ -2,11 +2,16 @@
   {
     "id": "pc",
     "components": {
-      "core.health": { "max": 20, "hp": 20 }
+      "core.health": { "max": 20, "hp": 20 },
+      "core.stats": { "speed": 5, "attack": 3, "defense": 1 },
+      "core.solid": {}
     }
   },
   {
     "id": "prop_crate",
-    "components": {}
+    "components": {
+      "core.health": { "max": 5, "hp": 5 },
+      "core.solid": {}
+    }
   }
 ]

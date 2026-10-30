@@ -69,5 +69,9 @@
       "t": "object",
       "fields": { "mode": { "t": "enum", "values": ["idle", "chase"] } }
     }
+  },
+  {
+    "id": "core.solid",
+    "schema": { "t": "object", "fields": {} }
   }
 ]

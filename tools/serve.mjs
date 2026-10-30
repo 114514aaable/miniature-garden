@@ -20,6 +20,7 @@ import { collectEffects } from "../engine/core/src/event/effects.ts";
 import { evaluate } from "../engine/core/src/event/evaluate.ts";
 import { Registry } from "../engine/core/src/event/registry.ts";
 import { createWorldView } from "../engine/core/src/event/view.ts";
+import { costOf, DEFAULT_CLOCK } from "../engine/core/src/rules/clock.ts";
 import { loadWorld } from "../engine/core/src/pack/load.ts";
 import { mergePacks } from "../engine/core/src/pack/merge.ts";
 import { orderPacks } from "../engine/core/src/pack/order.ts";
@@ -139,6 +140,7 @@ function act(dir) {
     tick: store.now(),
     entities: { get: (handle) => store.entity(handle) },
     terrains: loaded.terrains,
+    templates: loaded.templates,
   });
 
   const result = evaluate(envelope, link, handlers, view);
@@ -155,11 +157,31 @@ function act(dir) {
   for (const effect of effects) {
     store.submit(effect);
   }
-  const events = effects.length > 0 ? store.step() : [];
+
+  // 动作成本由规则层算：速度决定这次移动花几回合。
+  const speed = speedOfPlayer();
+  const cost = effects.length > 0 ? costOf(DEFAULT_CLOCK, "move", speed) : 0;
+  const events = store.step(cost);
   lastEvents = events;
 
   const now = store.entity(playerHandle).pos;
-  return snapshot(`走到 (${now.x}, ${now.y})`);
+  const rounds = cost === 0 ? "（零帧）" : `（${cost} 回合）`;
+  return snapshot(`走到 (${now.x}, ${now.y})${rounds}`);
+}
+
+/** 玩家的速度。读的是合并后的组件，所以模板里写的也算。 */
+function speedOfPlayer() {
+  const view = createWorldView(loaded.spaces, {
+    tick: store.now(),
+    entities: { get: (handle) => store.entity(handle) },
+    templates: loaded.templates,
+  });
+  const stats = view.entity(playerHandle).components["core.stats"];
+  if (typeof stats !== "object" || stats === null || Array.isArray(stats)) {
+    return 0;
+  }
+  const speed = (stats).speed;
+  return typeof speed === "number" ? speed : 0;
 }
 
 const PAGE = `<!doctype html>
