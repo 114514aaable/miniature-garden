@@ -106,12 +106,20 @@ export class Store {
   }
 
   /**
-   * 推进一步：应用上一 tick 积累的变更，成功之后时间才前进。
+   * 推进一步：应用积累的变更，成功之后时间才前进。
+   *
+   * cost 是这一步花掉多少 tick（由规则层按「回合」换算后传进来）：
+   *   cost = 0  零帧动作：应用变更、不推进时钟，事件记在当前 tick 的下一个 seq
+   *   cost > 0  正常动作：应用之后时钟前进 cost
    *
    * 原子性做法是「先改、记下反操作、失败就整体回滚」：
    * 实体表用快照回滚（连代数一起），空间用反操作回滚。
    */
-  step(): readonly LogEntry[] {
+  step(cost: number = 1): readonly LogEntry[] {
+    if (!Number.isInteger(cost) || cost < 0) {
+      throw new Error(`step 的成本必须是非负整数，收到 ${cost}`);
+    }
+
     const batch = this.pending;
     this.pending = [];
 
@@ -133,7 +141,9 @@ export class Store {
       throw error;
     }
 
-    this.timeline.advance();
+    if (cost > 0) {
+      this.timeline.advance(cost);
+    }
     return batch.map((effect, i) => this.record(effect, handles[i]));
   }
 
