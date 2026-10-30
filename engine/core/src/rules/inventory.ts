@@ -24,6 +24,7 @@ export const takeSignature: Signature = {
   result: ANY,
   returnsEffects: true,
   needsTimestamp: false,
+  skill: { name: "捡起", cost: "take", target: { kind: "self", range: 0 } },
 };
 
 export const dropSignature: Signature = {
@@ -35,6 +36,7 @@ export const dropSignature: Signature = {
   result: ANY,
   returnsEffects: true,
   needsTimestamp: false,
+  skill: { name: "放下", cost: "drop", target: { kind: "self", range: 0 } },
 };
 
 function inventoryOf(view: EvaluateContext["view"], handle: number): { slots: number; items: number[] } | null {

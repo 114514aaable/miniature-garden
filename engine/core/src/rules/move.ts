@@ -32,6 +32,7 @@ export const moveSignature: Signature = {
   result: { t: "any" },
   returnsEffects: true,
   needsTimestamp: false,
+  skill: { name: "走一步", cost: "move", target: { kind: "cell", range: 1 } },
 };
 
 export function moveHandler(params: JsonValue, context: EvaluateContext): JsonValue {

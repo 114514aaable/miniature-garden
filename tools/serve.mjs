@@ -81,6 +81,11 @@ const handlers = new Map([
   [link.tags.get("core.drop"), dropHandler],
 ]);
 
+/** 技能表：UI 只读这个，不认识任何实现。 */
+const skills = link.signatures
+  .filter((signature) => signature.skill !== undefined)
+  .map((signature) => ({ tag: signature.tag, ...signature.skill }));
+
 let lastEvents = [];
 
 function snapshot(message) {
@@ -118,6 +123,12 @@ function snapshot(message) {
     rules: loaded.rules,
     packs: ordered.map((content) => `${content.pack.id}@${content.pack.version}`),
     worldHash: loaded.hash,
+    skills: skills.map((skill) => ({
+      tag: skill.tag,
+      name: skill.name,
+      cost: skill.cost,
+      target: skill.target.kind,
+    })),
     events: lastEvents.map((entry) => `#${entry.id} ${entry.kind} ${JSON.stringify(entry.data)}`),
   };
 }
@@ -161,6 +172,19 @@ function act(command) {
   }
 
   return snapshot("不懂这个指令（w/a/s/d 走，e 捡，r 放）");
+}
+
+/** 用技能表里的技能：只处理「对自己」的，选目标的以后再说。 */
+function useSkill(tag) {
+  const sym = link.tags.get(tag);
+  const signature = sym === undefined ? undefined : link.signatures[sym];
+  if (signature === undefined || signature.skill === undefined) {
+    return snapshot("没有这个技能");
+  }
+  if (signature.skill.target.kind !== "self") {
+    return snapshot(`${signature.skill.name} 需要选目标：先用方向键`);
+  }
+  return run(tag, { actor: playerHandle }, signature.skill.cost, () => `用了 ${signature.skill.name}`);
 }
 
 /** 跑一次信封：求值、收效果、按成本推进。 */
@@ -233,6 +257,11 @@ const PAGE = `<!doctype html>
   .pad button:hover { background: #2c3242; }
   .pad .empty { visibility: hidden; }
   #message { margin-top: 16px; min-height: 24px; color: #f0c674; }
+  .skills { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .skills button { padding: 6px 10px; background: #232733; color: #d7dae0;
+                   border: 1px solid #333a4a; border-radius: 6px; cursor: pointer; }
+  .skills button:hover { background: #2c3242; }
+  .skills .hint { color: #7f8794; font-size: 12px; align-self: center; }
   #events { margin-top: 16px; color: #7f8794; font-size: 12px; max-height: 160px; overflow: auto; }
 </style>
 <main>
@@ -245,9 +274,7 @@ const PAGE = `<!doctype html>
         <div class="empty"></div><button data-dir="w">↑</button><div class="empty"></div>
         <button data-dir="a">←</button><button data-dir="s">↓</button><button data-dir="d">→</button>
       </div>
-      <div class="pad" style="margin-top:8px; grid-template-columns: repeat(2, 84px);">
-        <button data-dir="e">捡起 e</button><button data-dir="r">放下 r</button>
-      </div>
+      <div id="skills" class="skills"></div>
       <div id="message"></div>
       <div id="events"></div>
     </div>
@@ -269,6 +296,30 @@ function render(state) {
     state.packs.join(' + ') + ' · tick ' + state.tick + ' · 链头 ' + state.hash;
   document.getElementById('message').textContent = state.message;
   document.getElementById('events').textContent = state.events.join('\\n');
+
+  const skills = document.getElementById('skills');
+  skills.innerHTML = '';
+  for (const skill of state.skills) {
+    if (skill.tag === 'core.move') {
+      const hint = document.createElement('span');
+      hint.className = 'hint';
+      hint.textContent = '移动：方向键';
+      skills.appendChild(hint);
+      continue;
+    }
+    const button = document.createElement('button');
+    button.textContent = skill.name + ' (' + skill.cost + ')';
+    button.addEventListener('click', () => useSkill(skill.tag));
+    skills.appendChild(button);
+  }
+}
+async function useSkill(tag) {
+  const state = await fetch('/api/skill', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ tag }),
+  }).then((r) => r.json());
+  render(state);
 }
 document.querySelectorAll('button[data-dir]').forEach((button) => {
   button.addEventListener('click', () => act(button.dataset.dir));
@@ -301,6 +352,23 @@ const server = createServer((request, response) => {
       try {
         const { dir } = JSON.parse(body || "{}");
         sendJson(response, act(String(dir)));
+      } catch (error) {
+        response.writeHead(400, { "content-type": "application/json; charset=utf-8" });
+        response.end(JSON.stringify({ rows: ["错误"], message: String(error) }));
+      }
+    });
+    return;
+  }
+
+  if (request.method === "POST" && request.url === "/api/skill") {
+    let body = "";
+    request.on("data", (chunk) => {
+      body += chunk;
+    });
+    request.on("end", () => {
+      try {
+        const { tag } = JSON.parse(body || "{}");
+        sendJson(response, useSkill(String(tag)));
       } catch (error) {
         response.writeHead(400, { "content-type": "application/json; charset=utf-8" });
         response.end(JSON.stringify({ rows: ["错误"], message: String(error) }));

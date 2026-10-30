@@ -17,6 +17,18 @@
 import { type Schema } from "./schema.ts";
 import { type JsonValue, canonicalize, hashText } from "../time.ts";
 
+/** 技能的「接口那一半」：UI 和 AI 只读它，不认识实现。 */
+export interface SkillMeta {
+  readonly name: string;
+  /** 引用 clock.costs 的键，不写死数字。 */
+  readonly cost: string;
+  readonly target: {
+    readonly kind: "cell" | "entity" | "self";
+    /** 最远几格（self 用 0）。 */
+    readonly range: number;
+  };
+}
+
 export interface Signature {
   readonly tag: string;
   /** 参数结构。payload 必须长成这样。 */
@@ -27,6 +39,8 @@ export interface Signature {
   readonly returnsEffects: boolean;
   /** 函数自己声明需不需要时间戳，不由包声明。 */
   readonly needsTimestamp: boolean;
+  /** 可选：这份签名同时是一个「技能」，带上界面需要的信息。 */
+  readonly skill?: SkillMeta;
 }
 
 export interface LinkTable {
@@ -54,6 +68,9 @@ export class Registry {
     if (this.pending.has(signature.tag)) {
       throw new Error(`标签重复登记："${signature.tag}"`);
     }
+    if (signature.skill !== undefined) {
+      checkSkill(signature.skill, signature.tag);
+    }
     this.pending.set(signature.tag, signature);
   }
 
@@ -73,6 +90,7 @@ export class Registry {
       tag: signature.tag,
       params: signature.params,
       result: signature.result,
+      skill: signature.skill ?? null,
       returnsEffects: signature.returnsEffects,
       needsTimestamp: signature.needsTimestamp,
     }));
@@ -82,5 +100,22 @@ export class Registry {
       signatures: sorted,
       hash: hashText(canonicalize(manifest as unknown as JsonValue)),
     };
+  }
+}
+
+/** 技能接口的校验：名字、成本键、目标形状。 */
+function checkSkill(skill: SkillMeta, tag: string): void {
+  if (typeof skill.name !== "string" || skill.name.trim().length === 0) {
+    throw new Error(`技能 ${tag} 缺少名字`);
+  }
+  if (typeof skill.cost !== "string" || skill.cost.trim().length === 0) {
+    throw new Error(`技能 ${tag} 缺少成本键（clock.costs 里的名字）`);
+  }
+  const target = skill.target;
+  if (target === undefined || !["cell", "entity", "self"].includes(target.kind)) {
+    throw new Error(`技能 ${tag} 的目标类型非法`);
+  }
+  if (!Number.isInteger(target.range) || target.range < 0 || target.range > 16) {
+    throw new Error(`技能 ${tag} 的射程必须是 0..16 的整数`);
   }
 }

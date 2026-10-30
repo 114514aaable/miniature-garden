@@ -85,6 +85,35 @@ test("重复链接结果稳定", () => {
   assert.equal(r.link().hash, r.link().hash);
 });
 
+test("技能元数据会保留在链接表里，并参与哈希", () => {
+  const withSkill = new Registry();
+  withSkill.define(
+    sig("core.move", {
+      skill: { name: "走一步", cost: "move", target: { kind: "cell", range: 1 } },
+    }),
+  );
+
+  const table = withSkill.link();
+  assert.equal(table.signatures[0].skill?.name, "走一步");
+  assert.equal(table.signatures[0].skill?.target.kind, "cell");
+
+  const bare = new Registry();
+  bare.define(sig("core.move"));
+  assert.notEqual(withSkill.link().hash, bare.link().hash, "技能信息也是世界的一部分");
+});
+
+test("技能元数据不合格时拒绝登记", () => {
+  const r = new Registry();
+  assert.throws(
+    () => r.define(sig("core.a", { skill: { name: "", cost: "x", target: { kind: "self", range: 0 } } })),
+    /缺少名字/,
+  );
+  assert.throws(
+    () => r.define(sig("core.b", { skill: { name: "x", cost: "x", target: { kind: "cell", range: 99 } } })),
+    /射程/,
+  );
+});
+
 test("链接表里能按编号找回签名", () => {
   const r = new Registry();
   r.define(sig("core.move", { returnsEffects: true }));
