@@ -40,6 +40,9 @@ export interface PackManifest {
   readonly engine?: string;
   readonly requires?: Readonly<Record<string, string>>;
   readonly provides?: readonly string[];
+  /** 排在谁后面 / 前面。只影响顺序，不表示依赖。 */
+  readonly loadAfter?: readonly string[];
+  readonly loadBefore?: readonly string[];
   readonly extends?: string;
   readonly parent?: string;
   readonly scope?: PackScope;
@@ -63,6 +66,8 @@ const MANIFEST_SCHEMA: Schema = {
     engine: { t: "str" },
     requires: { t: "record", of: { t: "str" } },
     provides: ID_LIST,
+    loadAfter: ID_LIST,
+    loadBefore: ID_LIST,
     extends: { t: "str" },
     parent: { t: "str" },
     scope: { t: "enum", values: ["local", "shared"] },
@@ -84,6 +89,8 @@ const MANIFEST_SCHEMA: Schema = {
     "engine",
     "requires",
     "provides",
+    "loadAfter",
+    "loadBefore",
     "extends",
     "parent",
     "scope",
