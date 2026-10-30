@@ -101,6 +101,19 @@ function parseEffect(raw: JsonValue, path: string): Effect {
     };
   }
 
+  if (kind === "patch") {
+    allowKeys(object, ["kind", "handle", "component", "data"], path);
+    if (object.data === undefined) {
+      throw new Error(`${path}.data：patch 必须带数据`);
+    }
+    return {
+      kind: "patch",
+      handle: asInt(object.handle, `${path}.handle`),
+      component: asStr(object.component, `${path}.component`),
+      data: object.data,
+    };
+  }
+
   throw new Error(`${path}.kind：未知的效果类型 ${JSON.stringify(kind)}`);
 }
 

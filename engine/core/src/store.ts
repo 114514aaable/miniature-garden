@@ -19,6 +19,7 @@
 
 import { type Cell, type SpaceId, Space } from "./space.ts";
 import { type Handle, EntityTable, type Entity } from "./entity/entity.ts";
+import { mergeDeep } from "./entity/merge.ts";
 import { type JsonValue, type LogEntry, type Tick, Timeline } from "./time.ts";
 
 export type Effect =
@@ -33,11 +34,20 @@ export type Effect =
       readonly overrides?: Readonly<Record<string, JsonValue>>;
     }
   | { readonly kind: "despawn"; readonly handle: Handle }
-  | { readonly kind: "move"; readonly space: SpaceId; readonly handle: Handle; readonly to: Cell };
+  | { readonly kind: "move"; readonly space: SpaceId; readonly handle: Handle; readonly to: Cell }
+  | {
+      /** 改实体的组件数据：深合并到该组件的实例覆盖上。 */
+      readonly kind: "patch";
+      readonly handle: Handle;
+      readonly component: string;
+      readonly data: JsonValue;
+    };
 
 /** 只要能用 has 判断模板在不在，就够了——不把模板注册表整个拖进来。 */
 export interface TemplateSource {
   has(id: string): boolean;
+  /** 可选：模板声明了哪些组件。给了就校验，没给就放过。 */
+  componentNames?(templateId: string): readonly string[];
 }
 
 export interface StoreOptions {
@@ -248,6 +258,27 @@ export class Store {
         }
         return { undo };
       }
+
+      case "patch": {
+        const entity = this.entities.get(effect.handle);
+
+        // 组件必须由模板声明。运行时凭空造组件是后门，不开。
+        const declared = this.templates?.componentNames?.(entity.template);
+        if (declared !== undefined && !declared.includes(effect.component)) {
+          throw new Error(`实体 ${effect.handle} 的模板 ${entity.template} 没有组件 ${effect.component}`);
+        }
+
+        const current = entity.overrides[effect.component];
+        const base = typeof current === "object" && current !== null && !Array.isArray(current) ? current : {};
+        const merged = mergeDeep(base as JsonValue, effect.data);
+
+        this.entities.setOverrides(effect.handle, {
+          ...entity.overrides,
+          [effect.component]: merged,
+        });
+        // 不用反操作：实体表有快照，失败时整表回滚。
+        return { undo: [] };
+      }
     }
   }
 
@@ -266,6 +297,7 @@ export class Store {
       case "spawn":
       case "despawn":
       case "move":
+      case "patch":
         throw new Error(`内部错误：实体效果不该进回滚列表（${effect.kind}）`);
     }
   }
@@ -311,6 +343,13 @@ export class Store {
           kind,
           targets: [effect.handle],
           data: { space: effect.space, x: effect.to.x, y: effect.to.y, handle: effect.handle },
+        });
+
+      case "patch":
+        return this.timeline.append({
+          kind,
+          targets: [effect.handle],
+          data: { handle: effect.handle, component: effect.component, value: effect.data },
         });
     }
   }

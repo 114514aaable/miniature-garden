@@ -85,6 +85,11 @@ export class TemplateRegistry {
     return structuredClone(template);
   }
 
+  /** 模板声明了哪些组件。用来校验 patch 不会凭空造组件。 */
+  componentNames(templateId: string): readonly string[] {
+    return Object.keys(this.get(templateId).components);
+  }
+
   /** 组件名 → schema，供合并/校验时查。 */
   schemaOf(name: string): Schema {
     const schema = this.schemas.get(name);
