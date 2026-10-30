@@ -56,12 +56,17 @@ test("despawn：实体消失，格子空出来", () => {
   assert.throws(() => store.entity(handle), /已销毁/);
 });
 
-test("move：实体位置与空间索引一起变", () => {
+test("改 core.place：实体位置与空间索引一起变", () => {
   const { store, space } = world();
   store.submit({ kind: "spawn", space: 1, cell: { x: 0, y: 0 }, template: "npc_guard" });
   const handle = store.step()[0].data.handle as number;
 
-  store.submit({ kind: "move", space: 1, handle, to: { x: 3, y: 3 } });
+  store.submit({
+    kind: "patch",
+    handle,
+    component: "core.place",
+    data: { space: 1, x: 3, y: 3 },
+  });
   store.step();
 
   assert.deepEqual(store.entity(handle).pos, { x: 3, y: 3 });
@@ -73,10 +78,9 @@ test("一批里后面的失败：实体也要回滚", () => {
   const { store, space } = world();
 
   store.submit({ kind: "spawn", space: 1, cell: { x: 1, y: 1 }, template: "npc_guard" });
-  store.submit({ kind: "move", space: 1, handle: 999, to: { x: 0, y: 0 } });
+  store.submit({ kind: "patch", handle: 999, component: "core.place", data: { space: 1, x: 0, y: 0 } });
 
-  // 999 解码后是「槽位 0、第 999 代」，正好撞上刚出生的实体（第 0 代），
-  // 所以报的是「过期」而不是「不存在」——两种都说明这个句柄不能用。
+  // 999 解码后是「槽位 0、第 999 代」，撞上刚出生的实体（第 0 代），报「过期」。
   assert.throws(() => store.step(), /不存在|过期/);
   assert.equal(store.entityCount, 0);
   assert.deepEqual(space.occupantsAt({ x: 1, y: 1 }), []);
@@ -97,13 +101,18 @@ test("端到端：JSON 效果 → 解析 → 提交 → 实体出现", () => {
   assert.deepEqual(space.occupantsAt({ x: 2, y: 1 }), [handle]);
 });
 
-test("解析：despawn 与 move 也能从 JSON 进来", () => {
+test("解析：despawn 与 patch 也能从 JSON 进来", () => {
   const effects = collectEffects({
     effects: [
-      { kind: "move", space: 1, handle: 7, to: { x: 1, y: 2 } },
+      { kind: "patch", handle: 7, component: "core.place", data: { space: 1, x: 1, y: 2 } },
       { kind: "despawn", handle: 7 },
     ],
   });
-  assert.deepEqual(effects[0], { kind: "move", space: 1, handle: 7, to: { x: 1, y: 2 } });
+  assert.deepEqual(effects[0], {
+    kind: "patch",
+    handle: 7,
+    component: "core.place",
+    data: { space: 1, x: 1, y: 2 },
+  });
   assert.deepEqual(effects[1], { kind: "despawn", handle: 7 });
 });

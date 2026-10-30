@@ -14,6 +14,7 @@
  */
 
 import { type Entity, type Handle } from "../entity/entity.ts";
+import { PLACE, placeOf } from "../entity/place.ts";
 import { type TemplateRegistry } from "../entity/template.ts";
 import { mergeDeep } from "../entity/merge.ts";
 import { type Cell, type Offset, Space, type SpaceId } from "../space.ts";
@@ -135,10 +136,18 @@ class WorldViewImpl implements WorldView {
       ? this.templates.get(entity.template).components
       : {};
 
-    return {
-      ...structuredClone(entity),
-      components: mergeDeep(defaults as Record<string, JsonValue>, entity.overrides) as Record<string, JsonValue>,
-    };
+    const components = mergeDeep(
+      defaults as Record<string, JsonValue>,
+      entity.overrides,
+    ) as Record<string, JsonValue>;
+
+    // 位置是虚拟组件：对外是一份普通数据，对内还是实体的 space/pos。
+    const place = placeOf(entity);
+    if (place !== null) {
+      components[PLACE] = { space: place.space, x: place.x, y: place.y };
+    }
+
+    return { ...structuredClone(entity), components };
   }
 }
 

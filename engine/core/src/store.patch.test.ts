@@ -73,9 +73,9 @@ test("patch 失败时整体回滚（实体表快照）", () => {
   const { store, handle } = setup();
 
   store.submit({ kind: "patch", handle, component: "core.health", data: { hp: 1 } });
-  store.submit({ kind: "move", space: 1, handle: 999, to: { x: 0, y: 0 } });
+  store.submit({ kind: "patch", handle, component: "core.mana", data: { value: 9 } });
 
-  assert.throws(() => store.step(), /不存在|过期/);
+  assert.throws(() => store.step(), /没有组件 core\.mana/);
   assert.deepEqual(store.entity(handle).overrides["core.health"], undefined, "血量必须回到原样");
 });
 

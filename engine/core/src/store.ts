@@ -19,6 +19,7 @@
 
 import { type Cell, type SpaceId, Space } from "./space.ts";
 import { type Handle, EntityTable, type Entity } from "./entity/entity.ts";
+import { PLACE } from "./entity/place.ts";
 import { mergeDeep } from "./entity/merge.ts";
 import { type JsonValue, type LogEntry, type Tick, Timeline } from "./time.ts";
 
@@ -34,14 +35,28 @@ export type Effect =
       readonly overrides?: Readonly<Record<string, JsonValue>>;
     }
   | { readonly kind: "despawn"; readonly handle: Handle }
-  | { readonly kind: "move"; readonly space: SpaceId; readonly handle: Handle; readonly to: Cell }
   | {
-      /** 改实体的组件数据：深合并到该组件的实例覆盖上。 */
+      /**
+       * 改实体的组件数据：深合并到该组件的实例覆盖上。
+       *
+       * 唯一特殊的是 `core.place`：它是「东西在哪」，空间索引靠它维护，
+       * 所以内核必须认识这个名字。写它不仅改数据，还改索引。
+       */
       readonly kind: "patch";
       readonly handle: Handle;
       readonly component: string;
       readonly data: JsonValue;
     };
+
+/** 位置是唯一被内核认识的组件（见 entity/place.ts）。 */
+export { PLACE } from "./entity/place.ts";
+
+function asInteger(value: JsonValue | undefined, at: string): number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value)) {
+    throw new Error(`${at} 必须是整数，收到 ${JSON.stringify(value)}`);
+  }
+  return value;
+}
 
 /** 只要能用 has 判断模板在不在，就够了——不把模板注册表整个拖进来。 */
 export interface TemplateSource {
@@ -239,28 +254,13 @@ export class Store {
         return { undo: [] };
       }
 
-      case "move": {
-        const entity = this.entities.get(effect.handle);
-        const from = entity.space !== null && entity.pos !== null ? { space: entity.space, cell: entity.pos } : null;
-
-        this.space(effect.space).index(effect.to); // 目标越界先抛
-        this.entities.move(effect.handle, effect.space, effect.to);
-        if (from !== null && !this.space(from.space).removeOccupant(from.cell, effect.handle)) {
-          throw new Error(`索引不一致：${effect.handle} 不在 (${from.cell.x}, ${from.cell.y})`);
-        }
-        this.space(effect.space).addOccupant(effect.to, effect.handle);
-
-        const undo: Effect[] = [
-          { kind: "remove", space: effect.space, cell: effect.to, handle: effect.handle },
-        ];
-        if (from !== null) {
-          undo.push({ kind: "place", space: from.space, cell: from.cell, handle: effect.handle });
-        }
-        return { undo };
-      }
-
       case "patch": {
         const entity = this.entities.get(effect.handle);
+
+        // 位置是唯一被内核认识的组件：写它要同步空间索引。
+        if (effect.component === PLACE) {
+          return this.applyPlace(entity, effect.data);
+        }
 
         // 组件必须由模板声明。运行时凭空造组件是后门，不开。
         const declared = this.templates?.componentNames?.(entity.template);
@@ -282,6 +282,40 @@ export class Store {
     }
   }
 
+  /**
+   * 写 core.place：改实体位置 + 同步空间索引，一步都不能少。
+   *
+   * 它是虚拟组件——对外是 `components["core.place"]`，对内还是实体的 space/pos。
+   * 这样规则看到的是统一的数据，存储也不用搬一次家。
+   */
+  private applyPlace(entity: Entity, data: JsonValue): Applied {
+    if (typeof data !== "object" || data === null || Array.isArray(data)) {
+      throw new Error("core.place 的数据必须是 { space, x, y }");
+    }
+    const place = data as Record<string, JsonValue>;
+    const spaceId = asInteger(place.space, "core.place.space");
+    const x = asInteger(place.x, "core.place.x");
+    const y = asInteger(place.y, "core.place.y");
+
+    const target = this.space(spaceId);
+    target.index({ x, y }); // 越界先抛，别改了实体才发现
+
+    const from =
+      entity.space !== null && entity.pos !== null ? { space: entity.space, cell: entity.pos } : null;
+
+    this.entities.move(entity.handle, spaceId, { x, y });
+    if (from !== null && !this.space(from.space).removeOccupant(from.cell, entity.handle)) {
+      throw new Error(`索引不一致：${entity.handle} 不在 (${from.cell.x}, ${from.cell.y})`);
+    }
+    target.addOccupant({ x, y }, entity.handle);
+
+    const undo: Effect[] = [{ kind: "remove", space: spaceId, cell: { x, y }, handle: entity.handle }];
+    if (from !== null) {
+      undo.push({ kind: "place", space: from.space, cell: from.cell, handle: entity.handle });
+    }
+    return { undo };
+  }
+
   /** 只应用空间效果，不校验、不记账。给回滚用。实体由快照恢复。 */
   private applyRaw(effect: Effect): void {
     switch (effect.kind) {
@@ -296,8 +330,6 @@ export class Store {
         return;
       case "spawn":
       case "despawn":
-      case "move":
-      case "patch":
         throw new Error(`内部错误：实体效果不该进回滚列表（${effect.kind}）`);
     }
   }
@@ -336,13 +368,6 @@ export class Store {
           kind,
           targets: [effect.handle],
           data: { handle: effect.handle },
-        });
-
-      case "move":
-        return this.timeline.append({
-          kind,
-          targets: [effect.handle],
-          data: { space: effect.space, x: effect.to.x, y: effect.to.y, handle: effect.handle },
         });
 
       case "patch":

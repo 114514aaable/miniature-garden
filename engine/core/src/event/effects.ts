@@ -91,16 +91,6 @@ function parseEffect(raw: JsonValue, path: string): Effect {
     return { kind: "despawn", handle: asInt(object.handle, `${path}.handle`) };
   }
 
-  if (kind === "move") {
-    allowKeys(object, ["kind", "space", "handle", "to"], path);
-    return {
-      kind: "move",
-      space: asInt(object.space, `${path}.space`) as SpaceId,
-      handle: asInt(object.handle, `${path}.handle`),
-      to: asCell(object.to, `${path}.to`),
-    };
-  }
-
   if (kind === "patch") {
     allowKeys(object, ["kind", "handle", "component", "data"], path);
     if (object.data === undefined) {

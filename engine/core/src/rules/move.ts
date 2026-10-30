@@ -61,10 +61,9 @@ export function moveHandler(params: JsonValue, context: EvaluateContext): JsonVa
     return { ok: false, reason: "那里已经有东西了" };
   }
 
-  // 注意：这里是纯 JSON 字面量，不是 Effect 类型。
-  // 效果要能进哈希、能被父节点合并，所以它在类型上必须是 JsonValue。
+  // 移动就是改 core.place——统一成数据之后，没有专门的 move 效果了。
   const effects = [
-    { kind: "move", space: spaceId, handle, to: { x: target.x, y: target.y } },
+    { kind: "patch", handle, component: "core.place", data: { space: spaceId, x: target.x, y: target.y } },
   ];
   return { ok: true, effects };
 }
