@@ -12,10 +12,9 @@ import assert from "node:assert/strict";
 
 import { type PackManifest } from "./manifest.ts";
 import { mergePacks, type Definition } from "./merge.ts";
-import { type ComponentSpec, loadWorld } from "./load.ts";
+import { loadWorld } from "./load.ts";
 
-const HEALTH: ComponentSpec = {
-  name: "core.health",
+const HEALTH = {
   schema: { t: "object", fields: { max: { t: "int" }, hp: { t: "int" } }, optional: ["hp"] },
 };
 
@@ -30,6 +29,7 @@ function def(kind: string, id: string, data: unknown): Definition {
 /** 3×3 空间，(1,1) 是墙；实体在 (0,0)；出生点 (2,2)。 */
 function minimal(): Definition[] {
   return [
+    def("component", "core.health", HEALTH),
     def("terrain", "0", { name: "地面", passable: true }),
     def("terrain", "1", { name: "墙", passable: false }),
     def("space", "dock", { id: "dock", width: 3, height: 3, terrain: [0, 0, 0, 0, 1, 0, 0, 0, 0] }),
@@ -43,7 +43,7 @@ function minimal(): Definition[] {
 }
 
 function load(definitions: Definition[] = minimal()) {
-  return loadWorld(mergePacks([{ pack: manifest(), definitions }]), [HEALTH]);
+  return loadWorld(mergePacks([{ pack: manifest(), definitions }]));
 }
 
 test("最小世界能加载", () => {
@@ -122,6 +122,7 @@ test("出生点不可走：拒绝", () => {
 
 test("多个空间按名字排序分配句柄", () => {
   const definitions = [
+    def("component", "core.health", HEALTH),
     def("terrain", "0", { name: "地面", passable: true }),
     def("space", "mine", { id: "mine", width: 2, height: 2, terrain: [0, 0, 0, 0] }),
     def("space", "dock", { id: "dock", width: 2, height: 2, terrain: [0, 0, 0, 0] }),

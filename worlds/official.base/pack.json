@@ -8,6 +8,7 @@
   "engine": ">=0.1.0",
   "files": {
     "terrains": ["terrains.json"],
+    "components": ["components.json"],
     "templates": ["templates/props.json"]
   }
 }

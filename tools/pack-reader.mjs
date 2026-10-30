@@ -31,6 +31,7 @@ const KIND_BY_FOLDER = {
   templates: "template",
   entities: "entity",
   terrains: "terrain",
+  components: "component",
   world: "world",
 };
 
@@ -80,8 +81,8 @@ function toDefinition(kind, item, where) {
     throw new Error(`${where}：缺少 id`);
   }
 
-  // entity / terrain 的 id 只用于合并与补丁定位，不进运行时数据。
-  if (kind === "entity" || kind === "terrain") {
+  // entity / terrain / component 的 id 只用于合并与补丁定位，不进运行时数据。
+  if (kind === "entity" || kind === "terrain" || kind === "component") {
     const { id: _ignored, ...data } = item;
     return { kind, id, data };
   }

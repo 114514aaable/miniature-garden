@@ -17,9 +17,11 @@ import { type JsonValue, canonicalize, hashText } from "../time.ts";
 import { type Schema } from "../event/schema.ts";
 import { TemplateRegistry } from "../entity/template.ts";
 import {
+  type ComponentDef,
   type ConflictPolicy,
   type EntityDef,
   isPassable,
+  parseComponentDef,
   parseEntityDef,
   parseSpaceDef,
   parseTemplateDef,
@@ -32,7 +34,7 @@ import {
 } from "./definitions.ts";
 import { type MergedWorld } from "./merge.ts";
 
-/** 组件是代码里的原语（L2），由引擎提供；世界只能使用，不能定义。 */
+/** 引擎额外提供的组件。组件现在由包定义，这里一般是空的。 */
 export interface ComponentSpec {
   readonly name: string;
   readonly schema: Schema;
@@ -60,17 +62,18 @@ export interface LoadedWorld {
   readonly hash: string;
 }
 
-const KNOWN_KINDS = new Set(["space", "template", "entity", "terrain", "world"]);
+const KNOWN_KINDS = new Set(["space", "template", "entity", "terrain", "component", "world"]);
 
 export function loadWorld(
   merged: MergedWorld,
-  components: readonly ComponentSpec[],
+  components: readonly ComponentSpec[] = [],
 ): LoadedWorld {
   const spaceDefs: SpaceDef[] = [];
   const templateDefs: TemplateDef[] = [];
   const entityDefs: EntityDef[] = [];
   const terrains = new Map<number, TerrainDef>();
   const worldDefs: WorldDef[] = [];
+  const componentDefs: ComponentDef[] = [];
 
   for (const [key, def] of merged.definitions) {
     if (!KNOWN_KINDS.has(def.kind)) {
@@ -91,6 +94,9 @@ export function loadWorld(
         terrains.set(terrain.id, terrain);
         break;
       }
+      case "component":
+        componentDefs.push(parseComponentDef(def.data, def.id, `$component.${def.id}`));
+        break;
       case "world":
         worldDefs.push(parseWorldDef(def.data, `$world.${def.id}`));
         break;
@@ -118,6 +124,10 @@ export function loadWorld(
   const spaces = sortedSpaces.map((def) => buildSpace(def, spaceIds.get(def.id) as SpaceId));
 
   const templates = new TemplateRegistry();
+  // 先注册包定义的组件（这是常态），再注册引擎额外提供的（一般是空的）。
+  for (const def of componentDefs) {
+    templates.defineComponent(def.name, def.schema);
+  }
   for (const component of components) {
     templates.defineComponent(component.name, component.schema);
   }

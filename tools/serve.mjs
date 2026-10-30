@@ -26,13 +26,6 @@ import { orderPacks } from "../engine/core/src/pack/order.ts";
 import { moveHandler, moveSignature } from "../engine/core/src/rules/move.ts";
 import { Store } from "../engine/core/src/store.ts";
 
-const COMPONENTS = [
-  {
-    name: "core.health",
-    schema: { t: "object", fields: { max: { t: "int" }, hp: { t: "int" } }, optional: ["hp"] },
-  },
-];
-
 const GLYPH = { pc: "@", npc_salt: "N", prop_crate: "o" };
 const TERRAIN_GLYPH = { 0: " ", 1: "#", 2: "~", 3: "." };
 const DIRECTIONS = {
@@ -52,7 +45,7 @@ const contents = dirs.map(readPack);
 const byId = new Map(contents.map((content) => [content.pack.id, content]));
 const ordered = orderPacks(contents.map((content) => content.pack)).map((pack) => byId.get(pack.id));
 const merged = mergePacks(ordered);
-const loaded = loadWorld(merged, COMPONENTS);
+const loaded = loadWorld(merged);
 
 const store = new Store(loaded.spaces, { templates: loaded.templates });
 for (const entity of loaded.entities) {

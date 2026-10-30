@@ -163,6 +163,106 @@ export function parseWorldDef(raw: unknown, path = "$world"): WorldDef {
   return raw as WorldDef;
 }
 
+/**
+ * 组件定义：名字 + 它的 schema。
+ *
+ * 组件是「包定义的数据」，不是引擎原语——所以 RPG 的血条、
+ * 赛博的义体、修真的丹田，各在各的包里，内核一个都不认识。
+ *
+ * 代价：规则只能按组件 id 读写，不能 import 组件类型。
+ */
+export interface ComponentDef {
+  readonly name: string;
+  readonly schema: Schema;
+}
+
+export function parseComponentDef(raw: unknown, idKey: string, path = "$component"): ComponentDef {
+  if (!COMPONENT_ID.test(idKey)) {
+    throw new SchemaError(`${path}.id`, `组件名非法："${idKey}"，应形如 "core.health"`);
+  }
+  const object = raw as { schema?: unknown };
+  if (typeof object !== "object" || object === null || Array.isArray(object)) {
+    throw new SchemaError(path, "需要对象");
+  }
+  return { name: idKey, schema: parseSchemaValue(object.schema, `${path}.schema`) };
+}
+
+/**
+ * 校验一个 schema 是不是合法的 Schema。
+ *
+ * 注意：这不能用我们自己的 schema 语言写——Schema 是递归类型，
+ * 而我们的类型语言没有递归。所以手写一遍，反而最直接。
+ */
+export function parseSchemaValue(raw: unknown, path = "$schema"): Schema {
+  return parseSchemaAt(raw, path, 0);
+}
+
+function parseSchemaAt(raw: unknown, path: string, depth: number): Schema {
+  if (depth > 8) {
+    throw new SchemaError(path, "schema 嵌套太深（上限 8 层）");
+  }
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    throw new SchemaError(path, "schema 必须是对象");
+  }
+
+  const node = raw as Record<string, unknown>;
+  const t = node.t;
+  switch (t) {
+    case "int":
+    case "num":
+    case "str":
+    case "bool":
+    case "null":
+    case "any":
+      return { t };
+    case "enum": {
+      if (!Array.isArray(node.values) || node.values.length === 0) {
+        throw new SchemaError(`${path}.values`, "enum 需要非空的 values");
+      }
+      for (const value of node.values) {
+        if (typeof value !== "string" && typeof value !== "number") {
+          throw new SchemaError(`${path}.values`, "enum 的取值只能是字符串或数字");
+        }
+      }
+      return { t: "enum", values: node.values as (string | number)[] };
+    }
+    case "array": {
+      const max = optionalInt(node.max, `${path}.max`);
+      return { t: "array", of: parseSchemaAt(node.of, `${path}.of`, depth + 1), ...(max === undefined ? {} : { max }) };
+    }
+    case "record": {
+      const max = optionalInt(node.max, `${path}.max`);
+      return { t: "record", of: parseSchemaAt(node.of, `${path}.of`, depth + 1), ...(max === undefined ? {} : { max }) };
+    }
+    case "object": {
+      if (typeof node.fields !== "object" || node.fields === null || Array.isArray(node.fields)) {
+        throw new SchemaError(`${path}.fields`, "object 需要 fields 对象");
+      }
+      const fields: Record<string, Schema> = {};
+      for (const [key, value] of Object.entries(node.fields as Record<string, unknown>)) {
+        fields[key] = parseSchemaAt(value, `${path}.fields.${key}`, depth + 1);
+      }
+      if (node.optional !== undefined) {
+        if (!Array.isArray(node.optional) || node.optional.some((item) => typeof item !== "string")) {
+          throw new SchemaError(`${path}.optional`, "optional 必须是字符串数组");
+        }
+        return { t: "object", fields, optional: node.optional as string[] };
+      }
+      return { t: "object", fields };
+    }
+    default:
+      throw new SchemaError(`${path}.t`, `未知的 schema 类型：${JSON.stringify(t)}`);
+  }
+}
+
+function optionalInt(raw: unknown, path: string): number | undefined {
+  if (raw === undefined) return undefined;
+  if (typeof raw !== "number" || !Number.isSafeInteger(raw) || raw < 1) {
+    throw new SchemaError(path, "需要正整数");
+  }
+  return raw;
+}
+
 /** 地形是否可走。规则层用这个，不直接比数字。 */
 export function isPassable(terrains: ReadonlyMap<number, TerrainDef>, terrain: number): boolean {
   const def = terrains.get(terrain);
