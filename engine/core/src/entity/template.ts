@@ -22,7 +22,7 @@ import { type Schema, validate } from "../event/schema.ts";
 import { type JsonValue, canonicalize, hashText } from "../time.ts";
 
 const COMPONENT_PATTERN = /^[a-z][a-z0-9]*\.[a-z][a-z0-9_]*$/;
-const TEMPLATE_PATTERN = /^[a-z][a-z0-9_-]{2,47}$/;
+const TEMPLATE_PATTERN = /^[a-z][a-z0-9_-]{1,47}$/;
 
 export interface Template {
   readonly id: string;

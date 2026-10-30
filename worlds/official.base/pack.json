@@ -1,0 +1,13 @@
+{
+  "id": "official.base",
+  "kind": "base",
+  "version": "0.1.0",
+  "name": "基础预设",
+  "description": "标准地形与通用模板。没有世界定义，必须和世界包一起加载。",
+  "license": "CC-BY-SA-4.0",
+  "engine": ">=0.1.0",
+  "files": {
+    "terrains": ["terrains.json"],
+    "templates": ["templates/props.json"]
+  }
+}

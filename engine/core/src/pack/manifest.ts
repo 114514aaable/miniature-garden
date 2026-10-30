@@ -27,6 +27,9 @@ export interface PackFiles {
   readonly spaces?: readonly string[];
   readonly templates?: readonly string[];
   readonly entities?: readonly string[];
+  readonly terrains?: readonly string[];
+  /** 世界的出生点与规则清单。base 包可以没有。 */
+  readonly world?: readonly string[];
   readonly patches?: readonly string[];
 }
 
@@ -74,8 +77,15 @@ const MANIFEST_SCHEMA: Schema = {
     tags: ID_LIST,
     files: {
       t: "object",
-      fields: { spaces: FILE_LIST, templates: FILE_LIST, entities: FILE_LIST, patches: FILE_LIST },
-      optional: ["spaces", "templates", "entities", "patches"],
+      fields: {
+        spaces: FILE_LIST,
+        templates: FILE_LIST,
+        entities: FILE_LIST,
+        terrains: FILE_LIST,
+        world: FILE_LIST,
+        patches: FILE_LIST,
+      },
+      optional: ["spaces", "templates", "entities", "terrains", "world", "patches"],
     },
     generator: {
       t: "object",

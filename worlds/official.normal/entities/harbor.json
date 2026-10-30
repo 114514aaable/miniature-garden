@@ -1,0 +1,5 @@
+[
+  { "id": "pc", "template": "pc", "space": "harbor", "x": 1, "y": 1 },
+  { "id": "salt", "template": "npc_salt", "space": "harbor", "x": 6, "y": 1 },
+  { "id": "crate", "template": "prop_crate", "space": "harbor", "x": 2, "y": 4 }
+]

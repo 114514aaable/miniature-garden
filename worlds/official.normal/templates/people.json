@@ -1,0 +1,8 @@
+[
+  {
+    "id": "npc_salt",
+    "components": {
+      "core.health": { "max": 10, "hp": 10 }
+    }
+  }
+]

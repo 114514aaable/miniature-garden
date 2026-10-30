@@ -1,0 +1,5 @@
+{
+  "start": { "space": "harbor", "x": 1, "y": 1 },
+  "rules": ["core.move"],
+  "onConflict": "error"
+}

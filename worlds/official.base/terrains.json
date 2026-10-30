@@ -1,0 +1,6 @@
+[
+  { "id": "0", "name": "空气", "passable": true },
+  { "id": "1", "name": "墙", "passable": false },
+  { "id": "2", "name": "水", "passable": false },
+  { "id": "3", "name": "地板", "passable": true }
+]

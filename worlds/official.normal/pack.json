@@ -1,0 +1,17 @@
+{
+  "id": "official.normal",
+  "kind": "overlay",
+  "version": "0.1.0",
+  "name": "默认世界：灰港码头",
+  "description": "一块 8×6 的码头：围墙、一片水、一个人。",
+  "license": "CC-BY-SA-4.0",
+  "engine": ">=0.1.0",
+  "extends": "official.base@0.1.0",
+  "requires": { "official.base": "^0.1.0" },
+  "files": {
+    "world": ["world.json"],
+    "spaces": ["spaces/harbor.json"],
+    "templates": ["templates/people.json"],
+    "entities": ["entities/harbor.json"]
+  }
+}

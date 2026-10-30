@@ -1,0 +1,12 @@
+[
+  {
+    "id": "pc",
+    "components": {
+      "core.health": { "max": 20, "hp": 20 }
+    }
+  },
+  {
+    "id": "prop_crate",
+    "components": {}
+  }
+]
