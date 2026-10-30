@@ -17,12 +17,21 @@ import { collectEffects } from "./event/effects.ts";
 import { type Envelope, evaluate } from "./event/evaluate.ts";
 import { Registry } from "./event/registry.ts";
 import { createWorldView } from "./event/view.ts";
-import { moveHandler, moveSignature, WALL } from "./rules/move.ts";
+import { moveHandler, moveSignature } from "./rules/move.ts";
 import { Space } from "./space.ts";
 import { Store } from "./store.ts";
 
 const WIDTH = 8;
 const HEIGHT = 6;
+
+// 地形号与含义。正式世界里这些来自 official.base 的 terrains.json，
+// 这里是文字版演示，直接在代码里声明，形状一样。
+const FLOOR = 0;
+const WALL = 1;
+const terrains = new Map<number, { passable: boolean }>([
+  [FLOOR, { passable: true }],
+  [WALL, { passable: false }],
+]);
 
 const space = new Space(1, WIDTH, HEIGHT);
 
@@ -104,7 +113,11 @@ function play(command: string): string {
     },
   };
 
-  const view = createWorldView([space], store.now(), { get: (handle) => store.entity(handle) });
+  const view = createWorldView([space], {
+    tick: store.now(),
+    entities: { get: (handle) => store.entity(handle) },
+    terrains,
+  });
   const result = evaluate(envelope, link, handlers, view);
 
   if (!result.ok) {

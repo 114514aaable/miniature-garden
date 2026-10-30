@@ -66,7 +66,7 @@ function build(): { link: LinkTable; handlers: HandlerMap } {
 }
 
 function view(): ReturnType<typeof createWorldView> {
-  return createWorldView([new Space(1, 4, 4)], 5);
+  return createWorldView([new Space(1, 4, 4)], { tick: 5 });
 }
 
 function envelope(partial: Partial<Envelope> & Pick<Envelope, "id" | "tag" | "params">): Envelope {

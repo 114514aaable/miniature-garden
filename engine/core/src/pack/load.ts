@@ -4,14 +4,12 @@
 /**
  * 加载器：把合并后的内容池变成运行时对象。
  *
- * 它做四件事：
- *   1. 按 kind 分派（space / template / entity / world），未知 kind 直接拒绝；
- *   2. 字符串 id → 数字句柄（空间号），这就是「重定位」；
- *   3. 建 Space、TemplateRegistry、实体列表；
- *   4. 整体校验：引用闭合、坐标合法、实体不能站在不可通行地形上、出生点能站。
- *
- * 加载器本身不认识具体的 kind 怎么造——那是注册表的事。
- * 以后接别的格式（比如 RPG Maker 的地图），注册一个新 kind 就行。
+ * 它做五件事：
+ *   1. 按 kind 分派（space / template / entity / terrain / world），未知 kind 直接拒绝；
+ *   2. 字符串 id → 数字句柄（空间号、地形号），这就是「重定位」；
+ *   3. 建 Space、TemplateRegistry、实体列表、地形表；
+ *   4. 整体校验：引用闭合、坐标合法、地形都已声明、出生点能站；
+ *   5. 收集世界启用的规则标签——包负责选，宿主负责实现。
  */
 
 import { type Cell, Space, type SpaceId } from "../space.ts";
@@ -19,6 +17,7 @@ import { type JsonValue, canonicalize, hashText } from "../time.ts";
 import { type Schema } from "../event/schema.ts";
 import { TemplateRegistry } from "../entity/template.ts";
 import {
+  type ConflictPolicy,
   type EntityDef,
   isPassable,
   parseEntityDef,
@@ -26,6 +25,8 @@ import {
   parseTemplateDef,
   type SpaceDef,
   type TemplateDef,
+  parseTerrainDef,
+  type TerrainDef,
   parseWorldDef,
   type WorldDef,
 } from "./definitions.ts";
@@ -48,14 +49,18 @@ export interface LoadedWorld {
   readonly spaces: readonly Space[];
   readonly templates: TemplateRegistry;
   readonly entities: readonly LoadedEntity[];
+  readonly terrains: ReadonlyMap<number, TerrainDef>;
   readonly start: { readonly space: SpaceId; readonly pos: Cell };
   /** 空间名 → 数字句柄。存档和调试都用得上。 */
   readonly spaceIds: ReadonlyMap<string, SpaceId>;
+  /** 这个世界启用哪些规则（标签），由宿主对到实现。 */
+  readonly rules: readonly string[];
+  readonly onConflict: ConflictPolicy;
   readonly world: WorldDef;
   readonly hash: string;
 }
 
-const KNOWN_KINDS = new Set(["space", "template", "entity", "world"]);
+const KNOWN_KINDS = new Set(["space", "template", "entity", "terrain", "world"]);
 
 export function loadWorld(
   merged: MergedWorld,
@@ -64,6 +69,7 @@ export function loadWorld(
   const spaceDefs: SpaceDef[] = [];
   const templateDefs: TemplateDef[] = [];
   const entityDefs: EntityDef[] = [];
+  const terrains = new Map<number, TerrainDef>();
   const worldDefs: WorldDef[] = [];
 
   for (const [key, def] of merged.definitions) {
@@ -80,6 +86,11 @@ export function loadWorld(
       case "entity":
         entityDefs.push(parseEntityDef(def.data, `$entity.${entityDefs.length}`));
         break;
+      case "terrain": {
+        const terrain = parseTerrainDef(def.data, def.id, `$terrain.${def.id}`);
+        terrains.set(terrain.id, terrain);
+        break;
+      }
       case "world":
         worldDefs.push(parseWorldDef(def.data, `$world.${def.id}`));
         break;
@@ -100,6 +111,10 @@ export function loadWorld(
     spaceIds.set(def.id, index + 1);
   });
 
+  for (const def of sortedSpaces) {
+    checkTerrainDeclared(def, terrains);
+  }
+
   const spaces = sortedSpaces.map((def) => buildSpace(def, spaceIds.get(def.id) as SpaceId));
 
   const templates = new TemplateRegistry();
@@ -111,18 +126,38 @@ export function loadWorld(
   }
 
   const world = worldDefs[0];
-  const entities = entityDefs.map((def, index) => normalizeEntity(def, index, spaceIds, spaces, templates, world));
-  const start = resolveStart(world, spaceIds, spaces);
+  const entities = entityDefs.map((def, index) =>
+    normalizeEntity(def, index, spaceIds, spaces, templates, terrains),
+  );
+  const start = resolveStart(world, spaceIds, spaces, terrains);
 
   return {
     spaces,
     templates,
     entities,
+    terrains,
     start,
     spaceIds,
+    rules: world.rules ?? [],
+    onConflict: world.onConflict ?? "error",
     world,
-    hash: hashOf(merged.hash, sortedSpaces, templateDefs, entities, start),
+    hash: hashOf(merged.hash, sortedSpaces, templateDefs, [...terrains.values()], entities, start),
   };
+}
+
+/** 空间里出现的每个地形号，都必须在世界里声明过。 */
+function checkTerrainDeclared(def: SpaceDef, terrains: ReadonlyMap<number, TerrainDef>): void {
+  const missing = new Set<number>();
+  for (const terrain of def.terrain) {
+    if (!terrains.has(terrain)) {
+      missing.add(terrain);
+    }
+  }
+  if (missing.size > 0) {
+    throw new Error(
+      `空间 ${def.id} 用了未声明的地形：${[...missing].sort((a, b) => a - b).join(", ")}`,
+    );
+  }
 }
 
 function buildSpace(def: SpaceDef, id: SpaceId): Space {
@@ -141,7 +176,7 @@ function normalizeEntity(
   spaceIds: ReadonlyMap<string, SpaceId>,
   spaces: readonly Space[],
   templates: TemplateRegistry,
-  world: WorldDef,
+  terrains: ReadonlyMap<number, TerrainDef>,
 ): LoadedEntity {
   if (!templates.has(def.template)) {
     throw new Error(`实体 #${index} 用了不存在的模板：${def.template}`);
@@ -157,7 +192,7 @@ function normalizeEntity(
   if (!space.inBounds(pos)) {
     throw new Error(`实体 #${index} 的坐标越界：(${def.x}, ${def.y})`);
   }
-  if (!isPassable(world, space.terrainAt(pos))) {
+  if (!isPassable(terrains, space.terrainAt(pos))) {
     throw new Error(`实体 #${index}（${def.template}）站在不可通行地形上：(${def.x}, ${def.y})`);
   }
 
@@ -168,6 +203,7 @@ function resolveStart(
   world: WorldDef,
   spaceIds: ReadonlyMap<string, SpaceId>,
   spaces: readonly Space[],
+  terrains: ReadonlyMap<number, TerrainDef>,
 ): { space: SpaceId; pos: Cell } {
   const spaceId = spaceIds.get(world.start.space);
   if (spaceId === undefined) {
@@ -179,7 +215,7 @@ function resolveStart(
   if (!space.inBounds(pos)) {
     throw new Error(`出生点越界：(${pos.x}, ${pos.y})`);
   }
-  if (!isPassable(world, space.terrainAt(pos))) {
+  if (!isPassable(terrains, space.terrainAt(pos))) {
     throw new Error(`出生点在不可通行地形上：(${pos.x}, ${pos.y})`);
   }
 
@@ -190,6 +226,7 @@ function hashOf(
   mergedHash: string,
   spaces: readonly SpaceDef[],
   templates: readonly TemplateDef[],
+  terrains: readonly TerrainDef[],
   entities: readonly LoadedEntity[],
   start: { space: SpaceId; pos: Cell },
 ): string {
@@ -198,6 +235,7 @@ function hashOf(
       mergedHash,
       spaces,
       templates,
+      terrains: [...terrains].sort((a, b) => a.id - b.id),
       entities: entities.map((entity) => ({
         template: entity.template,
         space: entity.space,

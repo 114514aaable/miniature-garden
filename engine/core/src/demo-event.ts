@@ -98,7 +98,7 @@ const envelope: Envelope = {
 console.log("=== Event 管线 ===");
 console.log(`信封：${envelope.tag}，子节点 ${envelope.children?.length ?? 0} 个`);
 
-const view = createWorldView([space], store.now());
+const view = createWorldView([space], { tick: store.now() });
 const result = evaluate(envelope, link, handlers, view);
 
 if (!result.ok) {

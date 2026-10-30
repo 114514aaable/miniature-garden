@@ -15,8 +15,7 @@ import { type JsonValue } from "../time.ts";
 import { type Signature } from "../event/registry.ts";
 import { type EvaluateContext } from "../event/evaluate.ts";
 
-/** 地形 1 = 墙。v0 写死，将来由世界包注册。 */
-export const WALL = 1;
+/** 地形能不能走由世界声明；规则不认数字，只问视图。 */
 
 export const moveSignature: Signature = {
   tag: "core.move",
@@ -52,8 +51,8 @@ export function moveHandler(params: JsonValue, context: EvaluateContext): JsonVa
     return { ok: false, reason: "一次只能走一格，而且不能斜着走" };
   }
 
-  if (space.terrainAt(target) === WALL) {
-    return { ok: false, reason: "前面是墙" };
+  if (!space.passableAt(target)) {
+    return { ok: false, reason: "那里过不去" };
   }
 
   if (space.occupantsAt(target).length > 0) {
