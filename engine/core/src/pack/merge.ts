@@ -48,9 +48,25 @@ export interface ProvenanceEntry {
   readonly pack: string;
 }
 
+export interface MergeWarning {
+  readonly kind: string;
+  readonly id: string;
+  readonly previousOrigin: string;
+  readonly newOrigin: string;
+}
+
+export interface MergeOptions {
+  /**
+   * 冲突策略。默认 error——正式世界不该「后装的悄悄赢」。
+   * warn：覆盖但记警告；override：覆盖不记（沙盒用）。
+   */
+  readonly onConflict?: "error" | "warn" | "override";
+}
+
 export interface MergedWorld {
   readonly definitions: ReadonlyMap<string, MergedDefinition>;
   readonly provenance: readonly ProvenanceEntry[];
+  readonly warnings: readonly MergeWarning[];
   /** 合并结果的哈希：参与世界身份。 */
   readonly hash: string;
 }
@@ -63,9 +79,14 @@ export function keyOf(kind: string, id: string): string {
  * 按给定顺序合并。调用方负责先跑 orderPacks——这里不再排序，
  * 因为「顺序」已经是一个决定，不该在合并阶段被悄悄改掉。
  */
-export function mergePacks(contents: readonly PackContent[]): MergedWorld {
+export function mergePacks(
+  contents: readonly PackContent[],
+  options: MergeOptions = {},
+): MergedWorld {
+  const policy = options.onConflict ?? "error";
   const pool = new Map<string, MergedDefinition>();
   const provenance: ProvenanceEntry[] = [];
+  const warnings: MergeWarning[] = [];
 
   for (const content of contents) {
     const packId = content.pack.id;
@@ -77,10 +98,29 @@ export function mergePacks(contents: readonly PackContent[]): MergedWorld {
 
       const existing = pool.get(key);
       if (existing !== undefined) {
-        throw new Error(
-          `定义重复：${definition.kind}/${definition.id}（${existing.origin} 与 ${packId}）。` +
-            `要改它请用补丁，不要重复定义。`,
-        );
+        if (policy === "error") {
+          throw new Error(
+            `定义重复：${definition.kind}/${definition.id}（${existing.origin} 与 ${packId}）。` +
+              `要改它请用补丁，或把世界的 onConflict 调成 "warn" / "override"。`,
+          );
+        }
+        // 覆盖，但保留最初的定义者，把这件事记进 patchedBy——覆盖也是「改」，要留痕。
+        pool.set(key, {
+          ...definition,
+          data: structuredClone(definition.data),
+          origin: existing.origin,
+          patchedBy: [...existing.patchedBy, packId],
+        });
+        provenance.push({ action: "replace", kind: definition.kind, id: definition.id, pack: packId });
+        if (policy === "warn") {
+          warnings.push({
+            kind: definition.kind,
+            id: definition.id,
+            previousOrigin: existing.origin,
+            newOrigin: packId,
+          });
+        }
+        continue;
       }
 
       pool.set(key, {
@@ -120,6 +160,7 @@ export function mergePacks(contents: readonly PackContent[]): MergedWorld {
   return {
     definitions: pool,
     provenance,
+    warnings,
     hash: hashOf(pool),
   };
 }

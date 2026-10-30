@@ -139,3 +139,57 @@ test("补丁历史也进哈希", () => {
   const b = mergePacks([base, content("a.one", [], [{ op: "replace", kind: "template", id: "x", data: 1 }])]);
   assert.notEqual(a.hash, b.hash, "内容一样，但改过就是不同的世界");
 });
+
+test("默认策略下，重复定义仍然报错（并提示可以调策略）", () => {
+  assert.throws(
+    () =>
+      mergePacks([
+        content("a.one", [{ kind: "template", id: "x", data: 1 }]),
+        content("b.two", [{ kind: "template", id: "x", data: 2 }]),
+      ]),
+    /onConflict/,
+  );
+});
+
+test("warn：后加载者覆盖，但记一条警告，出处仍然追溯到最初的定义者", () => {
+  const world = mergePacks(
+    [
+      content("a.one", [{ kind: "template", id: "x", data: 1 }]),
+      content("b.two", [{ kind: "template", id: "x", data: 2 }]),
+    ],
+    { onConflict: "warn" },
+  );
+
+  const def = world.definitions.get(keyOf("template", "x"));
+  assert.deepEqual(def?.data, 2);
+  assert.equal(def?.origin, "a.one", "最初的定义者不会被覆盖掉");
+  assert.deepEqual(def?.patchedBy, ["b.two"]);
+  assert.deepEqual(world.warnings, [
+    { kind: "template", id: "x", previousOrigin: "a.one", newOrigin: "b.two" },
+  ]);
+});
+
+test("override：覆盖但不记警告", () => {
+  const world = mergePacks(
+    [
+      content("a.one", [{ kind: "template", id: "x", data: 1 }]),
+      content("b.two", [{ kind: "template", id: "x", data: 2 }]),
+    ],
+    { onConflict: "override" },
+  );
+
+  assert.deepEqual(world.definitions.get(keyOf("template", "x"))?.data, 2);
+  assert.deepEqual(world.warnings, []);
+});
+
+test("warn / override 也会改变哈希（覆盖过的世界不是原版）", () => {
+  const strict = mergePacks([content("a.one", [{ kind: "template", id: "x", data: 1 }])]);
+  const overridden = mergePacks(
+    [
+      content("a.one", [{ kind: "template", id: "x", data: 1 }]),
+      content("b.two", [{ kind: "template", id: "x", data: 1 }]),
+    ],
+    { onConflict: "override" },
+  );
+  assert.notEqual(strict.hash, overridden.hash);
+});
