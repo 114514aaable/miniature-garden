@@ -24,6 +24,7 @@ import { costOf, DEFAULT_CLOCK } from "../engine/core/src/rules/clock.ts";
 import { loadWorld } from "../engine/core/src/pack/load.ts";
 import { mergePacks } from "../engine/core/src/pack/merge.ts";
 import { orderPacks } from "../engine/core/src/pack/order.ts";
+import { attackHandler, attackSignature } from "../engine/core/src/rules/attack.ts";
 import { moveHandler, moveSignature } from "../engine/core/src/rules/move.ts";
 import { dropHandler, dropSignature, takeHandler, takeSignature } from "../engine/core/src/rules/inventory.ts";
 import { Store } from "../engine/core/src/store.ts";
@@ -74,11 +75,13 @@ const registry = new Registry();
 registry.define(moveSignature);
 registry.define(takeSignature);
 registry.define(dropSignature);
+registry.define(attackSignature);
 const link = registry.link();
 const handlers = new Map([
   [link.tags.get("core.move"), moveHandler],
   [link.tags.get("core.take"), takeHandler],
   [link.tags.get("core.drop"), dropHandler],
+  [link.tags.get("core.attack"), attackHandler],
 ]);
 
 /** 技能表：UI 只读这个，不认识任何实现。 */
@@ -174,17 +177,53 @@ function act(command) {
   return snapshot("不懂这个指令（w/a/s/d 走，e 捡，r 放）");
 }
 
-/** 用技能表里的技能：只处理「对自己」的，选目标的以后再说。 */
+/** 用技能表里的技能：自己 / 相邻实体，选格子的以后再说。 */
 function useSkill(tag) {
   const sym = link.tags.get(tag);
   const signature = sym === undefined ? undefined : link.signatures[sym];
   if (signature === undefined || signature.skill === undefined) {
     return snapshot("没有这个技能");
   }
-  if (signature.skill.target.kind !== "self") {
-    return snapshot(`${signature.skill.name} 需要选目标：先用方向键`);
+
+  if (signature.skill.target.kind === "self") {
+    return run(tag, { actor: playerHandle }, signature.skill.cost, () => `用了 ${signature.skill.name}`);
   }
-  return run(tag, { actor: playerHandle }, signature.skill.cost, () => `用了 ${signature.skill.name}`);
+
+  if (signature.skill.target.kind === "entity") {
+    const target = adjacentTarget();
+    if (target === null) {
+      return snapshot(`${signature.skill.name}：旁边没有可以打的东西`);
+    }
+    return run(tag, { actor: playerHandle, target }, signature.skill.cost, () => `对 ${target} 用了 ${signature.skill.name}`);
+  }
+
+  return snapshot(`${signature.skill.name} 需要选目标：先用方向键`);
+}
+
+/** 相邻的、有生命值的东西。v0 只找四个正方向。 */
+function adjacentTarget() {
+  const self = store.entity(playerHandle);
+  if (self.pos === null || self.space === null) return null;
+
+  const view = createWorldView(loaded.spaces, {
+    tick: store.now(),
+    entities: { get: (handle) => store.entity(handle) },
+    terrains: loaded.terrains,
+    templates: loaded.templates,
+  });
+
+  const space = view.space(self.space);
+  for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
+    const cell = { x: self.pos.x + dx, y: self.pos.y + dy };
+    if (!space.passableAt(cell)) continue;
+    for (const handle of space.occupantsAt(cell)) {
+      if (handle === playerHandle) continue;
+      if (view.entity(handle).components["core.health"] !== undefined) {
+        return handle;
+      }
+    }
+  }
+  return null;
 }
 
 /** 跑一次信封：求值、收效果、按成本推进。 */
