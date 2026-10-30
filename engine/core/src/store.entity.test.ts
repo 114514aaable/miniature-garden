@@ -116,3 +116,40 @@ test("解析：despawn 与 patch 也能从 JSON 进来", () => {
   });
   assert.deepEqual(effects[1], { kind: "despawn", handle: 7 });
 });
+
+test("core.place 写 null：从世界里拿掉，索引也清空", () => {
+  const { store, space } = world();
+  store.submit({ kind: "spawn", space: 1, cell: { x: 1, y: 2 }, template: "item_lamp" });
+  const handle = store.step()[0].data.handle as number;
+
+  assert.deepEqual(space.occupantsAt({ x: 1, y: 2 }), [handle]);
+
+  store.submit({ kind: "patch", handle, component: "core.place", data: null });
+  store.step();
+
+  assert.equal(store.entity(handle).space, null);
+  assert.equal(store.entity(handle).pos, null);
+  assert.deepEqual(space.occupantsAt({ x: 1, y: 2 }), []);
+});
+
+test("捡起：物品进背包，地上消失（两步 patch）", () => {
+  const { store, space } = world();
+
+  store.submit({ kind: "spawn", space: 1, cell: { x: 1, y: 1 }, template: "npc_guard" });
+  const actor = store.step()[0].data.handle as number;
+
+  store.submit({ kind: "spawn", space: 1, cell: { x: 1, y: 1 }, template: "item_lamp" });
+  const item = store.step()[0].data.handle as number;
+
+  store.submit({ kind: "patch", handle: item, component: "core.place", data: null });
+  store.submit({
+    kind: "patch",
+    handle: actor,
+    component: "core.container",
+    data: { items: [item] },
+  });
+  store.step();
+
+  assert.deepEqual(space.occupantsAt({ x: 1, y: 1 }), [actor]);
+  assert.deepEqual(store.entity(item).pos, null);
+});

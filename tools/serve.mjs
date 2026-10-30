@@ -25,9 +25,10 @@ import { loadWorld } from "../engine/core/src/pack/load.ts";
 import { mergePacks } from "../engine/core/src/pack/merge.ts";
 import { orderPacks } from "../engine/core/src/pack/order.ts";
 import { moveHandler, moveSignature } from "../engine/core/src/rules/move.ts";
+import { dropHandler, dropSignature, takeHandler, takeSignature } from "../engine/core/src/rules/inventory.ts";
 import { Store } from "../engine/core/src/store.ts";
 
-const GLYPH = { pc: "@", npc_salt: "N", prop_crate: "o" };
+const GLYPH = { pc: "@", npc_salt: "N", prop_crate: "o", item_lamp: "i" };
 const TERRAIN_GLYPH = { 0: " ", 1: "#", 2: "~", 3: "." };
 const DIRECTIONS = {
   w: { dx: 0, dy: -1 },
@@ -71,8 +72,14 @@ for (const entry of spawnEvents) {
 
 const registry = new Registry();
 registry.define(moveSignature);
+registry.define(takeSignature);
+registry.define(dropSignature);
 const link = registry.link();
-const handlers = new Map([[link.tags.get("core.move"), moveHandler]]);
+const handlers = new Map([
+  [link.tags.get("core.move"), moveHandler],
+  [link.tags.get("core.take"), takeHandler],
+  [link.tags.get("core.drop"), dropHandler],
+]);
 
 let lastEvents = [];
 
@@ -115,26 +122,50 @@ function snapshot(message) {
   };
 }
 
-function act(dir) {
-  const direction = DIRECTIONS[dir];
-  if (direction === undefined) {
-    return snapshot("不懂这个指令（w/a/s/d）");
-  }
+function act(command) {
   if (playerHandle === null) {
     return snapshot("这个世界没有玩家角色");
   }
 
-  const position = store.entity(playerHandle).pos;
-  const envelope = {
-    id: store.now() + 1,
-    tag: "core.move",
-    params: {
-      handle: playerHandle,
-      space: store.entity(playerHandle).space,
-      x: position.x + direction.dx,
-      y: position.y + direction.dy,
-    },
-  };
+  // 方向键 → 移动
+  const direction = DIRECTIONS[command];
+  if (direction !== undefined) {
+    const position = store.entity(playerHandle).pos;
+    return run(
+      "core.move",
+      {
+        handle: playerHandle,
+        space: store.entity(playerHandle).space,
+        x: position.x + direction.dx,
+        y: position.y + direction.dy,
+      },
+      "move",
+      (now) => `走到 (${now.x}, ${now.y})`,
+    );
+  }
+
+  // e → 捡起脚下 / 同格的东西
+  if (command === "e") {
+    return run("core.take", { actor: playerHandle }, "take", (now) => `捡起（${now.x}, ${now.y}）`);
+  }
+
+  // r → 把背包里第一个东西放在脚下
+  if (command === "r") {
+    const position = store.entity(playerHandle).pos;
+    return run(
+      "core.drop",
+      { actor: playerHandle, x: position.x, y: position.y },
+      "drop",
+      (now) => `放下（${now.x}, ${now.y}）`,
+    );
+  }
+
+  return snapshot("不懂这个指令（w/a/s/d 走，e 捡，r 放）");
+}
+
+/** 跑一次信封：求值、收效果、按成本推进。 */
+function run(tag, params, costKey, describe) {
+  const envelope = { id: store.now() + 1, tag, params };
 
   const view = createWorldView(loaded.spaces, {
     tick: store.now(),
@@ -150,7 +181,7 @@ function act(dir) {
 
   const value = result.value;
   if (value.ok !== true) {
-    return snapshot(value.reason ?? "走不了");
+    return snapshot(value.reason ?? "不行");
   }
 
   const effects = collectEffects(result.value);
@@ -158,15 +189,13 @@ function act(dir) {
     store.submit(effect);
   }
 
-  // 动作成本由规则层算：速度决定这次移动花几回合。
   const speed = speedOfPlayer();
-  const cost = effects.length > 0 ? costOf(DEFAULT_CLOCK, "move", speed) : 0;
-  const events = store.step(cost);
-  lastEvents = events;
+  const cost = effects.length > 0 ? costOf(DEFAULT_CLOCK, costKey, speed) : 0;
+  lastEvents = store.step(cost);
 
-  const now = store.entity(playerHandle).pos;
+  const now = store.entity(playerHandle).pos ?? { x: 0, y: 0 };
   const rounds = cost === 0 ? "（零帧）" : `（${cost} 回合）`;
-  return snapshot(`走到 (${now.x}, ${now.y})${rounds}`);
+  return snapshot(`${describe(now)}${rounds}`);
 }
 
 /** 玩家的速度。读的是合并后的组件，所以模板里写的也算。 */
@@ -216,6 +245,9 @@ const PAGE = `<!doctype html>
         <div class="empty"></div><button data-dir="w">↑</button><div class="empty"></div>
         <button data-dir="a">←</button><button data-dir="s">↓</button><button data-dir="d">→</button>
       </div>
+      <div class="pad" style="margin-top:8px; grid-template-columns: repeat(2, 84px);">
+        <button data-dir="e">捡起 e</button><button data-dir="r">放下 r</button>
+      </div>
       <div id="message"></div>
       <div id="events"></div>
     </div>
@@ -242,7 +274,7 @@ document.querySelectorAll('button[data-dir]').forEach((button) => {
   button.addEventListener('click', () => act(button.dataset.dir));
 });
 window.addEventListener('keydown', (event) => {
-  if (['w', 'a', 's', 'd'].includes(event.key)) act(event.key);
+  if (['w', 'a', 's', 'd', 'e', 'r'].includes(event.key)) act(event.key);
 });
 fetch('/api/state').then((r) => r.json()).then(render);
 </script>

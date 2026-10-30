@@ -289,8 +289,22 @@ export class Store {
    * 这样规则看到的是统一的数据，存储也不用搬一次家。
    */
   private applyPlace(entity: Entity, data: JsonValue): Applied {
-    if (typeof data !== "object" || data === null || Array.isArray(data)) {
-      throw new Error("core.place 的数据必须是 { space, x, y }");
+    const from =
+      entity.space !== null && entity.pos !== null ? { space: entity.space, cell: entity.pos } : null;
+
+    // null = 从世界里拿掉（进背包、被拾取）。索引也要清。
+    if (data === null) {
+      if (from !== null && !this.space(from.space).removeOccupant(from.cell, entity.handle)) {
+        throw new Error(`索引不一致：${entity.handle} 不在 (${from.cell.x}, ${from.cell.y})`);
+      }
+      this.entities.move(entity.handle, null, null);
+      return {
+        undo: from === null ? [] : [{ kind: "place", space: from.space, cell: from.cell, handle: entity.handle }],
+      };
+    }
+
+    if (typeof data !== "object" || Array.isArray(data)) {
+      throw new Error("core.place 的数据必须是 { space, x, y } 或 null");
     }
     const place = data as Record<string, JsonValue>;
     const spaceId = asInteger(place.space, "core.place.space");
@@ -299,9 +313,6 @@ export class Store {
 
     const target = this.space(spaceId);
     target.index({ x, y }); // 越界先抛，别改了实体才发现
-
-    const from =
-      entity.space !== null && entity.pos !== null ? { space: entity.space, cell: entity.pos } : null;
 
     this.entities.move(entity.handle, spaceId, { x, y });
     if (from !== null && !this.space(from.space).removeOccupant(from.cell, entity.handle)) {

@@ -51,7 +51,7 @@ export interface ClockConfig {
 }
 
 export const DEFAULT_CLOCK: ClockConfig = {
-  costs: { move: 2, attack: 3, heavy: 7, cast: 4, look: 0, wait: 4 },
+  costs: { move: 2, attack: 3, heavy: 7, cast: 4, look: 0, wait: 4, take: 1, drop: 1 },
   speedBonus: [
     { atSpeed: 5, bonus: 0 },
     { atSpeed: 8, bonus: 1 },
