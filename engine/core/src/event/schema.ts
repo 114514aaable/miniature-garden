@@ -29,6 +29,8 @@ export type Schema =
       readonly fields: Readonly<Record<string, Schema>>;
       readonly optional?: readonly string[];
     }
+  /** 键名不固定的映射，比如「依赖包 id → 版本范围」。 */
+  | { readonly t: "record"; readonly of: Schema; readonly max?: number }
   | { readonly t: "any" };
 
 /** 嵌套深度上限。超过就当它不是数据，是炸弹。 */
@@ -111,6 +113,21 @@ function walk(value: unknown, schema: Schema, path: string, depth: number): void
         throw new SchemaError(path, `数组最多 ${max} 项，收到 ${value.length}`);
       }
       value.forEach((item, i) => walk(item, schema.of, `${path}[${i}]`, depth + 1));
+      return;
+    }
+
+    case "record": {
+      if (!isPlainObject(value)) {
+        throw new SchemaError(path, `需要对象，收到 ${show(value)}`);
+      }
+      const entries = Object.entries(value);
+      const max = schema.max ?? MAX_ARRAY;
+      if (entries.length > max) {
+        throw new SchemaError(path, `最多 ${max} 个键，收到 ${entries.length}`);
+      }
+      for (const [key, item] of entries) {
+        walk(item, schema.of, `${path}.${key}`, depth + 1);
+      }
       return;
     }
 
