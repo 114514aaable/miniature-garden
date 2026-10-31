@@ -11,10 +11,27 @@
  *      所以关掉硬件加速，并且把崩溃原因写进 desktop/electron.log。
  */
 
-const { app, BrowserWindow, dialog } = require("electron");
+const electron = require("electron");
 const { spawn } = require("node:child_process");
 const { appendFileSync } = require("node:fs");
 const path = require("node:path");
+
+// 如果 ELECTRON_RUN_AS_NODE 被设置，Electron 会把自己当 node 跑，
+// require("electron") 拿到的是一个路径字符串，app 是 undefined。
+// 这种情况给出人话，而不是一个看不懂的 TypeError。
+if (typeof electron !== "object" || electron.app === undefined) {
+  console.error(
+    [
+      "Electron 没有以窗口模式启动。",
+      "多半是环境变量 ELECTRON_RUN_AS_NODE 被设置了。",
+      "在终端里执行：  Remove-Item Env:\\ELECTRON_RUN_AS_NODE",
+      "然后重新运行。",
+    ].join("\n"),
+  );
+  process.exit(1);
+}
+
+const { app, BrowserWindow, dialog } = electron;
 
 const ROOT = path.join(__dirname, "..");
 const LOG = path.join(__dirname, "electron.log");
