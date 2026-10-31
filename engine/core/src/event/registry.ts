@@ -52,8 +52,8 @@ export interface LinkTable {
   readonly hash: string;
 }
 
-/** 标签格式：小写、至少两段（命名空间 + 动词）、最多四段。 */
-const TAG_PATTERN = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*){1,3}$/;
+/** 标签格式：小写、至少两段（命名空间 + 动词）、最多四段；段内可带下划线。 */
+const TAG_PATTERN = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){1,3}$/;
 
 export class Registry {
   private readonly pending = new Map<string, Signature>();

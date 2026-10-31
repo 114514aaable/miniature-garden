@@ -30,6 +30,8 @@ import { costOf, DEFAULT_CLOCK } from "../engine/core/src/rules/clock.ts";
 import { moveHandler, moveSignature } from "../engine/core/src/rules/move.ts";
 import { dropHandler, dropSignature, takeHandler, takeSignature } from "../engine/core/src/rules/inventory.ts";
 import { attackHandler, attackSignature } from "../engine/core/src/rules/attack.ts";
+import { enemyTurnHandler, enemyTurnSignature } from "../engine/core/src/rules/ai.ts";
+import { Scheduler } from "../engine/core/src/rules/scheduler.ts";
 import { readFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
 import { createProjector } from "../systems/render/project.ts";
@@ -159,6 +161,7 @@ function buildSession(ordered) {
   registry.define(takeSignature);
   registry.define(dropSignature);
   registry.define(attackSignature);
+  registry.define(enemyTurnSignature);
   const link = registry.link();
 
   const handlers = new Map([
@@ -166,6 +169,7 @@ function buildSession(ordered) {
     [link.tags.get("core.take"), takeHandler],
     [link.tags.get("core.drop"), dropHandler],
     [link.tags.get("core.attack"), attackHandler],
+    [link.tags.get("core.enemy_turn"), enemyTurnHandler],
   ]);
 
   const skills = link.signatures
@@ -193,6 +197,21 @@ function buildSession(ordered) {
     console.warn(`[render] ${warning}`);
   }
 
+  // 有 core.ai 的非玩家实体进调度器。
+  const scheduler = new Scheduler([], store.now());
+  const startView = createWorldView(loaded.spaces, {
+    tick: store.now(),
+    entities: { get: (handle) => store.entity(handle) },
+    terrains: loaded.terrains,
+    templates: loaded.templates,
+  });
+  for (const entity of store.allEntities()) {
+    if (entity.handle === playerHandle) continue;
+    if (startView.entity(entity.handle).components["core.ai"] !== undefined) {
+      scheduler.add(entity.handle, store.now());
+    }
+  }
+
   return {
     loaded,
     store,
@@ -201,6 +220,8 @@ function buildSession(ordered) {
     skills,
     projector,
     playerHandle,
+    scheduler,
+    playerReadyAt: store.now(),
     packs: ordered.map((content) => `${content.pack.id}@${content.pack.version}`),
     lastEvents: [],
     devlog: new DevLog(),
@@ -389,15 +410,105 @@ function run(tag, params, costKey) {
     session.store.submit(effect);
   }
 
-  const speed = speedOfPlayer();
-  const cost = effects.length > 0 ? costOf(DEFAULT_CLOCK, costKey, speed) : 0;
-  session.lastEvents = session.store.step(cost);
-  for (const entry of session.lastEvents) {
-    session.devlog.effect(entry);
-  }
+  // 动作生效，然后世界推进到玩家下次能行动为止（敌人会在这段里行动）。
+  const cost = effects.length > 0 ? costOf(DEFAULT_CLOCK, costKey, speedOfPlayer()) : 0;
+  session.playerReadyAt = session.store.now() + cost;
+  session.lastEvents = [];
+  advanceTo(session.playerReadyAt);
 
   const rounds = cost === 0 ? "（零帧）" : `（${cost} 回合）`;
   return snapshot(`${skillName(tag)}${rounds}`);
+}
+
+/**
+ * 逐 tick 推进世界。
+ *
+ * 玩家用一次 cost 表示动作占多少回合，但敌人是逐 tick 结算的，
+ * 所以不能 step(cost) 一次跳完——中间要给敌人行动的机会。
+ */
+function advanceTo(target) {
+  let guard = 0;
+  while (session.store.now() < target) {
+    if (guard++ > 512) {
+      session.devlog.action(session.store.now(), "调度器", { error: "推进次数超限" });
+      break;
+    }
+    const events = session.store.step(1);
+    for (const entry of events) {
+      session.lastEvents.push(entry);
+      session.devlog.effect(entry);
+    }
+    drainEnemies();
+  }
+  applyPending();
+}
+
+/** 让当前 tick 该行动的敌人行动（可能连续多个）。 */
+function drainEnemies() {
+  const now = session.store.now();
+  let guard = 0;
+  for (;;) {
+    const due = session.scheduler.peek();
+    if (due === null || due.tick > now) break;
+    if (guard++ > 64) break;
+
+    session.scheduler.take();
+    enemyAct(due.handle);
+  }
+}
+
+/** 敌人的一回合：问 AI 想做什么，再用同一套求值跑它产出的信封。 */
+function enemyAct(handle) {
+  const view = currentView();
+  const ask = evaluate(
+    { id: session.store.now() + 1, tag: "core.enemy_turn", params: { enemy: handle, target: session.playerHandle } },
+    session.link,
+    session.handlers,
+    view,
+  );
+
+  const next = ask.ok && ask.value && ask.value.next ? ask.value.next : null;
+  if (next === null) {
+    session.devlog.action(session.store.now(), `敌人 ${handle} 等待`, {});
+    session.scheduler.done(handle, 1);
+    return;
+  }
+
+  session.devlog.action(session.store.now(), `敌人 ${handle} → ${next.tag}`, next.params);
+
+  const result = evaluate(
+    { id: session.store.now() + 2, tag: next.tag, params: next.params },
+    session.link,
+    session.handlers,
+    view,
+  );
+  if (result.ok && result.value && result.value.ok === true) {
+    for (const effect of collectEffects(result.value)) {
+      session.store.submit(effect);
+    }
+  } else {
+    session.devlog.action(session.store.now(), `敌人 ${handle} 动不了`, {
+      reason: (result.ok && result.value && result.value.reason) || "求值失败",
+    });
+  }
+
+  const key = next.tag === "core.attack" ? "attack" : "move";
+  session.scheduler.done(handle, costOf(DEFAULT_CLOCK, key, speedOf(handle)));
+}
+
+/** 把排队的变更落地，但不推进时间。 */
+function applyPending() {
+  const events = session.store.step(0);
+  for (const entry of events) {
+    session.lastEvents.push(entry);
+    session.devlog.effect(entry);
+  }
+}
+
+function speedOf(handle) {
+  if (handle === null) return 0;
+  const stats = currentView().entity(handle).components["core.stats"];
+  return readNumber(stats, "speed", 4);
 }
 
 /** 技能显示名从链接表里取，不在代码里写死。 */
