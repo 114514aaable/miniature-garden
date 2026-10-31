@@ -154,4 +154,13 @@ export class EntityTable {
     this.slots = [...data.slots];
     this.free = [...data.free];
   }
+
+  /** 所有活着的实体（内部对象，调用方只读）。给渲染投影用。 */
+  all(): readonly Entity[] {
+    const entities: Entity[] = [];
+    for (const slot of this.slots) {
+      if (slot.entity !== null) entities.push(slot.entity);
+    }
+    return entities;
+  }
 }

@@ -150,6 +150,11 @@ export class TemplateRegistry {
     return Object.keys(this.get(templateId).components);
   }
 
+  /** 这个世界有没有定义某个组件。渲染器启动握手要用。 */
+  hasComponent(name: string): boolean {
+    return this.schemas.has(name);
+  }
+
   /** 组件名 → schema，供合并/校验时查。 */
   schemaOf(name: string): Schema {
     const schema = this.schemas.get(name);

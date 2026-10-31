@@ -59,7 +59,11 @@ const options = {
   noImplicitReturns: true,
 };
 
-const files = [...collect("engine/core/src"), ...collect("engine/core/types")];
+const files = [
+  ...collect("engine/core/src"),
+  ...collect("engine/core/types"),
+  ...collect("systems"),
+];
 const program = ts.createProgram(files, options);
 const diagnostics = ts.getPreEmitDiagnostics(program);
 
