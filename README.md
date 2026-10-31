@@ -2,41 +2,63 @@
 
 > 一个先有规则、后有故事的开源世界。
 
-**当前状态：只保留内核。** 仓库里现在只有 `engine/core`（底层实现与测试）、`spec/`（世界包规范）、
-`docs/`（架构与需求）。世界包、生成器、校验器、CI 已从工作区移除——它们都在 git 历史里，
-等内核跑通之后按顺序加回来。
-
-理由很简单：**学一行，懂一行。** 一个能跑通、能被讲清楚的内核，比十个半成品目录有用。
+**当前状态：内核 + 规则 + 渲染管线都能跑，可以在浏览器里玩一个最小世界。**
 
 ## 目录
 
 ```
-engine/core/   内核（MIT）：空间、时间、事件契约、句柄、唯一写入口
-spec/          世界包规范草案（CC-BY-4.0）
-docs/          架构与需求（CC-BY-4.0）
+engine/core/     内核（MIT）：空间、时间、事件契约、句柄、唯一写入口、包加载
+systems/render/  渲染系统（宿主侧）：契约、投影、绘制指令
+tools/           宿主工具：读包、播放、调试台 / 启动器、CSV 导入
+worlds/          世界包：official.base（基础）、official.normal（示例世界）
+desktop/         Electron 壳（实验性，暂时不走这条线）
+spec/            世界包规范草案（CC-BY-4.0）
+docs/            架构与需求（CC-BY-4.0）
 ```
-
-## 进度
-
-- [x] 空间：格子、地形、占用者、按偏移遍历 —— 20 个测试
-- [x] 时间线：单调 tick + 记录 + 哈希链 —— 19 个测试
-- [x] store：唯一写入口、批量原子应用、回滚 —— 12 个测试
-- [x] 第一条规则：求和（校验 → 纯函数 → Effect）
-- [x] Event 管线：schema / registry / evaluate / effects / view —— 41 个测试
-- [ ] 实体层：id + 位置 + 索引同步
-- [ ] 世界包加载器：JSON → 链接表 + 世界
-- [ ] 世界生成器：离线跑一次，产出世界包
 
 ## 跑起来
 
+**玩**：双击 `启动游戏(浏览器).bat`，浏览器会打开 `http://127.0.0.1:8787`。
+
+或者在终端里：
+
 ```bash
-cd engine/core
-npm test          # 92 个测试
-npm run demo      # 端到端：信封 → 求值 → 效果 → 落地
-npm run typecheck # 需要 typescript，或设置 TSC_PATH
+node tools/serve.mjs                      # 启动器：列出 worlds/ 下的世界
+node tools/serve.mjs worlds/official.base worlds/official.normal   # 直接进某个世界
 ```
 
-Node 24 能直接运行 `.ts`，不需要编译，零依赖。
+**测试与类型检查**：
+
+```bash
+node --test --test-isolation=none         # 259 个测试（仓库根目录）
+node tools/typecheck.mjs                  # 0 个错误；需要 TSC_PATH 指向 typescript
+```
+
+Node 24 能直接运行 `.ts`，不需要编译，引擎零依赖。
+
+## 进度
+
+- [x] 空间：格子、地形、占用者、按偏移遍历
+- [x] 时间线：单调 tick + 记录 + 哈希链
+- [x] store：唯一写入口、批量原子应用、回滚
+- [x] Event 管线：schema / registry / evaluate / effects / view
+- [x] 实体层：模板继承、组件合并、代际句柄、位置索引
+- [x] 世界包加载器：清单、依赖排序、补丁合并、加载期校验
+- [x] 规则：时钟（回合成本 / 零帧）、碰撞、移动、物品栏、攻击
+- [x] 渲染：契约握手、快照投影、绘制指令、Canvas 执行
+- [x] 工具：启动器、CSV 导入、类型检查
+- [ ] 贴图：`core.sprite` + tileset
+- [ ] 动效：渲染时间线、位置插值
+- [ ] 存档 / 读档
+- [ ] 地图生成、敌人 AI
+
+## 设计要点
+
+- **一个 tick 就是一回合**；动作有成本，成本为 0 的动作不推进时钟。
+- **内核只保留一个组件名**：`core.place`（位置），因为空间索引靠它。
+- **六个效果**撑起所有玩法：terrain / place / remove / spawn / despawn / patch。
+- **技能 = 数据接口 + 代码实现**：UI 与 AI 只读接口。
+- **渲染是只读客户端**：拿快照、发命令，永远不改世界。
 
 ## 三条原则
 
