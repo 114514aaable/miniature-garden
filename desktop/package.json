@@ -5,8 +5,8 @@
   "main": "main.cjs",
   "description": "新世界的桌面壳：把调试台装进一个窗口",
   "scripts": {
-    "start": "electron . --no-sandbox",
-    "start:debug": "electron . --no-sandbox --enable-logging"
+    "start": "electron . --no-sandbox --disable-gpu",
+    "start:debug": "electron . --no-sandbox --disable-gpu --enable-logging"
   },
   "devDependencies": {
     "electron": "^33.0.0"
