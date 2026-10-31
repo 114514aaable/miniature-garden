@@ -38,12 +38,31 @@ export function enemyTurnHandler(params: JsonValue, context: EvaluateContext): J
     return { ok: true, next: null, reason: "不在同一空间" };
   }
 
+  const intent = enemy.components[INTENT];
+  const active = intentTiles(intent).length > 0;
+
+  // 已经起手：到点就打，没到就等。
+  if (active) {
+    const resolveAt = numberIn(intent, "resolveAt", 0);
+    if (context.view.tick >= resolveAt) {
+      return { ok: true, next: { tag: "core.enemy_strike", params: { enemy: p.enemy, target: p.target } } };
+    }
+    return { ok: true, next: null, reason: "起手中" };
+  }
+
   const dx = target.pos.x - enemy.pos.x;
   const dy = target.pos.y - enemy.pos.y;
   const distance = Math.abs(dx) + Math.abs(dy);
 
+  // 够得着：先起手，下回合再打（给玩家躲的机会）。
   if (distance === 1) {
-    return { ok: true, next: { tag: "core.attack", params: { actor: p.enemy, target: p.target } } };
+    return {
+      ok: true,
+      next: {
+        tag: "core.enemy_windup",
+        params: { enemy: p.enemy, dx, dy, damage: 2, ticks: 2 },
+      },
+    };
   }
 
   const space = context.view.space(enemy.space);
@@ -66,4 +85,18 @@ export function enemyTurnHandler(params: JsonValue, context: EvaluateContext): J
   }
 
   return { ok: true, next: null, reason: "被挡住了" };
+}
+
+const INTENT = "core.intent";
+
+function intentTiles(intent: unknown): unknown[] {
+  if (typeof intent !== "object" || intent === null || Array.isArray(intent)) return [];
+  const tiles = (intent as Record<string, unknown>).tiles;
+  return Array.isArray(tiles) ? tiles : [];
+}
+
+function numberIn(component: unknown, key: string, fallback: number): number {
+  if (typeof component !== "object" || component === null) return fallback;
+  const value = (component as Record<string, unknown>)[key];
+  return typeof value === "number" ? value : fallback;
 }

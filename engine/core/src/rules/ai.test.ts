@@ -19,7 +19,22 @@ function setup(enemyAt: { x: number; y: number }, walls: Array<{ x: number; y: n
 
   const templates = new TemplateRegistry();
   templates.defineComponent("core.solid", { t: "object", fields: {} });
-  templates.defineTemplate({ id: "npc_salt", components: { "core.solid": {} } });
+  templates.defineComponent("core.intent", {
+    t: "object",
+    fields: {
+      kind: { t: "str" },
+      tiles: { t: "array", of: { t: "object", fields: { dx: { t: "int" }, dy: { t: "int" } } } },
+      damage: { t: "int" },
+      resolveAt: { t: "int" },
+    },
+  });
+  templates.defineTemplate({
+    id: "npc_salt",
+    components: {
+      "core.solid": {},
+      "core.intent": { kind: "melee", tiles: [], damage: 0, resolveAt: 0 },
+    },
+  });
   templates.defineTemplate({ id: "pc", components: { "core.solid": {} } });
 
   const entities = new EntityTable();
@@ -60,12 +75,23 @@ function run(params: Record<string, number>, view: ReturnType<typeof setup>["vie
   };
 }
 
-test("相邻：产出攻击信封", () => {
+test("相邻：先起手（不是立刻打）", () => {
   const { view, player, enemy } = setup({ x: 3, y: 2 });
   const result = run({ enemy, target: player }, view);
 
-  assert.equal(result.next?.tag, "core.attack");
-  assert.deepEqual(result.next?.params, { actor: enemy, target: player });
+  assert.equal(result.next?.tag, "core.enemy_windup");
+  assert.deepEqual(result.next?.params, { enemy, dx: -1, dy: 0, damage: 2, ticks: 2 });
+});
+
+test("起手中：还没到点就等", () => {
+  const { entities, view, player, enemy } = setup({ x: 3, y: 2 });
+  entities.setOverrides(enemy, {
+    "core.intent": { kind: "melee", tiles: [{ dx: -1, dy: 0 }], damage: 2, resolveAt: 5 },
+  });
+
+  const result = run({ enemy, target: player }, view);
+  assert.equal(result.next, null);
+  assert.match(result.reason ?? "", /起手/);
 });
 
 test("不相邻：产出移动信封，朝玩家走一格", () => {

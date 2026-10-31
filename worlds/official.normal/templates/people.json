@@ -5,7 +5,8 @@
       "core.health": { "max": 10, "hp": 10 },
       "core.stats": { "speed": 4, "attack": 2, "defense": 1 },
       "core.ai": { "mode": "idle" },
-      "core.solid": {}
+      "core.solid": {},
+      "core.intent": { "kind": "melee", "tiles": [], "damage": 0, "resolveAt": 0 }
     }
   }
 ]

@@ -31,6 +31,12 @@ import { moveHandler, moveSignature } from "../engine/core/src/rules/move.ts";
 import { dropHandler, dropSignature, takeHandler, takeSignature } from "../engine/core/src/rules/inventory.ts";
 import { attackHandler, attackSignature } from "../engine/core/src/rules/attack.ts";
 import { enemyTurnHandler, enemyTurnSignature } from "../engine/core/src/rules/ai.ts";
+import {
+  strikeHandler,
+  strikeSignature,
+  windupHandler,
+  windupSignature,
+} from "../engine/core/src/rules/enemy-actions.ts";
 import { Scheduler } from "../engine/core/src/rules/scheduler.ts";
 import { readFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
@@ -162,6 +168,8 @@ function buildSession(ordered) {
   registry.define(dropSignature);
   registry.define(attackSignature);
   registry.define(enemyTurnSignature);
+  registry.define(windupSignature);
+  registry.define(strikeSignature);
   const link = registry.link();
 
   const handlers = new Map([
@@ -170,6 +178,8 @@ function buildSession(ordered) {
     [link.tags.get("core.drop"), dropHandler],
     [link.tags.get("core.attack"), attackHandler],
     [link.tags.get("core.enemy_turn"), enemyTurnHandler],
+    [link.tags.get("core.enemy_windup"), windupHandler],
+    [link.tags.get("core.enemy_strike"), strikeHandler],
   ]);
 
   const skills = link.signatures
