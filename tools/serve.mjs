@@ -33,6 +33,7 @@ import { attackHandler, attackSignature } from "../engine/core/src/rules/attack.
 import { readFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
 import { createProjector } from "../systems/render/project.ts";
+import { DevLog, formatLine } from "../systems/log/devlog.ts";
 
 const PORT = Number(process.env.PORT ?? 8787);
 const WORLDS_DIR = "worlds";
@@ -202,6 +203,7 @@ function buildSession(ordered) {
     playerHandle,
     packs: ordered.map((content) => `${content.pack.id}@${content.pack.version}`),
     lastEvents: [],
+    devlog: new DevLog(),
   };
 }
 
@@ -280,6 +282,7 @@ function snapshot(message) {
       target: skill.target.kind,
     })),
     events: session.lastEvents.map((entry) => `#${entry.id} ${entry.kind} ${JSON.stringify(entry.data)}`),
+    devlog: session.devlog.tail(200).map(formatLine),
   };
 }
 
@@ -365,14 +368,19 @@ function adjacentTarget() {
 
 function run(tag, params, costKey) {
   const envelope = { id: session.store.now() + 1, tag, params };
+  session.devlog.action(session.store.now(), tag, params);
 
   const result = evaluate(envelope, session.link, session.handlers, currentView());
   if (!result.ok) {
+    session.devlog.action(session.store.now(), `${tag} 求值失败`, {
+      message: result.diagnostics[0]?.message ?? "未知",
+    });
     return snapshot(`规则出错：${result.diagnostics[0]?.message ?? "未知"}`);
   }
 
   const value = result.value;
   if (value.ok !== true) {
+    session.devlog.action(session.store.now(), `${tag} 被拒绝`, { reason: value.reason ?? null });
     return snapshot(value.reason ?? "不行");
   }
 
@@ -384,6 +392,9 @@ function run(tag, params, costKey) {
   const speed = speedOfPlayer();
   const cost = effects.length > 0 ? costOf(DEFAULT_CLOCK, costKey, speed) : 0;
   session.lastEvents = session.store.step(cost);
+  for (const entry of session.lastEvents) {
+    session.devlog.effect(entry);
+  }
 
   const rounds = cost === 0 ? "（零帧）" : `（${cost} 回合）`;
   return snapshot(`${skillName(tag)}${rounds}`);
@@ -545,6 +556,10 @@ const PAGE = `<!doctype html>
   .skills button:hover { background: #2c3242; }
   .skills .hint { color: #7f8794; font-size: 12px; align-self: center; }
   #events { margin-top: 16px; color: #7f8794; font-size: 12px; max-height: 160px; overflow: auto; }
+  #devpanel { margin-top: 12px; color: #7f8794; font-size: 12px; }
+  #devpanel summary { cursor: pointer; }
+  #devlog { margin: 8px 0 0; padding: 8px; max-height: 220px; overflow: auto; color: #8b929e;
+            background: #0f1116; border: 1px solid #232733; border-radius: 6px; white-space: pre; }
   .world { display: flex; justify-content: space-between; align-items: center; gap: 16px;
            padding: 12px 14px; margin-bottom: 8px; background: #1b1f27;
            border: 1px solid #2a303c; border-radius: 8px; }
@@ -583,6 +598,10 @@ const PAGE = `<!doctype html>
         <div id="skills" class="skills"></div>
         <div id="message"></div>
         <div id="events"></div>
+        <details id="devpanel">
+          <summary>开发日志</summary>
+          <pre id="devlog"></pre>
+        </details>
       </div>
     </div>
   </div>
@@ -660,6 +679,7 @@ function render(state) {
     ' · tick <b>' + state.tick + '</b>';
   document.getElementById('message').textContent = state.message;
   document.getElementById('events').textContent = state.events.join('\\n');
+  document.getElementById('devlog').textContent = (state.devlog || []).join('\\n');
 
   const skills = document.getElementById('skills');
   skills.innerHTML = '';
