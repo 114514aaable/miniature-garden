@@ -1,0 +1,13 @@
+{
+  "name": "newworld-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "main": "main.cjs",
+  "description": "新世界的桌面壳：把调试台装进一个窗口",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^33.0.0"
+  }
+}
