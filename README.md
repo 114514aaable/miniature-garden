@@ -18,14 +18,14 @@ docs/            架构与需求（CC-BY-4.0）
 
 ## 跑起来
 
-**玩**：双击 `启动游戏(浏览器).bat`，浏览器会打开 `http://127.0.0.1:8787`。
-
-或者在终端里：
+**玩**：先构建前端，再起服务：
 
 ```bash
-node tools/serve.mjs                      # 启动器：列出 worlds/ 下的世界
-node tools/serve.mjs worlds/official.base worlds/official.normal   # 直接进某个世界
+node tools/build-web.mjs        # TS → web/（浏览器端渲染器）
+node tools/serve.mjs            # 启动器：列出 worlds/ 下的世界
 ```
+
+或者双击 `启动游戏(浏览器).bat`（它会先构建）。
 
 **测试与类型检查**：
 

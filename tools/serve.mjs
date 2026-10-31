@@ -30,7 +30,8 @@ import { costOf, DEFAULT_CLOCK } from "../engine/core/src/rules/clock.ts";
 import { moveHandler, moveSignature } from "../engine/core/src/rules/move.ts";
 import { dropHandler, dropSignature, takeHandler, takeSignature } from "../engine/core/src/rules/inventory.ts";
 import { attackHandler, attackSignature } from "../engine/core/src/rules/attack.ts";
-import { buildFrame, DEFAULT_STYLE } from "../systems/render/draw.ts";
+import { readFileSync } from "node:fs";
+import { extname, resolve } from "node:path";
 import { createProjector } from "../systems/render/project.ts";
 
 const PORT = Number(process.env.PORT ?? 8787);
@@ -251,18 +252,20 @@ function snapshot(message) {
     entities: session.store.allEntities(),
   });
 
-  const commands = buildFrame(frame, {
-    tile: TILE,
-    viewport: VIEWPORT,
-    camera: { x: 0, y: 0 },
-    style: DEFAULT_STYLE,
-  });
-
   return {
     launcher: false,
-    commands,
-    viewport: VIEWPORT,
     tile: TILE,
+    snapshot: {
+      tick: frame.tick,
+      // 地形转成普通数组：JSON 里 Int32Array 会变成奇怪的对象
+      spaces: frame.spaces.map((space) => ({
+        id: space.id,
+        width: space.width,
+        height: space.height,
+        terrain: Array.from(space.terrain),
+      })),
+      entities: frame.entities,
+    },
     hud: playerHud(),
     tick: session.store.now(),
     hash: session.store.headHash,
@@ -439,6 +442,27 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    if (request.url.startsWith("/web/")) {
+      const relative = request.url.slice("/web/".length).split("?")[0];
+      const root = resolve("web");
+      const file = resolve(root, relative);
+      if (!file.startsWith(root)) {
+        response.writeHead(403);
+        response.end("forbidden");
+        return;
+      }
+      try {
+        const data = readFileSync(file);
+        const type = extname(file) === ".js" ? "text/javascript; charset=utf-8" : "application/octet-stream";
+        response.writeHead(200, { "content-type": type });
+        response.end(data);
+      } catch {
+        response.writeHead(404);
+        response.end("not found");
+      }
+      return;
+    }
+
     if (request.method === "POST" && request.url === "/api/leave") {
       session = null;
       sendJson(response, { launcher: true, ...scanWorlds() });
@@ -563,7 +587,11 @@ const PAGE = `<!doctype html>
     </div>
   </div>
 </main>
-<script>
+<script type="module">
+import { attach } from '/web/systems/render/browser.js';
+
+let renderer = null;
+
 async function api(path, body) {
   const options = body === undefined ? {} : {
     method: 'POST',
@@ -622,7 +650,10 @@ function showGame(state) {
 }
 
 function render(state) {
-  drawCommands(state);
+  if (renderer === null) {
+    renderer = attach(document.getElementById('map'), { tile: state.tile });
+  }
+  renderer.setState(state);
   document.getElementById('hud').innerHTML =
     'HP <b>' + state.hud.hp + '/' + state.hud.hpMax + '</b>' +
     ' · 背包 <b>' + state.hud.inventory.length + '</b>' +
@@ -644,26 +675,6 @@ function render(state) {
     button.textContent = skill.name + ' (' + skill.cost + ')';
     button.addEventListener('click', () => useSkill(skill.tag));
     skills.appendChild(button);
-  }
-}
-
-function drawCommands(state) {
-  const canvas = document.getElementById('map');
-  canvas.width = state.viewport.width;
-  canvas.height = state.viewport.height;
-  const ctx = canvas.getContext('2d');
-
-  for (const command of state.commands) {
-    if (command.kind === 'rect') {
-      ctx.fillStyle = command.color;
-      ctx.fillRect(command.x, command.y, command.w, command.h);
-    } else if (command.kind === 'text') {
-      ctx.fillStyle = command.color;
-      ctx.font = command.size + 'px ui-monospace, Consolas, monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(command.text, command.x, command.y);
-    }
   }
 }
 
