@@ -4,26 +4,86 @@
 /**
  * 桌面壳：开一个窗口，把本地服务装进去。
  *
- * 为什么还要起服务，而不是直接读文件：
- *   世界加载、规则求值、绘制指令都在服务端做（见 tools/serve.mjs），
- *   窗口只是一个浏览器。以后要做联机，这个结构不用改。
- *
- * 引擎仍然是零依赖；Electron 只属于这个壳。
+ * 两个坑，这里都处理了：
+ *   1. Electron 自带的 Node 是 20，跑不了 .ts（类型剥离要 Node 22+），
+ *      所以服务用系统 node 起，不是 process.execPath。
+ *   2. 某些显卡驱动下 Electron 一启动就崩（0x80000003），
+ *      所以关掉硬件加速，并且把崩溃原因写进 desktop/electron.log。
  */
 
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, dialog } = require("electron");
 const { spawn } = require("node:child_process");
+const { appendFileSync } = require("node:fs");
 const path = require("node:path");
 
 const ROOT = path.join(__dirname, "..");
+const LOG = path.join(__dirname, "electron.log");
 const PORT = 8790;
 const URL = `http://127.0.0.1:${PORT}`;
 
 let server = null;
 let window = null;
 
-/** 等服务起来：轮询到通为止，比 sleep 固定时间可靠。 */
-async function waitForServer(tries = 60) {
+function log(message) {
+  const line = `[${new Date().toISOString()}] ${message}\n`;
+  try {
+    appendFileSync(LOG, line, "utf8");
+  } catch {
+    // 日志写不进去也不能影响启动
+  }
+  console.log(message);
+}
+
+log(`starting; electron=${process.versions.electron} node=${process.versions.node}`);
+
+// 先关硬件加速：某些驱动会让主进程在创建窗口前就崩。
+app.disableHardwareAcceleration();
+
+process.on("uncaughtException", (error) => {
+  log(`uncaughtException: ${error && error.stack ? error.stack : error}`);
+});
+process.on("unhandledRejection", (reason) => {
+  log(`unhandledRejection: ${reason}`);
+});
+
+app.on("child-process-gone", (_event, details) => {
+  log(`child-process-gone: ${details.type} ${details.reason} (${details.exitCode})`);
+});
+app.on("render-process-gone", (_event, _contents, details) => {
+  log(`render-process-gone: ${details.reason} (${details.exitCode})`);
+});
+
+/** 找系统 node：Electron 自带的跑不了 .ts。 */
+function findNode() {
+  const candidates = [
+    process.env.NEWWORLD_NODE,
+    process.env.NODE_EXE,
+    "node",
+  ].filter(Boolean);
+
+  return candidates[0];
+}
+
+function startServer() {
+  const node = findNode();
+  log(`spawning server with: ${node}`);
+
+  server = spawn(node, [path.join(ROOT, "tools", "serve.mjs")], {
+    cwd: ROOT,
+    env: { ...process.env, PORT: String(PORT) },
+    stdio: "inherit",
+    shell: process.platform === "win32" && node === "node",
+  });
+
+  server.on("error", (error) => {
+    log(`server spawn error: ${error.message}`);
+  });
+  server.on("exit", (code, signal) => {
+    log(`server exited: code=${code} signal=${signal}`);
+  });
+}
+
+async function waitForServer(tries = 80) {
   for (let i = 0; i < tries; i += 1) {
     try {
       const response = await fetch(URL, { method: "GET" });
@@ -34,15 +94,6 @@ async function waitForServer(tries = 60) {
     await new Promise((resolve) => setTimeout(resolve, 150));
   }
   return false;
-}
-
-function startServer() {
-  // ELECTRON_RUN_AS_NODE：让 electron 可执行文件当 node 用
-  server = spawn(process.execPath, [path.join(ROOT, "tools", "serve.mjs")], {
-    cwd: ROOT,
-    env: { ...process.env, PORT: String(PORT), ELECTRON_RUN_AS_NODE: "1" },
-    stdio: "inherit",
-  });
 }
 
 function createWindow() {
@@ -61,18 +112,26 @@ function createWindow() {
   });
 
   window.loadURL(URL);
+  window.webContents.on("did-fail-load", (_event, code, description) => {
+    log(`did-fail-load: ${code} ${description}`);
+  });
   window.on("closed", () => {
     window = null;
   });
 }
 
 app.whenReady().then(async () => {
+  log("app ready");
   startServer();
 
   const ready = await waitForServer();
+  log(`server ready: ${ready}`);
+
   if (!ready) {
-    const { dialog } = require("electron");
-    dialog.showErrorBox("启动失败", `本地服务没有起来：${URL}\n看终端里的报错。`);
+    dialog.showErrorBox(
+      "启动失败",
+      `本地服务没有起来：${URL}\n详见 desktop\\electron.log 和终端输出。`,
+    );
     app.quit();
     return;
   }
@@ -82,6 +141,9 @@ app.whenReady().then(async () => {
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+}).catch((error) => {
+  log(`whenReady failed: ${error && error.stack ? error.stack : error}`);
+  dialog.showErrorBox("启动失败", String(error));
 });
 
 app.on("window-all-closed", () => {
