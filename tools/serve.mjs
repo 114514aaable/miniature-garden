@@ -21,6 +21,8 @@ import { evaluate } from "../engine/core/src/event/evaluate.ts";
 import { Registry } from "../engine/core/src/event/registry.ts";
 import { createWorldView } from "../engine/core/src/event/view.ts";
 import { costOf, DEFAULT_CLOCK } from "../engine/core/src/rules/clock.ts";
+import { buildFrame, DEFAULT_STYLE } from "../systems/render/draw.ts";
+import { createProjector } from "../systems/render/project.ts";
 import { loadWorld } from "../engine/core/src/pack/load.ts";
 import { mergePacks } from "../engine/core/src/pack/merge.ts";
 import { orderPacks } from "../engine/core/src/pack/order.ts";
@@ -91,35 +93,88 @@ const skills = link.signatures
 
 let lastEvents = [];
 
+const TILE = 40;
+const VIEWPORT = { width: 320, height: 240 };
+
+/** 渲染器契约：只要它画得出来的东西。 */
+const projector = createProjector(
+  {
+    id: "render.canvas2d",
+    version: "0.1.0",
+    needs: {
+      spaces: "current",
+      camera: true,
+      entityFields: ["pos", "template"],
+      components: [
+        { name: "core.health", required: false },
+        { name: "core.container", required: false },
+      ],
+      ui: ["inventory", "skills", "messages"],
+    },
+  },
+  loaded.templates,
+);
+
+for (const warning of projector.warnings) {
+  console.warn(`[render] ${warning}`);
+}
+
+/** 玩家的状态：血量、背包。 */
+function playerHud() {
+  if (playerHandle === null) {
+    return { hp: 0, hpMax: 0, inventory: [] };
+  }
+
+  const view = createWorldView(loaded.spaces, {
+    tick: store.now(),
+    entities: { get: (handle) => store.entity(handle) },
+    terrains: loaded.terrains,
+    templates: loaded.templates,
+  });
+  const components = view.entity(playerHandle).components;
+
+  const health = components["core.health"];
+  const container = components["core.container"];
+  const hp = readNumber(health, "hp", readNumber(health, "max", 0));
+  const hpMax = readNumber(health, "max", 0);
+  const inventory = readNumberArray(container, "items");
+
+  return { hp, hpMax, inventory };
+}
+
+function readNumber(component, key, fallback) {
+  if (typeof component !== "object" || component === null || Array.isArray(component)) return fallback;
+  const value = component[key];
+  return typeof value === "number" ? value : fallback;
+}
+
+function readNumberArray(component, key) {
+  if (typeof component !== "object" || component === null || Array.isArray(component)) return [];
+  const value = component[key];
+  return Array.isArray(value) ? value.filter((item) => typeof item === "number") : [];
+}
+
 function snapshot(message) {
   const space = loaded.spaces[0];
-  const glyphAt = new Map();
+  const frame = projector.snapshot({
+    tick: store.now(),
+    spaces: loaded.spaces,
+    templates: loaded.templates,
+    entities: store.allEntities(),
+  });
 
-  for (let y = 0; y < space.height; y++) {
-    for (let x = 0; x < space.width; x++) {
-      const occupants = space.occupantsAt({ x, y });
-      if (occupants.length > 0) {
-        const template = store.entity(occupants[0]).template;
-        glyphAt.set(`${x},${y}`, GLYPH[template] ?? "?");
-      } else {
-        glyphAt.set(`${x},${y}`, TERRAIN_GLYPH[space.terrainAt({ x, y })] ?? "?");
-      }
-    }
-  }
-
-  const rows = [];
-  for (let y = 0; y < space.height; y++) {
-    let row = "";
-    for (let x = 0; x < space.width; x++) {
-      row += glyphAt.get(`${x},${y}`);
-    }
-    rows.push(row);
-  }
+  const commands = buildFrame(frame, {
+    tile: TILE,
+    viewport: VIEWPORT,
+    camera: { x: 0, y: 0 },
+    style: DEFAULT_STYLE,
+  });
 
   return {
-    width: space.width,
-    height: space.height,
-    rows,
+    commands,
+    viewport: VIEWPORT,
+    tile: TILE,
+    hud: playerHud(),
     tick: store.now(),
     hash: store.headHash,
     message,
@@ -288,8 +343,10 @@ const PAGE = `<!doctype html>
   h1 { font-size: 16px; font-weight: 600; color: #8ab4f8; margin: 0 0 4px; }
   .meta { color: #8b929e; margin-bottom: 16px; }
   .stage { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
-  #map { background: #0d0f13; padding: 12px; border-radius: 8px; line-height: 1.2; }
-  #map div { white-space: pre; letter-spacing: 2px; }
+  #map { display: block; background: #0d0f13; border-radius: 8px;
+         image-rendering: pixelated; width: 480px; height: 360px; }
+  #hud { margin-top: 10px; color: #9aa3b2; }
+  #hud b { color: #d7dae0; }
   .pad { display: grid; grid-template-columns: repeat(3, 56px); gap: 8px; }
   .pad button { height: 56px; font-size: 18px; background: #232733; color: #d7dae0;
                  border: 1px solid #333a4a; border-radius: 8px; cursor: pointer; }
@@ -307,7 +364,10 @@ const PAGE = `<!doctype html>
   <h1>新世界 · 调试台</h1>
   <div class="meta" id="meta"></div>
   <div class="stage">
-    <div id="map"></div>
+    <div>
+      <canvas id="map" width="320" height="240"></canvas>
+      <div id="hud"></div>
+    </div>
     <div>
       <div class="pad">
         <div class="empty"></div><button data-dir="w">↑</button><div class="empty"></div>
@@ -329,10 +389,13 @@ async function act(dir) {
   render(state);
 }
 function render(state) {
-  document.getElementById('map').innerHTML =
-    state.rows.map((row) => '<div>' + row.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</div>').join('');
+  drawCommands(state);
+  document.getElementById('hud').innerHTML =
+    'HP <b>' + state.hud.hp + '/' + state.hud.hpMax + '</b>' +
+    ' · 背包 <b>' + state.hud.inventory.length + '</b>' +
+    ' · tick <b>' + state.tick + '</b>';
   document.getElementById('meta').textContent =
-    state.packs.join(' + ') + ' · tick ' + state.tick + ' · 链头 ' + state.hash;
+    state.packs.join(' + ') + ' · 链头 ' + state.hash;
   document.getElementById('message').textContent = state.message;
   document.getElementById('events').textContent = state.events.join('\\n');
 
@@ -350,6 +413,27 @@ function render(state) {
     button.textContent = skill.name + ' (' + skill.cost + ')';
     button.addEventListener('click', () => useSkill(skill.tag));
     skills.appendChild(button);
+  }
+}
+
+/** 渲染器只做一件事：把服务端给的绘制指令画出来。 */
+function drawCommands(state) {
+  const canvas = document.getElementById('map');
+  canvas.width = state.viewport.width;
+  canvas.height = state.viewport.height;
+  const ctx = canvas.getContext('2d');
+
+  for (const command of state.commands) {
+    if (command.kind === 'rect') {
+      ctx.fillStyle = command.color;
+      ctx.fillRect(command.x, command.y, command.w, command.h);
+    } else if (command.kind === 'text') {
+      ctx.fillStyle = command.color;
+      ctx.font = command.size + 'px ui-monospace, Consolas, monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(command.text, command.x, command.y);
+    }
   }
 }
 async function useSkill(tag) {
