@@ -318,17 +318,38 @@ function snapshot(message) {
       tick: session.store.now(),
       playerReadyAt: session.playerReadyAt,
       upcoming: session.scheduler.upcoming(5),
-      actors: [...session.scheduler.upcoming(64)].map((due) => {
-        const entity = session.store.entity(due.handle);
-        return {
-          handle: due.handle,
-          template: entity.template,
-          readyAt: due.tick,
-          x: entity.pos === null ? null : entity.pos.x,
-          y: entity.pos === null ? null : entity.pos.y,
-        };
-      }),
+      actors: (() => {
+        const view = currentView();
+        return [...session.scheduler.upcoming(64)].map((due) => {
+          const entity = session.store.entity(due.handle);
+          const intent = view.entity(due.handle).components["core.intent"];
+          return {
+            handle: due.handle,
+            template: entity.template,
+            readyAt: due.tick,
+            x: entity.pos === null ? null : entity.pos.x,
+            y: entity.pos === null ? null : entity.pos.y,
+            intent: summarizeIntent(intent, entity),
+          };
+        });
+      })(),
     },
+  };
+}
+
+/** 把意图翻译成「打哪几格、什么时候」。没有意图返回 null。 */
+function summarizeIntent(intent, entity) {
+  if (typeof intent !== "object" || intent === null || Array.isArray(intent)) return null;
+  const tiles = Array.isArray(intent.tiles) ? intent.tiles : [];
+  if (tiles.length === 0 || entity.pos === null) return null;
+
+  return {
+    resolveAt: intent.resolveAt ?? 0,
+    damage: intent.damage ?? 0,
+    tiles: tiles.map((tile) => ({
+      x: entity.pos.x + (tile.dx ?? 0),
+      y: entity.pos.y + (tile.dy ?? 0),
+    })),
   };
 }
 
@@ -814,6 +835,10 @@ function formatDebug(debug) {
     lines.push(
       '  #' + actor.handle + ' ' + actor.template + ' @(' + actor.x + ',' + actor.y + ') 下次 ' + actor.readyAt,
     );
+    if (actor.intent) {
+      const tiles = actor.intent.tiles.map((t) => '(' + t.x + ',' + t.y + ')').join(' ');
+      lines.push('      意图：打 ' + tiles + '  伤害 ' + actor.intent.damage + '  结算 @' + actor.intent.resolveAt);
+    }
   }
   return lines.join('\\n');
 }
