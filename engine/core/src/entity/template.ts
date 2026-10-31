@@ -20,12 +20,15 @@
 
 import { type Schema, validate } from "../event/schema.ts";
 import { type JsonValue, canonicalize, hashText } from "../time.ts";
+import { mergeDeep } from "./merge.ts";
 
 const COMPONENT_PATTERN = /^[a-z][a-z0-9]*\.[a-z][a-z0-9_]*$/;
 const TEMPLATE_PATTERN = /^[a-z][a-z0-9_-]{1,47}$/;
 
 export interface Template {
   readonly id: string;
+  /** 继承哪个模板。组件会深合并到父模板上。 */
+  readonly extends?: string;
   readonly components: Readonly<Record<string, JsonValue>>;
 }
 
@@ -37,6 +40,8 @@ export interface TemplateLink {
 export class TemplateRegistry {
   private readonly schemas = new Map<string, Schema>();
   private readonly templates = new Map<string, Template>();
+  /** 解析并校验过的模板缓存。get 在实体查询里是热路径。 */
+  private readonly resolved = new Map<string, Template>();
 
   /** 登记一种组件。组件的名字就是它的身份，登记两次直接报错。 */
   defineComponent(name: string, schema: Schema): void {
@@ -52,8 +57,8 @@ export class TemplateRegistry {
   /**
    * 登记一个模板。会逐项校验：
    *   - 组件必须已登记；
-   *   - 组件数据必须符合 schema；
-   *   - 不允许出现模板里没登记的组件（防止打错字）。
+   *   - 没有继承的模板，组件数据当场按 schema 校验；
+   *   - 有继承的模板只校验字段名，数值合并之后再校验（它可能只写了差异）。
    */
   defineTemplate(template: Template): void {
     if (!TEMPLATE_PATTERN.test(template.id)) {
@@ -67,22 +72,77 @@ export class TemplateRegistry {
       if (schema === undefined) {
         throw new Error(`模板 "${template.id}" 用了未登记的组件："${name}"`);
       }
-      validate(value, schema, `$${template.id}.${name}`);
+      if (template.extends === undefined) {
+        validate(value, schema, `$${template.id}.${name}`);
+      }
     }
     this.templates.set(template.id, structuredClone(template));
+    this.resolved.clear();
   }
 
   has(id: string): boolean {
     return this.templates.has(id);
   }
 
-  /** 取模板；返回副本，外面改不到内部。 */
+  /** 取模板（已合并继承链）；返回副本，外面改不到内部。 */
   get(id: string): Template {
-    const template = this.templates.get(id);
-    if (template === undefined) {
-      throw new Error(`模板不存在：${id}`);
+    return structuredClone(this.resolve(id, []));
+  }
+
+  /**
+   * 沿继承链解析组件。
+   *
+   * 用「路径」而不是「深度」来报错：环的时候能说清是哪一条链断了。
+   * 结果会缓存——`get` 在实体查询里是热路径，不能每次都重算 + 重校验。
+   */
+  private resolve(id: string, path: readonly string[]): Template {
+    const cached = this.resolved.get(id);
+    if (cached !== undefined) {
+      return cached;
     }
-    return structuredClone(template);
+
+    if (path.includes(id)) {
+      throw new Error(`模板继承成环：${[...path, id].join(" → ")}`);
+    }
+    if (path.length > 8) {
+      throw new Error(`模板继承超过 8 层：${[...path, id].join(" → ")}`);
+    }
+
+    const raw = this.templates.get(id);
+    if (raw === undefined) {
+      const where = path.length > 0 ? `（被 ${path.join(" → ")} 引用）` : "";
+      throw new Error(`模板不存在：${id}${where}`);
+    }
+
+    const own = raw.components;
+    if (raw.extends === undefined) {
+      const template: Template = { id, components: structuredClone(own) };
+      this.checkResolved(template);
+      this.resolved.set(id, template);
+      return template;
+    }
+
+    const parent = this.resolve(raw.extends, [...path, id]);
+    const merged = mergeDeep(
+      parent.components as Record<string, JsonValue>,
+      own,
+    ) as Record<string, JsonValue>;
+
+    const template: Template = { id, extends: raw.extends, components: merged };
+    this.checkResolved(template);
+    this.resolved.set(id, template);
+    return template;
+  }
+
+  /** 合并之后的组件必须整体合法（这才是实体真正会用到的数据）。 */
+  private checkResolved(template: Template): void {
+    for (const [name, value] of Object.entries(template.components)) {
+      const schema = this.schemas.get(name);
+      if (schema === undefined) {
+        throw new Error(`模板 "${template.id}" 用了未登记的组件："${name}"`);
+      }
+      validate(value, schema, `$${template.id}.${name}`);
+    }
   }
 
   /** 模板声明了哪些组件。用来校验 patch 不会凭空造组件。 */
@@ -110,7 +170,10 @@ export class TemplateRegistry {
 
     const templates = [...this.templates.keys()]
       .sort()
-      .map((id) => ({ id, components: this.templates.get(id)?.components ?? {} }));
+      .map((id) => {
+        const resolved = this.resolve(id, []);
+        return { id, extends: resolved.extends ?? null, components: resolved.components };
+      });
 
     return {
       hash: hashText(canonicalize({ components, templates } as unknown as JsonValue)),

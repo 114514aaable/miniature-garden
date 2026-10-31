@@ -18,7 +18,7 @@ import { mergePacks } from "../engine/core/src/pack/merge.ts";
 import { orderPacks } from "../engine/core/src/pack/order.ts";
 import { Store } from "../engine/core/src/store.ts";
 
-const GLYPH = { pc: "@", npc_salt: "N", prop_crate: "o" };
+const GLYPH = { pc: "@", npc_salt: "N", prop_crate: "o", item_lamp: "i" };
 const TERRAIN_GLYPH = { 0: " ", 1: "#", 2: "~", 3: "." };
 
 function main(dirs) {
@@ -63,7 +63,10 @@ function draw(store, loaded, spawned) {
   for (const entry of spawned) {
     const handle = entry.data.handle;
     const entity = store.entity(handle);
-    byHandle.set(`${entity.pos.x},${entity.pos.y}`, GLYPH[entity.template] ?? "?");
+    const key = `${entity.pos.x},${entity.pos.y}`;
+    if (!byHandle.has(key)) {
+      byHandle.set(key, GLYPH[entity.template] ?? "?");
+    }
   }
 
   for (let y = 0; y < space.height; y++) {
