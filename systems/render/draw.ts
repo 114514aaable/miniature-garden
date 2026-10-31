@@ -40,6 +40,12 @@ export interface TerrainStyle {
 export interface EntityStyle {
   readonly glyph: string;
   readonly color: string;
+  /** 图层：小的先画。物品 0、角色 1，这样角色不会被道具盖住。 */
+  readonly layer?: number;
+  /** 画多大（相对格子）。省略 = 0.7。 */
+  readonly scale?: number;
+  /** 缩到右下角，避免和角色抢中心。 */
+  readonly corner?: boolean;
   /** 有贴图就用贴图，否则用 glyph。 */
   readonly sprite?: { readonly sheet: string; readonly index: number };
 }
@@ -71,10 +77,10 @@ export const DEFAULT_STYLE: RenderStyle = {
     3: { fill: "#171a21" },
   },
   templates: {
-    pc: { glyph: "@", color: "#8ab4f8" },
-    npc_salt: { glyph: "N", color: "#e06c75" },
-    prop_crate: { glyph: "o", color: "#c9a227" },
-    item_lamp: { glyph: "i", color: "#98c379" },
+    pc: { glyph: "@", color: "#8ab4f8", layer: 1 },
+    npc_salt: { glyph: "N", color: "#e06c75", layer: 1 },
+    prop_crate: { glyph: "o", color: "#c9a227", layer: 1 },
+    item_lamp: { glyph: "i", color: "#98c379", layer: 0, scale: 0.45, corner: true },
   },
   fallback: { glyph: "?", color: "#d7dae0" },
 };
@@ -132,7 +138,15 @@ export function buildFrame(snapshot: FrameSnapshot, spec: FrameSpec): readonly D
 
   const visibleEntities = snapshot.entities
     .filter((entity) => entity.x !== undefined && entity.y !== undefined)
-    .sort((a, b) => (a.y as number) - (b.y as number) || (a.x as number) - (b.x as number));
+    .sort((a, b) => {
+      const layerA = spec.style.templates[a.template ?? ""]?.layer ?? 0;
+      const layerB = spec.style.templates[b.template ?? ""]?.layer ?? 0;
+      return (
+        layerA - layerB ||
+        (a.y as number) - (b.y as number) ||
+        (a.x as number) - (b.x as number)
+      );
+    });
 
   for (const entity of visibleEntities) {
     const screenX = originX + (entity.x as number) * spec.tile;
@@ -142,13 +156,14 @@ export function buildFrame(snapshot: FrameSnapshot, spec: FrameSpec): readonly D
     }
 
     const style = spec.style.templates[entity.template ?? ""] ?? spec.style.fallback;
+    const size = Math.round(spec.tile * (style.scale ?? 0.7));
     commands.push({
       kind: "text",
-      x: round(screenX + spec.tile / 2),
-      y: round(screenY + spec.tile / 2),
+      x: round(screenX + (style.corner === true ? spec.tile * 0.72 : spec.tile / 2)),
+      y: round(screenY + (style.corner === true ? spec.tile * 0.72 : spec.tile / 2)),
       text: style.glyph,
       color: style.color,
-      size: Math.round(spec.tile * 0.7),
+      size,
     });
   }
 
