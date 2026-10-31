@@ -31,6 +31,7 @@ import { moveHandler, moveSignature } from "../engine/core/src/rules/move.ts";
 import { dropHandler, dropSignature, takeHandler, takeSignature } from "../engine/core/src/rules/inventory.ts";
 import { attackHandler, attackSignature } from "../engine/core/src/rules/attack.ts";
 import { enemyTurnHandler, enemyTurnSignature } from "../engine/core/src/rules/ai.ts";
+import { waitHandler, waitSignature } from "../engine/core/src/rules/wait.ts";
 import {
   strikeHandler,
   strikeSignature,
@@ -170,6 +171,7 @@ function buildSession(ordered) {
   registry.define(enemyTurnSignature);
   registry.define(windupSignature);
   registry.define(strikeSignature);
+  registry.define(waitSignature);
   const link = registry.link();
 
   const handlers = new Map([
@@ -180,6 +182,7 @@ function buildSession(ordered) {
     [link.tags.get("core.enemy_turn"), enemyTurnHandler],
     [link.tags.get("core.enemy_windup"), windupHandler],
     [link.tags.get("core.enemy_strike"), strikeHandler],
+    [link.tags.get("core.wait"), waitHandler],
   ]);
 
   const skills = link.signatures
@@ -457,7 +460,8 @@ function run(tag, params, costKey) {
   }
 
   // 动作生效，然后世界推进到玩家下次能行动为止（敌人会在这段里行动）。
-  const cost = effects.length > 0 ? costOf(DEFAULT_CLOCK, costKey, speedOfPlayer()) : 0;
+  // 注意：成本不看「有没有效果」——等待就是不产生效果但照样花时间。
+  const cost = costOf(DEFAULT_CLOCK, costKey, speedOfPlayer());
   session.playerReadyAt = session.store.now() + cost;
   session.lastEvents = [];
   advanceTo(session.playerReadyAt);
