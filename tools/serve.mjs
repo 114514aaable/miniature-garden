@@ -304,6 +304,21 @@ function snapshot(message) {
     })),
     events: session.lastEvents.map((entry) => `#${entry.id} ${entry.kind} ${JSON.stringify(entry.data)}`),
     devlog: session.devlog.tail(200).map(formatLine),
+    debug: {
+      tick: session.store.now(),
+      playerReadyAt: session.playerReadyAt,
+      upcoming: session.scheduler.upcoming(5),
+      actors: [...session.scheduler.upcoming(64)].map((due) => {
+        const entity = session.store.entity(due.handle);
+        return {
+          handle: due.handle,
+          template: entity.template,
+          readyAt: due.tick,
+          x: entity.pos === null ? null : entity.pos.x,
+          y: entity.pos === null ? null : entity.pos.y,
+        };
+      }),
+    },
   };
 }
 
@@ -711,6 +726,7 @@ const PAGE = `<!doctype html>
         <div id="events"></div>
         <details id="devpanel">
           <summary>开发日志</summary>
+          <pre id="debug"></pre>
           <pre id="devlog"></pre>
         </details>
       </div>
@@ -779,6 +795,19 @@ function showGame(state) {
   render(state);
 }
 
+function formatDebug(debug) {
+  if (!debug) return '';
+  const lines = [];
+  lines.push('tick ' + debug.tick + '   玩家下次可动 ' + debug.playerReadyAt);
+  lines.push('调度顺序：' + debug.upcoming.map((d) => '#' + d.handle + '@' + d.tick).join('  '));
+  for (const actor of debug.actors) {
+    lines.push(
+      '  #' + actor.handle + ' ' + actor.template + ' @(' + actor.x + ',' + actor.y + ') 下次 ' + actor.readyAt,
+    );
+  }
+  return lines.join('\\n');
+}
+
 function render(state) {
   if (renderer === null) {
     renderer = attach(document.getElementById('map'), { tile: state.tile });
@@ -791,6 +820,7 @@ function render(state) {
   document.getElementById('message').textContent = state.message;
   document.getElementById('events').textContent = state.events.join('\\n');
   document.getElementById('devlog').textContent = (state.devlog || []).join('\\n');
+  document.getElementById('debug').textContent = formatDebug(state.debug);
 
   const skills = document.getElementById('skills');
   skills.innerHTML = '';

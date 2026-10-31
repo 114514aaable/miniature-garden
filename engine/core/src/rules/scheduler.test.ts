@@ -103,3 +103,21 @@ test("移除的单位不再出现", () => {
 test("空调度器返回 null", () => {
   assert.equal(new Scheduler().take(), null);
 });
+
+test("upcoming 只读：列出接下来几个，不改变状态", () => {
+  const s = new Scheduler([
+    { handle: 9, readyAt: 3 },
+    { handle: 2, readyAt: 1 },
+    { handle: 5, readyAt: 1 },
+  ]);
+
+  assert.deepEqual(s.upcoming(3), [
+    { tick: 1, handle: 2 },
+    { tick: 1, handle: 5 },
+    { tick: 3, handle: 9 },
+  ]);
+
+  // 读完之后 peek 还是同一个
+  assert.deepEqual(s.peek(), { tick: 1, handle: 2 });
+  assert.equal(s.now(), 0, "读不改时钟");
+});

@@ -62,20 +62,22 @@ export class Scheduler {
 
   /** 下一个该行动的：tick 最小的；平局按 handle。 */
   peek(): Due | null {
-    let best: Due | null = null;
+    const [first] = this.upcoming(1);
+    return first ?? null;
+  }
 
+  /**
+   * 接下来 n 个行动者（只读，不改状态）。
+   *
+   * 调试叠层和以后的「行动顺序条」都读它——同一份数据，不用两套。
+   */
+  upcoming(limit = 5): Due[] {
+    const list: Due[] = [];
     for (const [handle, at] of this.readyAt) {
-      const tick = Math.max(at, this.tick);
-      if (
-        best === null ||
-        tick < best.tick ||
-        (tick === best.tick && handle < best.handle)
-      ) {
-        best = { tick, handle };
-      }
+      list.push({ tick: Math.max(at, this.tick), handle });
     }
-
-    return best;
+    list.sort((a, b) => a.tick - b.tick || a.handle - b.handle);
+    return list.slice(0, limit);
   }
 
   /**
