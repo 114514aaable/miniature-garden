@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 
 import { type FrameSnapshot } from "./project.ts";
 import { buildFrame, DEFAULT_STYLE, type FrameSpec } from "./draw.ts";
+import { parseAtlas } from "./atlas.ts";
 
 function snapshot(overrides: Partial<FrameSnapshot> = {}): FrameSnapshot {
   return {
@@ -82,4 +83,48 @@ test("未知模板用兜底字符", () => {
 
 test("同样的输入产出同样的指令（可复现）", () => {
   assert.deepEqual(buildFrame(snapshot(), spec()), buildFrame(snapshot(), spec()));
+});
+
+test("有图集且组件点了名：画贴图而不是字符", () => {
+  const atlas = parseAtlas({
+    frames: {
+      "Items/Lamp.png": {
+        frame: { x: 0, y: 0, w: 16, h: 16 },
+        trimmed: false,
+        sourceSize: { w: 16, h: 16 },
+      },
+    },
+    meta: { image: "atlas.png" },
+  });
+
+  const withSprite = snapshot({
+    entities: [
+      { handle: 0, x: 1, y: 0, template: "item_lamp", components: {}, sprite: { frame: "Items/Lamp.png" } },
+    ],
+  });
+
+  const commands = buildFrame(withSprite, spec({ atlas }));
+  const sprite = commands.find((command) => command.kind === "sprite");
+
+  assert.ok(sprite !== undefined);
+  assert.equal(sprite.kind === "sprite" ? sprite.image : "", "atlas.png");
+  assert.equal(sprite.kind === "sprite" ? sprite.sw : 0, 16);
+  assert.equal(sprite.kind === "sprite" ? sprite.fallback.text : "", "i", "图没加载出来时退回字符");
+});
+
+test("图集里没有这一帧：退回字符", () => {
+  const atlas = parseAtlas({
+    frames: {},
+    meta: { image: "atlas.png" },
+  });
+
+  const commands = buildFrame(
+    snapshot({
+      entities: [{ handle: 0, x: 1, y: 0, template: "item_lamp", components: {}, sprite: { frame: "nope.png" } }],
+    }),
+    spec({ atlas }),
+  );
+
+  assert.equal(commands.some((command) => command.kind === "sprite"), false);
+  assert.ok(commands.some((command) => command.kind === "text" && command.text === "i"));
 });

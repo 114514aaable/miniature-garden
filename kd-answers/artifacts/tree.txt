@@ -1,0 +1,67 @@
+﻿KinkiestDungeon-5.5  (two levels; [files] = files at that level)
+
+  .editorconfig
+  .eslintrc.json
+  .gitattributes
+  .gitignore
+  index.html
+  jsconfig.json
+  package-lock.json
+  package.json
+  README.md
+  style.css
+  tsconfig.json
+  .github/  [1 files]
+      scripts/
+      workflows/
+  Backgrounds/  [4 files]
+  Data/  [89 files]
+  DisplacementMaps/  [314 files]
+  Fonts/  [1 files]
+      3270/
+      Inconsolata/
+      Iosevka/
+      Lekton/
+      Nanum/
+      Roboto/
+      Saira Stencil One/
+      Satisfy/
+      System/
+  Game/  [99 files]
+      Audio/
+      Aura/
+      Buffs/
+      Bullets/
+      Class/
+      Conditions/
+      CustomStruggle/
+      DamageTypes/
+      EffectTiles/
+      Enemies/
+      EnemiesBound/
+      FloorGeneric/
+      ... +12 more dirs
+  Models/  [0 files]
+      Armbinder/
+      ArmorChain/
+      ArmorPlate/
+      Bandit/
+      Belts/
+      Blindfold/
+      Body/
+      BodyDoll/
+      BodySmooth/
+      Bra/
+      Bubble/
+      Bunny/
+      ... +146 more dirs
+  Mods/  [2 files]
+      example_enemy/
+      example_unlimitedbed/
+  Music/  [31 files]
+  out/  [1 files]
+  Screens/  [0 files]
+      MiniGame/
+  Scripts/  [15 files]
+      lib/
+  tools/  [11 files]

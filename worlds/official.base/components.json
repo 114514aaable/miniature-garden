@@ -73,5 +73,12 @@
   {
     "id": "core.solid",
     "schema": { "t": "object", "fields": {} }
+  },
+  {
+    "id": "core.sprite",
+    "schema": {
+      "t": "object",
+      "fields": { "sheet": { "t": "str" }, "frame": { "t": "str" } }
+    }
   }
 ]

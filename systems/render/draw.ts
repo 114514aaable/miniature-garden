@@ -11,6 +11,7 @@
  */
 
 import { type FrameSnapshot } from "./project.ts";
+import { type Atlas, frameOf } from "./atlas.ts";
 
 export type DrawCommand =
   | { readonly kind: "rect"; readonly x: number; readonly y: number; readonly w: number; readonly h: number; readonly color: string }
@@ -26,9 +27,15 @@ export type DrawCommand =
       readonly kind: "sprite";
       readonly x: number;
       readonly y: number;
-      readonly size: number;
-      readonly sheet: string;
-      readonly index: number;
+      readonly w: number;
+      readonly h: number;
+      readonly image: string;
+      readonly sx: number;
+      readonly sy: number;
+      readonly sw: number;
+      readonly sh: number;
+      /** 图片还没加载出来时画的字符。 */
+      readonly fallback: { readonly text: string; readonly color: string; readonly size: number };
     };
 
 export interface TerrainStyle {
@@ -65,6 +72,8 @@ export interface FrameSpec {
   /** 镜头左上角在格子坐标系里的浮点位置（用于插值）。 */
   readonly camera: { readonly x: number; readonly y: number };
   readonly style: RenderStyle;
+  /** 可选图集；没有就全用字符。 */
+  readonly atlas?: Atlas;
 }
 
 export const DEFAULT_STYLE: RenderStyle = {
@@ -157,10 +166,35 @@ export function buildFrame(snapshot: FrameSnapshot, spec: FrameSpec): readonly D
 
     const style = spec.style.templates[entity.template ?? ""] ?? spec.style.fallback;
     const size = Math.round(spec.tile * (style.scale ?? 0.7));
+    const centerX = round(screenX + (style.corner === true ? spec.tile * 0.72 : spec.tile / 2));
+    const centerY = round(screenY + (style.corner === true ? spec.tile * 0.72 : spec.tile / 2));
+
+    // 有图集、组件里也点了名 → 画贴图；否则退回字符。
+    const sprite = entity.sprite as { frame?: unknown } | undefined;
+    if (spec.atlas !== undefined && typeof sprite?.frame === "string") {
+      const frame = frameOf(spec.atlas, sprite.frame);
+      if (frame !== undefined) {
+        commands.push({
+          kind: "sprite",
+          x: round(screenX),
+          y: round(screenY),
+          w: spec.tile,
+          h: spec.tile,
+          image: spec.atlas.image,
+          sx: frame.x,
+          sy: frame.y,
+          sw: frame.w,
+          sh: frame.h,
+          fallback: { text: style.glyph, color: style.color, size },
+        });
+        continue;
+      }
+    }
+
     commands.push({
       kind: "text",
-      x: round(screenX + (style.corner === true ? spec.tile * 0.72 : spec.tile / 2)),
-      y: round(screenY + (style.corner === true ? spec.tile * 0.72 : spec.tile / 2)),
+      x: centerX,
+      y: centerY,
       text: style.glyph,
       color: style.color,
       size,

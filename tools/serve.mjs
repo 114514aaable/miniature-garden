@@ -439,6 +439,12 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    if (request.method === "POST" && request.url === "/api/leave") {
+      session = null;
+      sendJson(response, { launcher: true, ...scanWorlds() });
+      return;
+    }
+
     if (request.method === "POST" && request.url === "/api/start") {
       const { id } = await readBody(request);
       try {
@@ -536,6 +542,10 @@ const PAGE = `<!doctype html>
   </div>
 
   <div id="game" hidden>
+    <div style="margin-bottom:10px">
+      <button id="back" style="padding:4px 10px;background:#232733;color:#d7dae0;
+              border:1px solid #333a4a;border-radius:6px;cursor:pointer">← 返回</button>
+    </div>
     <div class="stage">
       <div>
         <canvas id="map" width="320" height="240"></canvas>
@@ -666,6 +676,9 @@ async function useSkill(tag) {
 
 document.querySelectorAll('button[data-dir]').forEach((button) => {
   button.addEventListener('click', () => act(button.dataset.dir));
+});
+document.getElementById('back').addEventListener('click', async () => {
+  renderLauncher(await api('/api/leave', {}));
 });
 window.addEventListener('keydown', (event) => {
   if (!document.getElementById('game').hidden && ['w','a','s','d','e','r'].includes(event.key)) {
