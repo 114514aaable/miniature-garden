@@ -254,7 +254,7 @@ function currentView() {
 
 function playerHud() {
   if (session.playerHandle === null) {
-    return { hp: 0, hpMax: 0, inventory: [] };
+    return { hp: 0, hpMax: 0, inventory: [], readyAt: 0, tick: 0 };
   }
   const components = currentView().entity(session.playerHandle).components;
 
@@ -265,6 +265,8 @@ function playerHud() {
     hp: readNumber(health, "hp", readNumber(health, "max", 0)),
     hpMax: readNumber(health, "max", 0),
     inventory: readNumberArray(container, "items"),
+    readyAt: session.playerReadyAt,
+    tick: session.store.now(),
   };
 }
 
@@ -855,7 +857,10 @@ function render(state) {
   document.getElementById('hud').innerHTML =
     'HP <b>' + state.hud.hp + '/' + state.hud.hpMax + '</b>' +
     ' · 背包 <b>' + state.hud.inventory.length + '</b>' +
-    ' · tick <b>' + state.tick + '</b>';
+    ' · tick <b>' + state.tick + '</b>' +
+    (state.hud.readyAt > state.tick
+      ? ' · <span style="color:#f0c674">恢复中 还要 ' + (state.hud.readyAt - state.tick) + ' 回合</span>'
+      : ' · <span style="color:#98c379">可以行动</span>');
   document.getElementById('message').textContent = state.message;
   document.getElementById('events').textContent = state.events.join('\\n');
   document.getElementById('devlog').textContent = (state.devlog || []).join('\\n');
