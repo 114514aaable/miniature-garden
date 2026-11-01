@@ -1,5 +1,15 @@
 {
   "start": { "space": "harbor", "x": 1, "y": 1 },
-  "rules": ["core.move"],
+  "rules": [
+    "core.move",
+    "core.take",
+    "core.drop",
+    "core.attack",
+    "core.wait",
+    "core.aim",
+    "core.enemy_turn",
+    "core.enemy_windup",
+    "core.enemy_strike"
+  ],
   "onConflict": "error"
 }

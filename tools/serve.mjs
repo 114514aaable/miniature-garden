@@ -43,6 +43,7 @@ import { Scheduler } from "../engine/core/src/rules/scheduler.ts";
 import { readFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
 import { createProjector } from "../systems/render/project.ts";
+import { buildGraph } from "../engine/core/src/pack/graph.ts";
 import { DevLog, formatLine } from "../systems/log/devlog.ts";
 
 const PORT = Number(process.env.PORT ?? 8787);
@@ -690,6 +691,25 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    if (request.method === "POST" && request.url === "/api/graph") {
+      const { id } = await readBody(request);
+      try {
+        const { byId } = collectPacks();
+        const ordered = closureOf(String(id), byId);
+        const merged = mergePacks(ordered);
+        const worldDef = [...merged.definitions.values()].find((def) => def.kind === "world");
+        const rules = [];
+        if (worldDef && typeof worldDef.data.rules === "object" && Array.isArray(worldDef.data.rules)) {
+          rules.push(...worldDef.data.rules.filter((rule) => typeof rule === "string"));
+        }
+        const graph = buildGraph(merged, rules);
+        sendJson(response, { ok: true, nodes: graph.nodes });
+      } catch (error) {
+        sendJson(response, { ok: false, error: messageOf(error) });
+      }
+      return;
+    }
+
     if (request.method === "POST" && request.url === "/api/aim") {
       const { tag, x, y } = await readBody(request);
       sendJson(response, aimAt(String(tag), Number(x), Number(y)));
@@ -754,6 +774,9 @@ const PAGE = `<!doctype html>
   .skills button:hover { background: #2c3242; }
   .skills .hint { color: #7f8794; font-size: 12px; align-self: center; }
   #events { margin-top: 16px; color: #7f8794; font-size: 12px; max-height: 160px; overflow: auto; }
+  #graph { margin-top: 16px; padding: 12px; max-height: 420px; overflow: auto; color: #9aa3b2;
+           background: #0f1116; border: 1px solid #232733; border-radius: 8px; font-size: 12px;
+           white-space: pre; display: none; }
   #devpanel { margin-top: 12px; color: #7f8794; font-size: 12px; }
   #devpanel summary { cursor: pointer; }
   #devlog { margin: 8px 0 0; padding: 8px; max-height: 220px; overflow: auto; color: #8b929e;
@@ -776,6 +799,7 @@ const PAGE = `<!doctype html>
   <div id="launcher">
     <div id="worlds"></div>
     <div id="errors"></div>
+    <pre id="graph"></pre>
   </div>
 
   <div id="game" hidden>
@@ -839,7 +863,16 @@ function renderLauncher(state) {
     button.textContent = '开始';
     button.disabled = !world.ok;
     button.addEventListener('click', () => start(world.id));
-    row.appendChild(button);
+
+    const graphButton = document.createElement('button');
+    graphButton.textContent = '结构';
+    graphButton.style.marginLeft = '8px';
+    graphButton.addEventListener('click', () => showGraph(world.id));
+
+    const actions = document.createElement('div');
+    actions.appendChild(button);
+    actions.appendChild(graphButton);
+    row.appendChild(actions);
     list.appendChild(row);
   }
 
@@ -860,6 +893,41 @@ async function start(id) {
     return;
   }
   showGame(state);
+}
+
+const KIND_ORDER = [
+  ['world', '世界'],
+  ['rule', '规则'],
+  ['component', '组件'],
+  ['template', '模板'],
+  ['terrain', '地形'],
+  ['space', '空间'],
+  ['entity', '实体'],
+];
+
+async function showGraph(id) {
+  const box = document.getElementById('graph');
+  box.style.display = 'block';
+  box.textContent = '读取结构…';
+
+  const result = await api('/api/graph', { id });
+  if (!result.ok) {
+    box.textContent = '读不出来：' + result.error;
+    return;
+  }
+
+  const lines = [];
+  for (const [kind, title] of KIND_ORDER) {
+    const nodes = result.nodes.filter((node) => node.kind === kind).sort((a, b) => (a.label < b.label ? -1 : 1));
+    if (nodes.length === 0) continue;
+    lines.push('── ' + title + ' (' + nodes.length + ') ──');
+    for (const node of nodes) {
+      const used = node.usedBy.length === 0 ? '—' : '被 ' + node.usedBy.length + ' 处引用';
+      lines.push('  ' + node.label.padEnd(22, ' ') + ' ' + node.origin.padEnd(18, ' ') + used);
+    }
+    lines.push('');
+  }
+  box.textContent = lines.join('\n');
 }
 
 function showGame(state) {
