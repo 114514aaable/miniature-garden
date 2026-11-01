@@ -661,6 +661,8 @@ function saveGame() {
   if (session === null) return { ok: false, error: "没有进行中的世界" };
   const data = {
     version: 1,
+    world: session.world ?? null,
+    savedAt: new Date().toISOString(),
     packs: session.packs,
     engine: session.store.exportState(),
     playerHandle: session.playerHandle,
@@ -676,8 +678,6 @@ function saveGame() {
 
 /** 读档：把世界恢复到存档那一刻。 */
 function loadGame() {
-  if (session === null) return { ok: false, error: "没有进行中的世界" };
-
   let data;
   try {
     data = JSON.parse(readFileSync(SAVE_FILE, "utf8"));
@@ -685,6 +685,33 @@ function loadGame() {
     return { ok: false, error: "还没有存档" };
   }
 
+  if (typeof data.world !== "string" || !Array.isArray(data.packs)) {
+    return { ok: false, error: "存档缺少世界信息，可能是旧格式" };
+  }
+
+  let ordered;
+  try {
+    const { byId } = collectPacks();
+    ordered = closureOf(data.world, byId);
+  } catch (error) {
+    return { ok: false, error: "存档要的世界包找不到了：" + messageOf(error) };
+  }
+
+  const packs = ordered.map((content) => content.pack.id + "@" + content.pack.version);
+  const missing = data.packs.filter((pack) => !packs.includes(pack));
+  const extra = packs.filter((pack) => !data.packs.includes(pack));
+  if (missing.length > 0 || extra.length > 0) {
+    return {
+      ok: false,
+      error: "存档的包和现在的不一致，拒绝读取（防止读出悬空引用）",
+      missing,
+      extra,
+    };
+  }
+
+  // 存档自带规则集：按它的 disabled 重建，再导入状态。
+  session = buildSession(ordered, new Set(data.disabled ?? []), data.seed ?? 0);
+  session.world = data.world;
   session.store.importState(data.engine);
   session.playerHandle = data.playerHandle;
   session.seed = data.seed ?? 0;
@@ -694,9 +721,10 @@ function loadGame() {
     session.store.now(),
   );
   session.lastEvents = [];
-  session.devlog.action(session.store.now(), "读档", { tick: session.store.now() });
+  session.devlog.action(session.store.now(), "读档", { tick: session.store.now(), world: data.world });
   return { ok: true, message: "已读档（tick " + session.store.now() + "）" };
 }
+
 /** 技能显示名从链接表里取，不在代码里写死。 */
 function skillName(tag) {
   const sym = session.link.tags.get(tag);
@@ -795,6 +823,7 @@ const server = createServer(async (request, response) => {
       try {
         const { byId } = collectPacks();
         session = buildSession(closureOf(String(id), byId), disabled, Number(seed) || 0);
+        session.world = String(id);
         session.disabled = [...disabled];
         sendJson(response, snapshot("世界已载入"));
       } catch (error) {
