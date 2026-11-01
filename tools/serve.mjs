@@ -296,6 +296,7 @@ function snapshot(message) {
   return {
     launcher: false,
     tile: TILE,
+    playerHandle: session.playerHandle,
     snapshot: {
       tick: frame.tick,
       // 地形转成普通数组：JSON 里 Int32Array 会变成奇怪的对象

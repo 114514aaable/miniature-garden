@@ -249,39 +249,59 @@ api('/api/worlds').then((state) => {
 </script>
 </html>`;
 
-/** 游戏：canvas + HUD + 技能。世界由 ?world= 指定。 */
+/** 游戏：全屏地图 + HUD 叠加层。世界由 ?world= 指定。 */
 export const GAME_PAGE = `<!doctype html>
 <html lang="zh-CN">
 <meta charset="utf-8">
 <title>新世界</title>
 <style>${CSS}</style>
-<main>
+<style>
+  body { overflow: hidden; }
+  #map { position: fixed; inset: 0; width: 100vw; height: 100vh; border-radius: 0; }
+  #hud { position: fixed; inset: 0; pointer-events: none; }
+  #hud > * { pointer-events: auto; }
+  #topbar { position: absolute; top: 10px; left: 10px; display: flex; gap: 8px; align-items: center;
+            padding: 4px 8px; background: rgba(16,19,26,0.75); border-radius: 8px; }
+  #status { position: absolute; top: 10px; right: 10px; padding: 6px 10px;
+            background: rgba(16,19,26,0.75); border-radius: 8px; }
+  #skills { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 6px; margin: 0; }
+  #skills button { min-width: 64px; height: 52px; }
+  #skills .hint { display: none; }
+  #message { position: absolute; bottom: 78px; left: 50%; transform: translateX(-50%);
+             margin: 0; padding: 4px 10px; background: rgba(16,19,26,0.7); border-radius: 6px;
+             white-space: nowrap; }
+  #logbox { position: absolute; bottom: 14px; left: 10px; width: 340px; max-height: 180px;
+            overflow: hidden; padding: 6px 10px; background: rgba(16,19,26,0.7);
+            border-radius: 8px; color: #9aa3b2; font-size: 12px; }
+  #devpanel { position: absolute; top: 10px; right: 10px; max-width: 460px; }
+  #devpanel[open] { background: rgba(16,19,26,0.92); padding: 8px 10px; border-radius: 8px; }
+</style>
+
+<canvas id="map"></canvas>
+
+<div id="hud">
   <div id="errbar" hidden></div>
-  <div class="topbar">
+
+  <div id="topbar">
     <a href="/">← 启动器</a>
-    <span><button id="savebtn">存档</button> <button id="loadbtn">读档</button> <span class="meta" id="meta"></span></span>
+    <button id="savebtn">存档</button>
+    <button id="loadbtn">读档</button>
+    <span class="meta" id="meta" style="margin:0"></span>
   </div>
 
-  <div class="stage">
-    <div>
-      <canvas id="map" width="320" height="240"></canvas>
-      <div id="hud"></div>
-    </div>
-    <div>
-      <div class="pad">
-        <div class="empty"></div><button data-dir="w">↑</button><div class="empty"></div>
-        <button data-dir="a">←</button><button data-dir="s">↓</button><button data-dir="d">→</button>
-      </div>
-      <div id="skills" class="skills"></div>
-      <div id="message"></div>
-      <details id="devpanel">
-        <summary>开发日志</summary>
-        <pre id="debug"></pre>
-        <pre id="devlog"></pre>
-      </details>
-    </div>
-  </div>
-</main>
+  <div id="status"></div>
+
+  <div id="skills"></div>
+  <div id="message"></div>
+  <div id="logbox"></div>
+
+  <details id="devpanel">
+    <summary>开发日志</summary>
+    <pre id="debug"></pre>
+    <pre id="devlog"></pre>
+  </details>
+</div>
 
 <script type="module">
 import { attach } from '/web/systems/render/browser.js';
@@ -291,9 +311,10 @@ ${ERRORS}
 const params = new URLSearchParams(location.search);
 const worldId = params.get('world');
 const off = (params.get('off') || '').split(',').filter(Boolean);
+
 let renderer = null;
-let lastTile = 40;
 let aimTimer = 0;
+let tile = 32;
 
 function formatDebug(debug) {
   if (!debug) return '';
@@ -307,41 +328,36 @@ function formatDebug(debug) {
       lines.push('      意图：打 ' + tiles + '  伤害 ' + actor.intent.damage + '  结算 @' + actor.intent.resolveAt);
     }
   }
-  return lines.join('\\n');
+  return lines.join('\n');
 }
 
 function render(state) {
   if (renderer === null) {
     renderer = attach(document.getElementById('map'), { tile: state.tile });
   }
-  lastTile = state.tile;
+  tile = state.tile;
   renderer.setState(state);
 
-  document.getElementById('hud').innerHTML =
+  document.getElementById('status').innerHTML =
     'HP <b>' + state.hud.hp + '/' + state.hud.hpMax + '</b>' +
     ' · 背包 <b>' + state.hud.inventory.length + '</b>' +
-    ' · tick <b>' + state.tick + '</b>' +
+    ' · tick <b>' + state.tick + '</b><br>' +
     (state.hud.readyAt > state.tick
-      ? ' · <span style="color:#f0c674">恢复中 还要 ' + (state.hud.readyAt - state.tick) + ' 回合</span>'
-      : ' · <span style="color:#98c379">可以行动</span>');
+      ? '<span style="color:#f0c674">恢复中 还要 ' + (state.hud.readyAt - state.tick) + ' 回合</span>'
+      : '<span style="color:#98c379">可以行动</span>');
 
   document.getElementById('meta').textContent = state.packs.join(' + ');
   document.getElementById('message').textContent = state.message;
-  document.getElementById('devlog').textContent = (state.devlog || []).join('\\n');
+  document.getElementById('logbox').textContent = (state.events || []).slice(-5).join('\n');
+  document.getElementById('devlog').textContent = (state.devlog || []).join('\n');
   document.getElementById('debug').textContent = formatDebug(state.debug);
 
   const skills = document.getElementById('skills');
   skills.textContent = '';
   for (const skill of state.skills) {
-    if (skill.tag === 'core.move') {
-      const hint = document.createElement('span');
-      hint.className = 'hint';
-      hint.textContent = '移动：方向键';
-      skills.appendChild(hint);
-      continue;
-    }
+    if (skill.tag === 'core.move') continue;
     const button = document.createElement('button');
-    button.textContent = skill.name + ' (' + skill.cost + ')';
+    button.textContent = skill.name + ' ' + skill.cost;
     button.addEventListener('click', () => useSkill(skill.tag));
     skills.appendChild(button);
   }
@@ -356,12 +372,9 @@ async function useSkill(tag, x, y) {
 }
 
 function cellAt(event) {
-  const canvas = event.currentTarget;
+  const canvas = document.getElementById('map');
   const rect = canvas.getBoundingClientRect();
-  return {
-    x: Math.floor(((event.clientX - rect.left) / rect.width) * (canvas.width / lastTile)),
-    y: Math.floor(((event.clientY - rect.top) / rect.height) * (canvas.height / lastTile)),
-  };
+  return renderer.cellAt(event.clientX - rect.left, event.clientY - rect.top);
 }
 
 document.getElementById('map').addEventListener('mousemove', (event) => {
@@ -386,10 +399,6 @@ document.getElementById('map').addEventListener('click', (event) => {
 
 document.getElementById('savebtn').addEventListener('click', async () => { render(await api('/api/save', {})); });
 document.getElementById('loadbtn').addEventListener('click', async () => { render(await api('/api/load', {})); });
-
-document.querySelectorAll('button[data-dir]').forEach((button) => {
-  button.addEventListener('click', () => act(button.dataset.dir));
-});
 
 window.addEventListener('keydown', (event) => {
   if (['w', 'a', 's', 'd', 'e', 'r'].includes(event.key)) act(event.key);
