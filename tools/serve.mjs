@@ -170,7 +170,7 @@ const RULE_TABLE = [
   { signature: aimSignature, handler: aimHandler },
 ];
 
-function buildSession(ordered, disabled = new Set()) {
+function buildSession(ordered, disabled = new Set(), seed = 0) {
   const merged = mergePacks(ordered);
   const loaded = loadWorld(merged);
 
@@ -254,6 +254,7 @@ function buildSession(ordered, disabled = new Set()) {
     scheduler,
     playerReadyAt: store.now(),
     packs: ordered.map((content) => `${content.pack.id}@${content.pack.version}`),
+    seed,
     lastEvents: [],
     devlog: new DevLog(),
   };
@@ -312,6 +313,7 @@ function snapshot(message) {
     launcher: false,
     tile: TILE,
     playerHandle: session.playerHandle,
+    seed: session.seed,
     snapshot: {
       tick: frame.tick,
       // 地形转成普通数组：JSON 里 Int32Array 会变成奇怪的对象
@@ -662,6 +664,7 @@ function saveGame() {
     packs: session.packs,
     engine: session.store.exportState(),
     playerHandle: session.playerHandle,
+    seed: session.seed,
     playerReadyAt: session.playerReadyAt,
     scheduler: session.scheduler.upcoming(999).map((due) => [due.handle, due.tick]),
     disabled: session.disabled ?? [],
@@ -684,6 +687,7 @@ function loadGame() {
 
   session.store.importState(data.engine);
   session.playerHandle = data.playerHandle;
+  session.seed = data.seed ?? 0;
   session.playerReadyAt = data.playerReadyAt;
   session.scheduler = new Scheduler(
     data.scheduler.map(([handle, readyAt]) => ({ handle, readyAt })),
@@ -786,11 +790,11 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.method === "POST" && request.url === "/api/start") {
-      const { id, off } = await readBody(request);
+      const { id, off, seed } = await readBody(request);
       const disabled = new Set(Array.isArray(off) ? off : []);
       try {
         const { byId } = collectPacks();
-        session = buildSession(closureOf(String(id), byId), disabled);
+        session = buildSession(closureOf(String(id), byId), disabled, Number(seed) || 0);
         session.disabled = [...disabled];
         sendJson(response, snapshot("世界已载入"));
       } catch (error) {

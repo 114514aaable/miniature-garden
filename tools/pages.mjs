@@ -154,9 +154,7 @@ function render(state) {
     const startButton = document.createElement('button');
     startButton.textContent = '{{launcher.start}}';
     startButton.disabled = !world.ok;
-    startButton.addEventListener('click', () => {
-      location.href = '/game?world=' + encodeURIComponent(world.id);
-    });
+    startButton.addEventListener('click', () => openSeedDialog(world.id));
     actions.appendChild(startButton);
 
     const graphButton = document.createElement('button');
@@ -182,6 +180,70 @@ function render(state) {
 }
 
 let currentWorld = null;
+
+/** 开始菜单里的「开始游戏」：先要一个种子。种子属于系统，跨世界保留。 */
+function openSeedDialog(worldId) {
+  const existing = document.getElementById('seedbox');
+  if (existing) existing.remove();
+
+  const box = document.createElement('div');
+  box.id = 'seedbox';
+  box.style.position = 'fixed';
+  box.style.inset = '0';
+  box.style.display = 'flex';
+  box.style.alignItems = 'center';
+  box.style.justifyContent = 'center';
+  box.style.background = 'rgba(0,0,0,0.6)';
+  box.style.zIndex = '50';
+
+  const card = document.createElement('div');
+  card.style.padding = '20px';
+  card.style.background = '#10131a';
+  card.style.border = '1px solid #2a303c';
+  card.style.borderRadius = '10px';
+  card.style.minWidth = '320px';
+
+  const title = document.createElement('div');
+  title.textContent = worldId + ' · 输入种子';
+  title.style.color = '#8ab4f8';
+  title.style.marginBottom = '10px';
+  card.appendChild(title);
+
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.value = localStorage.getItem('nw.seed') || String(Math.floor(Math.random() * 1000000000));
+  input.style.width = '100%';
+  input.style.padding = '8px';
+  input.style.background = '#0f1116';
+  input.style.color = '#d7dae0';
+  input.style.border = '1px solid #333a4a';
+  input.style.borderRadius = '6px';
+  card.appendChild(input);
+
+  const actions = document.createElement('div');
+  actions.style.display = 'flex';
+  actions.style.gap = '8px';
+  actions.style.justifyContent = 'flex-end';
+  actions.style.marginTop = '12px';
+
+  const cancel = document.createElement('button');
+  cancel.textContent = '取消';
+  cancel.addEventListener('click', () => box.remove());
+
+  const go = document.createElement('button');
+  go.textContent = '开始';
+  go.addEventListener('click', () => {
+    const seed = String(Number(input.value) || 0);
+    localStorage.setItem('nw.seed', seed);
+    location.href = '/game?world=' + encodeURIComponent(worldId) + '&seed=' + encodeURIComponent(seed);
+  });
+
+  actions.appendChild(cancel);
+  actions.appendChild(go);
+  card.appendChild(actions);
+  box.appendChild(card);
+  document.body.appendChild(box);
+}
 
 async function showGraph(id) {
   currentWorld = id;
@@ -413,6 +475,7 @@ ${ERRORS}
 const params = new URLSearchParams(location.search);
 const worldId = params.get('world');
 const off = (params.get('off') || '').split(',').filter(Boolean);
+const seed = Number(params.get('seed') || '0') || 0;
 
 let renderer = null;
 let aimTimer = 0;
@@ -601,7 +664,7 @@ window.addEventListener('keydown', (event) => {
     document.getElementById('errbar').textContent = '没有指定世界：请从启动器进入。';
     return;
   }
-  const state = await api('/api/start', { id: worldId, off });
+  const state = await api('/api/start', { id: worldId, off, seed });
   if (!state || state.launcher) {
     document.getElementById('errbar').hidden = false;
     document.getElementById('errbar').textContent = '世界载入失败：' + (state && state.errors && state.errors[0] ? state.errors[0].error : '未知');
