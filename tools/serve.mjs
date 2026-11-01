@@ -648,6 +648,12 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    if (request.url === "/api/worlds") {
+      // 启动器专用：永远返回世界列表，不受「已有会话」影响。
+      sendJson(response, scanWorlds());
+      return;
+    }
+
     if (request.url === "/api/state") {
       sendJson(response, session === null ? { launcher: true, ...scanWorlds() } : snapshot(""));
       return;

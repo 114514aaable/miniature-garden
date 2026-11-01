@@ -43,6 +43,7 @@ const CSS = `
   #devpanel summary { cursor: pointer; }
   #devlog, #debug { margin: 8px 0 0; padding: 8px; max-height: 200px; overflow: auto; color: #8b929e;
                     background: #0f1116; border: 1px solid #232733; border-radius: 6px; white-space: pre; }
+  #graphpanel[hidden] { display: none; }
   #graphpanel { position: fixed; inset: 40px 60px; z-index: 20; display: flex; flex-direction: column;
                 background: #10131a; border: 1px solid #2a303c; border-radius: 10px;
                 box-shadow: 0 20px 60px rgba(0,0,0,0.6); padding: 12px 16px; }
@@ -203,9 +204,9 @@ document.getElementById('graphclose').addEventListener('click', () => {
   document.getElementById('graphpanel').hidden = true;
 });
 
-api('/api/state').then((state) => {
+api('/api/worlds').then((state) => {
   document.getElementById('meta').textContent = '选择一个世界开始';
-  render(state.launcher ? state : { worlds: [], errors: [{ id: '未知', error: '服务返回了意外的数据' }] });
+  render(state);
 });
 </script>
 </html>`;
