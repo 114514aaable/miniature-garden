@@ -41,7 +41,7 @@ import {
   windupSignature,
 } from "../engine/core/src/rules/enemy-actions.ts";
 import { Scheduler } from "../engine/core/src/rules/scheduler.ts";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
 import { createProjector } from "../systems/render/project.ts";
 import { buildGraph } from "../engine/core/src/pack/graph.ts";
@@ -592,6 +592,48 @@ function speedOf(handle) {
   return readNumber(stats, "speed", 4);
 }
 
+const SAVE_DIR = "saves";
+const SAVE_FILE = "saves/quicksave.json";
+
+/** 存档：引擎状态 + 宿主侧（玩家、就绪时刻、调度器、关掉的规则）。 */
+function saveGame() {
+  if (session === null) return { ok: false, error: "没有进行中的世界" };
+  const data = {
+    version: 1,
+    packs: session.packs,
+    engine: session.store.exportState(),
+    playerHandle: session.playerHandle,
+    playerReadyAt: session.playerReadyAt,
+    scheduler: session.scheduler.upcoming(999).map((due) => [due.handle, due.tick]),
+    disabled: session.disabled ?? [],
+  };
+  mkdirSync(SAVE_DIR, { recursive: true });
+  writeFileSync(SAVE_FILE, JSON.stringify(data), "utf8");
+  return { ok: true, message: "已存档（" + session.store.now() + "）" };
+}
+
+/** 读档：把世界恢复到存档那一刻。 */
+function loadGame() {
+  if (session === null) return { ok: false, error: "没有进行中的世界" };
+
+  let data;
+  try {
+    data = JSON.parse(readFileSync(SAVE_FILE, "utf8"));
+  } catch {
+    return { ok: false, error: "还没有存档" };
+  }
+
+  session.store.importState(data.engine);
+  session.playerHandle = data.playerHandle;
+  session.playerReadyAt = data.playerReadyAt;
+  session.scheduler = new Scheduler(
+    data.scheduler.map(([handle, readyAt]) => ({ handle, readyAt })),
+    session.store.now(),
+  );
+  session.lastEvents = [];
+  session.devlog.action(session.store.now(), "读档", { tick: session.store.now() });
+  return { ok: true, message: "已读档（tick " + session.store.now() + "）" };
+}
 /** 技能显示名从链接表里取，不在代码里写死。 */
 function skillName(tag) {
   const sym = session.link.tags.get(tag);
@@ -704,6 +746,17 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    if (request.method === "POST" && request.url === "/api/save") {
+      const result = saveGame();
+      sendJson(response, result.ok ? snapshot(result.message) : { error: result.error });
+      return;
+    }
+
+    if (request.method === "POST" && request.url === "/api/load") {
+      const result = loadGame();
+      sendJson(response, result.ok ? snapshot(result.message) : snapshot(result.error));
+      return;
+    }
     if (request.method === "POST" && request.url === "/api/graph") {
       const { id } = await readBody(request);
       try {

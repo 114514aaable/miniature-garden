@@ -259,7 +259,7 @@ export const GAME_PAGE = `<!doctype html>
   <div id="errbar" hidden></div>
   <div class="topbar">
     <a href="/">← 启动器</a>
-    <span class="meta" id="meta"></span>
+    <span><button id="savebtn">存档</button> <button id="loadbtn">读档</button> <span class="meta" id="meta"></span></span>
   </div>
 
   <div class="stage">
@@ -383,6 +383,9 @@ document.getElementById('map').addEventListener('click', (event) => {
   const cell = cellAt(event);
   useSkill('core.attack', cell.x, cell.y);
 });
+
+document.getElementById('savebtn').addEventListener('click', async () => { render(await api('/api/save', {})); });
+document.getElementById('loadbtn').addEventListener('click', async () => { render(await api('/api/load', {})); });
 
 document.querySelectorAll('button[data-dir]').forEach((button) => {
   button.addEventListener('click', () => act(button.dataset.dir));

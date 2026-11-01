@@ -120,6 +120,24 @@ export class Space {
     this.terrain[this.index(cell)] = value;
   }
 
+  /** 导出地形（存档用）。 */
+  exportTerrain(): number[] {
+    return Array.from(this.terrain);
+  }
+
+  /** 导回地形。长度不对直接报错，不猜。 */
+  restoreTerrain(values: readonly number[]): void {
+    if (values.length !== this.terrain.length) {
+      throw new Error(`地形长度不匹配：需要 ${this.terrain.length}，收到 ${values.length}`);
+    }
+    this.terrain.set(values);
+  }
+
+  /** 清空占用索引（读档时按实体位置重建）。 */
+  clearOccupants(): void {
+    this.occupants.clear();
+  }
+
   /**
    * 这个格子里有谁。
    * 返回副本而不是内部数组——类型上的 readonly 只是编译期的。

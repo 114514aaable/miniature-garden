@@ -18,10 +18,17 @@
  */
 
 import { type Cell, type SpaceId, Space } from "./space.ts";
-import { type Handle, EntityTable, type Entity } from "./entity/entity.ts";
+import { type Handle, EntityTable, type Entity, type EntityTableSnapshot } from "./entity/entity.ts";
 import { PLACE } from "./entity/place.ts";
 import { mergeDeep } from "./entity/merge.ts";
 import { type JsonValue, type LogEntry, type Tick, Timeline } from "./time.ts";
+
+/** 一份可序列化的世界状态（存档）。 */
+export interface WorldState {
+  readonly tick: number;
+  readonly entities: EntityTableSnapshot;
+  readonly spaces: ReadonlyArray<{ readonly id: SpaceId; readonly terrain: readonly number[] }>;
+}
 
 export type Effect =
   | { readonly kind: "terrain"; readonly space: SpaceId; readonly cell: Cell; readonly value: number }
@@ -48,8 +55,7 @@ export type Effect =
       readonly data: JsonValue;
     };
 
-/** 位置是唯一被内核认识的组件（见 entity/place.ts）。 */
-export { PLACE } from "./entity/place.ts";
+/** 内核唯一保留的组件名：位置。索引靠它，所以它不能被当成普通数据。 */export { PLACE } from "./entity/place.ts";
 
 function asInteger(value: JsonValue | undefined, at: string): number {
   if (typeof value !== "number" || !Number.isSafeInteger(value)) {
@@ -79,7 +85,7 @@ interface Applied {
 export class Store {
   private readonly spaces = new Map<SpaceId, Space>();
   private readonly entities = new EntityTable();
-  private readonly timeline: Timeline;
+  private timeline: Timeline;
   private readonly templates: TemplateSource | null;
   private pending: Effect[] = [];
 
@@ -130,6 +136,42 @@ export class Store {
   /** 句柄还活着吗。 */
   hasEntity(handle: Handle): boolean {
     return this.entities.has(handle);
+  }
+
+  /**
+   * 导出整份世界状态（存档用）。
+   *
+   * 存的是「值」，不是引用：地形、实体表、tick。事件日志不在里面——
+   * 读档之后的哈希链从这一刻重新开始。
+   */
+  exportState(): WorldState {
+    return {
+      tick: this.now(),
+      entities: this.entities.snapshot(),
+      spaces: [...this.spaces.values()].map((space) => ({
+        id: space.id,
+        terrain: space.exportTerrain(),
+      })),
+    };
+  }
+
+  /** 导入世界状态。会重建空间索引，并把 tick 拨到存档那一刻。 */
+  importState(state: WorldState): void {
+    this.pending = [];
+    this.timeline = new Timeline(state.tick);
+    this.entities.restore(state.entities);
+
+    for (const saved of state.spaces) {
+      const space = this.space(saved.id);
+      space.restoreTerrain(saved.terrain);
+      space.clearOccupants();
+    }
+
+    for (const entity of this.entities.all()) {
+      if (entity.space !== null && entity.pos !== null) {
+        this.space(entity.space).addOccupant(entity.pos, entity.handle);
+      }
+    }
   }
 
   /**
