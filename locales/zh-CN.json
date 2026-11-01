@@ -18,7 +18,6 @@
   "game.recovering": "恢复中 还要 {n} 回合",
   "game.ready": "可以行动",
   "game.can_attack": "可以劈砍 ({x},{y})",
-
   "rule.core.move.name": "走一步",
   "rule.core.move.desc": "朝一个方向移动一格，成本由速度决定。",
   "rule.core.attack.name": "劈砍",
@@ -37,7 +36,6 @@
   "rule.core.enemy_windup.desc": "敌人写下攻击意图，两回合后才结算，期间可以被躲开。",
   "rule.core.enemy_strike.name": "敌人出手",
   "rule.core.enemy_strike.desc": "按意图里的格子结算伤害；玩家不在格子里就落空。",
-
   "component.core.health.name": "生命",
   "component.core.health.desc": "血量：最大生命与当前生命。",
   "component.core.stats.name": "属性",
@@ -56,7 +54,6 @@
   "component.core.sprite.desc": "指向图集里的一帧；没有就退回字符。",
   "component.core.intent.name": "意图",
   "component.core.intent.desc": "敌人下回合要打的格子与结算时刻，绘制和判定共用。",
-
   "template.pc.name": "你",
   "template.pc.desc": "玩家角色。",
   "template.item_base.name": "物品基类",
@@ -67,9 +64,21 @@
   "template.prop_crate.desc": "实心障碍，挡路。",
   "template.npc_salt.name": "盐商",
   "template.npc_salt.desc": "会靠近并起手打人的敌人。",
-
   "terrain.0.name": "空",
   "terrain.1.name": "墙",
   "terrain.2.name": "水",
-  "terrain.3.name": "地面"
+  "terrain.3.name": "地面",
+  "menu.start": "开始游戏",
+  "menu.load": "读档",
+  "menu.settings": "设置",
+  "menu.packs": "世界包",
+  "menu.quit": "退出",
+  "menu.back": "← 返回",
+  "menu.cancel": "取消",
+  "menu.load_confirm": "读取最新存档",
+  "menu.quit_note": "浏览器里关不掉标签页。打包成桌面版之后，这里会真的退出。",
+  "menu.seed_title": "输入种子",
+  "menu.no_world": "还没有选择世界，先去「世界包」里选一个。",
+  "menu.loading": "正在读取…",
+  "menu.no_bindings": "还没有自定义按键（用的默认键位）"
 }

@@ -82,10 +82,11 @@ async function api(path, body) {
 
 /** 启动器：列世界、看结构、跳转到 /game。 */
 /** 启动器：世界列表 + 结构树（组可整体开关）。 */
+/** 启动器：主菜单 → 开始 / 读档 / 设置 / 世界包 / 退出。 */
 export const LAUNCHER_PAGE = `<!doctype html>
 <html lang="zh-CN">
 <meta charset="utf-8">
-<title>新世界 · 启动器</title>
+<title>{{app.title}}</title>
 <style>${CSS}</style>
 <style>
   #graph { white-space: normal; }
@@ -96,13 +97,50 @@ export const LAUNCHER_PAGE = `<!doctype html>
   .tree .leaf .id { color: #5f6b7a; font-size: 11px; }
   .tree .leaf .desc { color: #6f7a89; font-size: 11px; }
   .tree label.group { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  .menu { display: flex; flex-direction: column; gap: 10px; max-width: 320px; margin-top: 20px; }
+  .menu button { padding: 12px 16px; text-align: left; font-size: 15px; }
+  .panel h2 { font-size: 15px; color: #8ab4f8; margin: 0 0 10px; }
+  .world.picked { border-color: #4a6da8; background: #1d2432; }
 </style>
 <main>
   <div id="errbar" hidden></div>
   <h1>{{app.title}}</h1>
   <div class="meta" id="meta">{{launcher.pick}}</div>
-  <div id="worlds"></div>
-  <div id="errors"></div>
+
+  <div class="menu" id="menu">
+    <button id="m-start">{{menu.start}}</button>
+    <button id="m-load">{{menu.load}}</button>
+    <button id="m-settings">{{menu.settings}}</button>
+    <button id="m-packs">{{menu.packs}}</button>
+    <button id="m-quit">{{menu.quit}}</button>
+  </div>
+
+  <div class="panel" id="packs" hidden>
+    <h2>{{menu.packs}}</h2>
+    <div id="worlds"></div>
+    <div id="errors"></div>
+    <div style="margin-top:10px"><button id="packs-back">{{menu.back}}</button></div>
+  </div>
+
+  <div class="panel" id="settings" hidden>
+    <h2>{{menu.settings}}</h2>
+    <div style="margin-bottom:10px">动画速度：<span id="speed-buttons"></span></div>
+    <div style="color:#8b929e; font-size:12px" id="bindings"></div>
+    <div style="margin-top:10px"><button id="settings-back">{{menu.back}}</button></div>
+  </div>
+
+  <div class="panel" id="load" hidden>
+    <h2>{{menu.load}}</h2>
+    <div id="load-msg" style="color:#9aa3b2; margin-bottom:10px"></div>
+    <button id="load-go">{{menu.load_confirm}}</button>
+    <button id="load-back">{{menu.back}}</button>
+  </div>
+
+  <div class="panel" id="quit" hidden>
+    <h2>{{menu.quit}}</h2>
+    <div style="color:#9aa3b2">{{menu.quit_note}}</div>
+    <div style="margin-top:10px"><button id="quit-back">{{menu.back}}</button></div>
+  </div>
 </main>
 
 <div id="graphpanel" hidden>
@@ -112,7 +150,6 @@ export const LAUNCHER_PAGE = `<!doctype html>
   </div>
   <div class="tree" id="tree"></div>
   <div style="margin-top:10px; display:flex; gap:10px; align-items:center">
-    <button id="graphstart">{{launcher.start_this}}</button>
     <span class="meta" id="offcount" style="margin:0"></span>
   </div>
 </div>
@@ -125,13 +162,24 @@ const KIND_ORDER = [
   ['terrain', '地形'], ['space', '空间'], ['entity', '实体'], ['world', '世界'],
 ];
 
-function render(state) {
+let worlds = [];
+let activeWorld = localStorage.getItem('nw.world') || null;
+let inspecting = null;
+
+function show(id) {
+  for (const panel of ['packs', 'settings', 'load', 'quit']) {
+    document.getElementById(panel).hidden = panel !== id;
+  }
+  document.getElementById('menu').hidden = id !== null;
+}
+
+function renderWorlds() {
   const list = document.getElementById('worlds');
   list.textContent = '';
 
-  for (const world of state.worlds) {
+  for (const world of worlds) {
     const row = document.createElement('div');
-    row.className = 'world' + (world.ok ? '' : ' bad');
+    row.className = 'world' + (world.id === activeWorld ? ' picked' : '') + (world.ok ? '' : ' bad');
 
     const info = document.createElement('div');
     const name = document.createElement('div');
@@ -151,17 +199,21 @@ function render(state) {
     row.appendChild(info);
 
     const actions = document.createElement('div');
-    const startButton = document.createElement('button');
-    startButton.textContent = '{{launcher.start}}';
-    startButton.disabled = !world.ok;
-    startButton.addEventListener('click', () => openSeedDialog(world.id));
-    actions.appendChild(startButton);
+    const pick = document.createElement('button');
+    pick.textContent = world.id === activeWorld ? '已选' : '选择';
+    pick.disabled = !world.ok;
+    pick.addEventListener('click', () => {
+      activeWorld = world.id;
+      localStorage.setItem('nw.world', world.id);
+      renderWorlds();
+    });
+    actions.appendChild(pick);
 
-    const graphButton = document.createElement('button');
-    graphButton.textContent = '{{launcher.structure}}';
-    graphButton.style.marginLeft = '8px';
-    graphButton.addEventListener('click', () => showGraph(world.id));
-    actions.appendChild(graphButton);
+    const graph = document.createElement('button');
+    graph.textContent = '{{launcher.structure}}';
+    graph.style.marginLeft = '8px';
+    graph.addEventListener('click', () => showGraph(world.id));
+    actions.appendChild(graph);
 
     row.appendChild(actions);
     list.appendChild(row);
@@ -169,69 +221,47 @@ function render(state) {
 
   const errors = document.getElementById('errors');
   errors.textContent = '';
-  for (const bad of state.errors || []) {
-    const row = document.createElement('div');
-    row.className = 'world bad';
-    row.innerHTML = '<div><div class="name"></div><div class="error"></div></div>';
-    row.querySelector('.name').textContent = bad.id;
-    row.querySelector('.error').textContent = bad.error;
-    errors.appendChild(row);
-  }
+  for (const bad of [] ) { void bad; }
 }
 
-let currentWorld = null;
-
-/** 开始菜单里的「开始游戏」：先要一个种子。种子属于系统，跨世界保留。 */
 function openSeedDialog(worldId) {
   const existing = document.getElementById('seedbox');
   if (existing) existing.remove();
 
   const box = document.createElement('div');
   box.id = 'seedbox';
-  box.style.position = 'fixed';
-  box.style.inset = '0';
-  box.style.display = 'flex';
-  box.style.alignItems = 'center';
-  box.style.justifyContent = 'center';
-  box.style.background = 'rgba(0,0,0,0.6)';
-  box.style.zIndex = '50';
+  box.style.position = 'fixed'; box.style.inset = '0'; box.style.display = 'flex';
+  box.style.alignItems = 'center'; box.style.justifyContent = 'center';
+  box.style.background = 'rgba(0,0,0,0.6)'; box.style.zIndex = '50';
 
   const card = document.createElement('div');
-  card.style.padding = '20px';
-  card.style.background = '#10131a';
-  card.style.border = '1px solid #2a303c';
-  card.style.borderRadius = '10px';
+  card.style.padding = '20px'; card.style.background = '#10131a';
+  card.style.border = '1px solid #2a303c'; card.style.borderRadius = '10px';
   card.style.minWidth = '320px';
 
   const title = document.createElement('div');
-  title.textContent = worldId + ' · 输入种子';
-  title.style.color = '#8ab4f8';
-  title.style.marginBottom = '10px';
+  title.textContent = worldId + ' · {{menu.seed_title}}';
+  title.style.color = '#8ab4f8'; title.style.marginBottom = '10px';
   card.appendChild(title);
 
   const input = document.createElement('input');
   input.type = 'number';
   input.value = localStorage.getItem('nw.seed') || String(Math.floor(Math.random() * 1000000000));
-  input.style.width = '100%';
-  input.style.padding = '8px';
-  input.style.background = '#0f1116';
-  input.style.color = '#d7dae0';
-  input.style.border = '1px solid #333a4a';
-  input.style.borderRadius = '6px';
+  input.style.width = '100%'; input.style.padding = '8px';
+  input.style.background = '#0f1116'; input.style.color = '#d7dae0';
+  input.style.border = '1px solid #333a4a'; input.style.borderRadius = '6px';
   card.appendChild(input);
 
   const actions = document.createElement('div');
-  actions.style.display = 'flex';
-  actions.style.gap = '8px';
-  actions.style.justifyContent = 'flex-end';
-  actions.style.marginTop = '12px';
+  actions.style.display = 'flex'; actions.style.gap = '8px';
+  actions.style.justifyContent = 'flex-end'; actions.style.marginTop = '12px';
 
   const cancel = document.createElement('button');
-  cancel.textContent = '取消';
+  cancel.textContent = '{{menu.cancel}}';
   cancel.addEventListener('click', () => box.remove());
 
   const go = document.createElement('button');
-  go.textContent = '开始';
+  go.textContent = '{{launcher.start}}';
   go.addEventListener('click', () => {
     const seed = String(Number(input.value) || 0);
     localStorage.setItem('nw.seed', seed);
@@ -246,7 +276,7 @@ function openSeedDialog(worldId) {
 }
 
 async function showGraph(id) {
-  currentWorld = id;
+  inspecting = id;
   const panel = document.getElementById('graphpanel');
   const tree = document.getElementById('tree');
   document.getElementById('graphtitle').textContent = '{{launcher.structure_title}} · ' + id;
@@ -254,23 +284,15 @@ async function showGraph(id) {
   tree.textContent = '{{launcher.reading}}';
 
   let result;
-  try {
-    result = await api('/api/graph', { id });
-  } catch (error) {
-    tree.textContent = '请求失败：' + error;
-    return;
-  }
-  if (!result || result.ok !== true) {
-    tree.textContent = '读不出来：' + (result && result.error ? result.error : '未知错误');
-    return;
-  }
+  try { result = await api('/api/graph', { id }); }
+  catch (error) { tree.textContent = '请求失败：' + error; return; }
+  if (!result || result.ok !== true) { tree.textContent = '读不出来：' + (result && result.error ? result.error : '未知'); return; }
 
   tree.textContent = '';
   buildTree(tree, result.nodes);
   updateOffCount();
 }
 
-/** 包 → 类别 → 条目；规则和规则组带勾选。 */
 function buildTree(root, nodes) {
   const packs = new Map();
   for (const node of nodes) {
@@ -290,13 +312,11 @@ function buildTree(root, nodes) {
       if (!byKind.has(node.kind)) byKind.set(node.kind, []);
       byKind.get(node.kind).push(node);
     }
-
     for (const [kind, title] of KIND_ORDER) {
       const items = byKind.get(kind);
       if (!items || items.length === 0) continue;
       packBox.appendChild(kindGroup(kind, title, items));
     }
-
     root.appendChild(packBox);
   }
 }
@@ -304,21 +324,17 @@ function buildTree(root, nodes) {
 function kindGroup(kind, title, items) {
   const box = document.createElement('details');
   box.open = kind === 'rule';
-
   const summary = document.createElement('summary');
+
   if (kind === 'rule') {
-    // 组开关：整组一起启停
     const label = document.createElement('label');
     label.className = 'group';
     const group = document.createElement('input');
     group.type = 'checkbox';
     group.checked = true;
-    group.dataset.group = kind;
     group.addEventListener('click', (event) => event.stopPropagation());
     group.addEventListener('change', () => {
-      for (const input of box.querySelectorAll('input[data-rule]')) {
-        input.checked = group.checked;
-      }
+      for (const input of box.querySelectorAll('input[data-rule]')) input.checked = group.checked;
       updateOffCount();
     });
     label.appendChild(group);
@@ -332,35 +348,27 @@ function kindGroup(kind, title, items) {
   for (const node of items.sort((a, b) => (a.label < b.label ? -1 : 1))) {
     const leaf = document.createElement('div');
     leaf.className = 'leaf';
-
     if (kind === 'rule') {
       const input = document.createElement('input');
-      input.type = 'checkbox';
-      input.checked = true;
-      input.dataset.rule = node.label;
+      input.type = 'checkbox'; input.checked = true; input.dataset.rule = node.label;
       input.addEventListener('change', updateOffCount);
       leaf.appendChild(input);
     }
-
     const name = document.createElement('span');
     name.textContent = node.display || node.label;
     leaf.appendChild(name);
-
     const id = document.createElement('span');
     id.className = 'id';
     id.textContent = node.label !== node.display ? node.label : '';
     leaf.appendChild(id);
-
     if (node.description) {
       const desc = document.createElement('span');
       desc.className = 'desc';
       desc.textContent = '— ' + node.description;
       leaf.appendChild(desc);
     }
-
     box.appendChild(leaf);
   }
-
   return box;
 }
 
@@ -372,23 +380,77 @@ function disabledRules() {
 
 function updateOffCount() {
   const off = disabledRules();
+  localStorage.setItem('nw.off', JSON.stringify(off));
   document.getElementById('offcount').textContent = off.length === 0 ? '' : '关掉 ' + off.length + ' 条规则';
 }
 
-document.getElementById('graphstart').addEventListener('click', () => {
-  const off = disabledRules();
-  const query = '/game?world=' + encodeURIComponent(currentWorld) +
-    (off.length > 0 ? '&off=' + encodeURIComponent(off.join(',')) : '');
-  location.href = query;
+function loadRules() {
+  try { return JSON.parse(localStorage.getItem('nw.off') || '[]'); } catch { return []; }
+}
+
+document.getElementById('m-start').addEventListener('click', () => {
+  if (!activeWorld) {
+    document.getElementById('meta').textContent = '{{menu.no_world}}';
+    show('packs');
+    return;
+  }
+  openSeedDialog(activeWorld);
 });
 
-document.getElementById('graphclose').addEventListener('click', () => {
-  document.getElementById('graphpanel').hidden = true;
+document.getElementById('m-load').addEventListener('click', async () => {
+  show('load');
+  const msg = document.getElementById('load-msg');
+  msg.textContent = '{{menu.loading}}';
+  const result = await api('/api/load', {});
+  if (result && result.ok === false) {
+    msg.textContent = result.error + (result.missing && result.missing.length ? '  缺：' + result.missing.join(', ') : '') +
+      (result.extra && result.extra.length ? '  多：' + result.extra.join(', ') : '');
+    return;
+  }
+  location.href = '/game?world=' + encodeURIComponent(result.world || activeWorld || '') + '&loaded=1';
 });
+
+document.getElementById('load-go').addEventListener('click', () => { show('load'); });
+document.getElementById('load-back').addEventListener('click', () => show(null));
+document.getElementById('m-settings').addEventListener('click', () => { show('settings'); renderSettings(); });
+document.getElementById('settings-back').addEventListener('click', () => show(null));
+document.getElementById('m-packs').addEventListener('click', () => { show('packs'); renderWorlds(); });
+document.getElementById('packs-back').addEventListener('click', () => show(null));
+document.getElementById('m-quit').addEventListener('click', () => show('quit'));
+document.getElementById('quit-back').addEventListener('click', () => show(null));
+document.getElementById('graphclose').addEventListener('click', () => { document.getElementById('graphpanel').hidden = true; });
+
+function renderSettings() {
+  const speeds = [5, 10, 20];
+  const current = Number(localStorage.getItem('nw.speed') || '10');
+  const box = document.getElementById('speed-buttons');
+  box.textContent = '';
+  for (const speed of speeds) {
+    const button = document.createElement('button');
+    button.textContent = (speed === current ? '● ' : '') + speed + ' 格/秒';
+    button.style.marginRight = '6px';
+    button.addEventListener('click', () => {
+      localStorage.setItem('nw.speed', String(speed));
+      renderSettings();
+    });
+    box.appendChild(button);
+  }
+
+  const bindings = JSON.parse(localStorage.getItem('nw.bindings') || '{}');
+  const lines = Object.entries(bindings).map(([code, command]) => code + ' → ' + command);
+  document.getElementById('bindings').textContent = lines.length > 0 ? lines.join('   ') : '{{menu.no_bindings}}';
+}
+
+document.getElementById('quit-back').textContent = '{{menu.back}}';
 
 api('/api/worlds').then((state) => {
+  worlds = state.worlds || [];
+  if (!activeWorld && worlds.length > 0) {
+    const usable = worlds.find((world) => world.ok);
+    if (usable) activeWorld = usable.id;
+  }
+  renderWorlds();
   document.getElementById('meta').textContent = '{{launcher.pick}}';
-  render(state);
 });
 </script>
 </html>`;
@@ -474,7 +536,10 @@ ${ERRORS}
 
 const params = new URLSearchParams(location.search);
 const worldId = params.get('world');
-const off = (params.get('off') || '').split(',').filter(Boolean);
+const offFromUrl = (params.get('off') || '').split(',').filter(Boolean);
+const off = offFromUrl.length > 0
+  ? offFromUrl
+  : (JSON.parse(localStorage.getItem('nw.off') || '[]'));
 const seed = Number(params.get('seed') || '0') || 0;
 
 let renderer = null;
@@ -664,7 +729,11 @@ window.addEventListener('keydown', (event) => {
     document.getElementById('errbar').textContent = '没有指定世界：请从启动器进入。';
     return;
   }
-  const state = await api('/api/start', { id: worldId, off, seed });
+  // 读档流程已经建好会话，直接用；否则按选择开局。
+  let state = await api('/api/state');
+  if (!state || state.launcher) {
+    state = await api('/api/start', { id: worldId, off, seed });
+  }
   if (!state || state.launcher) {
     document.getElementById('errbar').hidden = false;
     document.getElementById('errbar').textContent = '世界载入失败：' + (state && state.errors && state.errors[0] ? state.errors[0].error : '未知');
