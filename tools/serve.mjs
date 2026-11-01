@@ -785,7 +785,15 @@ const server = createServer(async (request, response) => {
           rules.push(...worldDef.data.rules.filter((rule) => typeof rule === "string"));
         }
         const graph = buildGraph(merged, rules);
-        sendJson(response, { ok: true, nodes: graph.nodes });
+        // 外显名与介绍：查语言包，查不到就退回 id。
+        const label = (kind, id) => MESSAGES[kind + "." + id + ".name"] ?? String(id);
+        const describe = (kind, id) => MESSAGES[kind + "." + id + ".desc"] ?? "";
+        const nodes = graph.nodes.map((node) => ({
+          ...node,
+          display: label(node.kind, node.label),
+          description: describe(node.kind, node.label),
+        }));
+        sendJson(response, { ok: true, nodes });
       } catch (error) {
         sendJson(response, { ok: false, error: messageOf(error) });
       }

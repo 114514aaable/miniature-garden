@@ -197,7 +197,8 @@ async function showGraph(id) {
     lines.push('── ' + title + ' (' + nodes.length + ') ──');
     for (const node of nodes) {
       const used = node.usedBy.length === 0 ? '—' : '被 ' + node.usedBy.length + ' 处引用';
-      lines.push('  ' + String(node.label).padEnd(22, ' ') + ' ' + String(node.origin).padEnd(18, ' ') + used);
+      const shown = node.display && node.display !== node.label ? node.display + ' (' + node.label + ')' : String(node.label);
+      lines.push('  ' + shown.padEnd(30, ' ') + ' ' + String(node.origin).padEnd(16, ' ') + used);
     }
     lines.push('');
   }
@@ -224,7 +225,7 @@ function renderRuleToggles(worldId, nodes) {
     box2.value = node.label;
     box2.dataset.rule = node.label;
     row.appendChild(box2);
-    row.appendChild(document.createTextNode(' ' + node.label));
+    row.appendChild(document.createTextNode(' ' + (node.display || node.label) + (node.description ? '  —  ' + node.description : '')));
     box.appendChild(row);
   }
 
