@@ -1,0 +1,135 @@
+// SPDX-FileCopyrightText: 2026 newworld contributors
+// SPDX-License-Identifier: MIT
+
+/**
+ * UI 描述：一组纯数据，能单测，不碰 DOM。
+ *
+ * 和渲染管线的分工一样：
+ *   spec  声明「长什么样」（纯函数，可测）
+ *   dom   把 spec 变成真实节点（执行器，几十行）
+ *
+ * 这样布局 bug 在 spec 层就能复现，不需要开浏览器。
+ */
+
+import { flexStyle, type SizePolicy } from "./flex.ts";
+
+export interface UiNode {
+  readonly tag: string;
+  readonly style: Readonly<Record<string, string>>;
+  readonly text?: string;
+  readonly children: readonly UiNode[];
+  readonly onClick?: () => void;
+  readonly className?: string;
+  readonly attrs?: Readonly<Record<string, string>>;
+}
+
+export type Align = "start" | "center" | "end" | "stretch" | "baseline";
+export type Justify = "start" | "center" | "end" | "between";
+
+export interface BoxOptions {
+  /** 在父容器里怎么让步。默认 fit。 */
+  readonly policy?: SizePolicy;
+  /** 只有 fill / grow / ratio 用得上。 */
+  readonly weight?: number;
+  readonly gap?: number;
+  /** 数字 = 四边；数组 = [上, 右, 下, 左]。 */
+  readonly padding?: number | readonly [number, number, number, number];
+  readonly width?: number;
+  readonly height?: number;
+  readonly align?: Align;
+  readonly justify?: Justify;
+  readonly className?: string;
+}
+
+const ALIGN: Record<Align, string> = {
+  start: "flex-start",
+  center: "center",
+  end: "flex-end",
+  stretch: "stretch",
+  baseline: "baseline",
+};
+
+const JUSTIFY: Record<Justify, string> = {
+  start: "flex-start",
+  center: "center",
+  end: "flex-end",
+  between: "space-between",
+};
+
+/** 把 BoxOptions 翻成 CSS 键值。纯函数，测试主要看这个。 */
+export function boxStyle(options: BoxOptions = {}, direction: "row" | "column" = "row"): Record<string, string> {
+  const style: Record<string, string> = {
+    display: "flex",
+    "flex-direction": direction,
+    "min-width": "0",
+    "min-height": "0",
+    flex: flexStyle(options.policy ?? "fit", options.weight ?? 1),
+  };
+
+  if (options.gap !== undefined) style.gap = `${options.gap}px`;
+  if (options.padding !== undefined) style.padding = paddingOf(options.padding);
+  if (options.width !== undefined) style.width = `${options.width}px`;
+  if (options.height !== undefined) style.height = `${options.height}px`;
+  if (options.align !== undefined) style["align-items"] = ALIGN[options.align];
+  if (options.justify !== undefined) style["justify-content"] = JUSTIFY[options.justify];
+
+  return style;
+}
+
+function paddingOf(padding: number | readonly [number, number, number, number]): string {
+  if (typeof padding === "number") return `${padding}px`;
+  return padding.map((value) => `${value}px`).join(" ");
+}
+
+export function row(options: BoxOptions = {}, ...children: readonly UiNode[]): UiNode {
+  return node("div", boxStyle(options, "row"), children, options);
+}
+
+export function col(options: BoxOptions = {}, ...children: readonly UiNode[]): UiNode {
+  return node("div", boxStyle(options, "column"), children, options);
+}
+
+export function panel(options: BoxOptions = {}, ...children: readonly UiNode[]): UiNode {
+  const style = boxStyle(options, "column");
+  style.background = "rgba(16,19,26,0.85)";
+  style["border-radius"] = "8px";
+  style["border"] = "1px solid #2a303c";
+  return node("div", style, children, options);
+}
+
+export function text(value: string, options: BoxOptions = {}): UiNode {
+  const style = boxStyle(options, "row");
+  style.align = "center";
+  return { tag: "span", style, text: value, children: [] };
+}
+
+export function button(label: string, onClick: () => void, options: BoxOptions = {}): UiNode {
+  const style = boxStyle({ policy: "fixed", ...options }, "row");
+  style["align-items"] = "center";
+  style["justify-content"] = "center";
+  style["border-radius"] = "6px";
+  style.cursor = "pointer";
+
+  return {
+    tag: "button",
+    style,
+    text: label,
+    children: [],
+    onClick,
+    ...(options.className === undefined ? {} : { className: options.className }),
+  };
+}
+
+function node(
+  tag: string,
+  style: Record<string, string>,
+  children: readonly UiNode[],
+  options: BoxOptions,
+): UiNode {
+  return {
+    tag,
+    style,
+    children,
+    ...(options.className === undefined ? {} : { className: options.className }),
+  };
+}

@@ -316,6 +316,8 @@ window.addEventListener('error', function (event) {
 
 <script type="module">
 import { attach } from '/web/systems/render/browser.js';
+import { row, button } from '/web/systems/ui/spec.js';
+import { mount } from '/web/systems/ui/dom.js';
 
 ${ERRORS}
 
@@ -363,15 +365,10 @@ function render(state) {
   document.getElementById('devlog').textContent = (state.devlog || []).join('\\n');
   document.getElementById('debug').textContent = formatDebug(state.debug);
 
-  const skills = document.getElementById('skills');
-  skills.textContent = '';
-  for (const skill of state.skills) {
-    if (skill.tag === 'core.move') continue;
-    const button = document.createElement('button');
-    button.textContent = skill.name + ' ' + skill.cost;
-    button.addEventListener('click', () => useSkill(skill.tag));
-    skills.appendChild(button);
-  }
+  const skillButtons = state.skills
+    .filter((skill) => skill.tag !== 'core.move')
+    .map((skill) => button(skill.name + ' ' + skill.cost, () => useSkill(skill.tag)));
+  mount(document.getElementById('skills'), row({ gap: 6, align: 'center' }, ...skillButtons));
 }
 
 async function act(dir) {
