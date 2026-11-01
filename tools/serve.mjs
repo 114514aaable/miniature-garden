@@ -774,9 +774,17 @@ const PAGE = `<!doctype html>
   .skills button:hover { background: #2c3242; }
   .skills .hint { color: #7f8794; font-size: 12px; align-self: center; }
   #events { margin-top: 16px; color: #7f8794; font-size: 12px; max-height: 160px; overflow: auto; }
-  #graph { margin-top: 16px; padding: 12px; max-height: 420px; overflow: auto; color: #9aa3b2;
-           background: #0f1116; border: 1px solid #232733; border-radius: 8px; font-size: 12px;
-           white-space: pre; display: none; }
+  #graphpanel { position: fixed; inset: 40px 60px; z-index: 20; display: flex; flex-direction: column;
+                background: #10131a; border: 1px solid #2a303c; border-radius: 10px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.6); padding: 12px 16px; }
+  .graphbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .graphbar span { color: #8ab4f8; font-weight: 600; }
+  .graphbar button { padding: 4px 12px; background: #232733; color: #d7dae0;
+                     border: 1px solid #333a4a; border-radius: 6px; cursor: pointer; }
+  #graph { margin: 0; flex: 1; overflow: auto; color: #9aa3b2; font-size: 12px; white-space: pre; }
+  #errbar { position: sticky; top: 0; z-index: 30; margin-bottom: 12px; padding: 8px 12px;
+            background: #3a1d22; color: #ff9aa2; border: 1px solid #5c2a32; border-radius: 6px;
+            font-size: 12px; white-space: pre-wrap; }
   #devpanel { margin-top: 12px; color: #7f8794; font-size: 12px; }
   #devpanel summary { cursor: pointer; }
   #devlog { margin: 8px 0 0; padding: 8px; max-height: 220px; overflow: auto; color: #8b929e;
@@ -793,12 +801,20 @@ const PAGE = `<!doctype html>
   .world.bad button { opacity: 0.4; cursor: not-allowed; }
 </style>
 <main>
+  <div id="errbar" hidden></div>
   <h1>新世界</h1>
   <div class="meta" id="meta"></div>
 
   <div id="launcher">
     <div id="worlds"></div>
     <div id="errors"></div>
+  </div>
+
+  <div id="graphpanel" hidden>
+    <div class="graphbar">
+      <span id="graphtitle">世界结构</span>
+      <button id="graphclose">关闭</button>
+    </div>
     <pre id="graph"></pre>
   </div>
 
@@ -836,6 +852,21 @@ let renderer = null;
 let lastTile = 40;
 let aimTimer = 0;
 
+// 页面里的任何异常都显示出来，别留一片白屏
+window.addEventListener('error', (event) => {
+  const bar = document.getElementById('errbar');
+  if (bar === null) return;
+  bar.hidden = false;
+  bar.textContent = '页面出错：' + (event.message || event.error || '未知') +
+    (event.filename ? '  @' + event.filename + ':' + event.lineno : '');
+});
+window.addEventListener('unhandledrejection', (event) => {
+  const bar = document.getElementById('errbar');
+  if (bar === null) return;
+  bar.hidden = false;
+  bar.textContent = '未处理的错误：' + (event.reason && event.reason.message ? event.reason.message : event.reason);
+});
+
 async function api(path, body) {
   const options = body === undefined ? {} : {
     method: 'POST',
@@ -848,6 +879,7 @@ async function api(path, body) {
 function renderLauncher(state) {
   document.getElementById('launcher').hidden = false;
   document.getElementById('game').hidden = true;
+  document.getElementById('graphpanel').hidden = true;
   document.getElementById('meta').textContent = '选择一个世界开始';
 
   const list = document.getElementById('worlds');
@@ -906,13 +938,22 @@ const KIND_ORDER = [
 ];
 
 async function showGraph(id) {
+  const panel = document.getElementById('graphpanel');
   const box = document.getElementById('graph');
-  box.style.display = 'block';
+  document.getElementById('graphtitle').textContent = '世界结构 · ' + id;
+  panel.hidden = false;
   box.textContent = '读取结构…';
 
-  const result = await api('/api/graph', { id });
-  if (!result.ok) {
-    box.textContent = '读不出来：' + result.error;
+  let result;
+  try {
+    result = await api('/api/graph', { id });
+  } catch (error) {
+    box.textContent = '请求失败：' + error;
+    return;
+  }
+
+  if (!result || result.ok !== true) {
+    box.textContent = '读不出来：' + (result && result.error ? result.error : '未知错误');
     return;
   }
 
@@ -923,12 +964,16 @@ async function showGraph(id) {
     lines.push('── ' + title + ' (' + nodes.length + ') ──');
     for (const node of nodes) {
       const used = node.usedBy.length === 0 ? '—' : '被 ' + node.usedBy.length + ' 处引用';
-      lines.push('  ' + node.label.padEnd(22, ' ') + ' ' + node.origin.padEnd(18, ' ') + used);
+      lines.push('  ' + String(node.label).padEnd(22, ' ') + ' ' + String(node.origin).padEnd(18, ' ') + used);
     }
     lines.push('');
   }
   box.textContent = lines.join('\n');
 }
+
+document.getElementById('graphclose').addEventListener('click', () => {
+  document.getElementById('graphpanel').hidden = true;
+});
 
 function showGame(state) {
   document.getElementById('launcher').hidden = true;
