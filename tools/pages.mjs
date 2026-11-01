@@ -81,11 +81,22 @@ async function api(path, body) {
 `;
 
 /** 启动器：列世界、看结构、跳转到 /game。 */
+/** 启动器：世界列表 + 结构树（组可整体开关）。 */
 export const LAUNCHER_PAGE = `<!doctype html>
 <html lang="zh-CN">
 <meta charset="utf-8">
 <title>新世界 · 启动器</title>
 <style>${CSS}</style>
+<style>
+  #graph { white-space: normal; }
+  .tree details { margin-left: 14px; }
+  .tree summary { cursor: pointer; color: #9aa3b2; padding: 2px 0; }
+  .tree summary b { color: #d7dae0; }
+  .tree .leaf { margin-left: 22px; padding: 2px 0; color: #8b929e; display: flex; gap: 6px; align-items: baseline; }
+  .tree .leaf .id { color: #5f6b7a; font-size: 11px; }
+  .tree .leaf .desc { color: #6f7a89; font-size: 11px; }
+  .tree label.group { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+</style>
 <main>
   <div id="errbar" hidden></div>
   <h1>{{app.title}}</h1>
@@ -99,17 +110,19 @@ export const LAUNCHER_PAGE = `<!doctype html>
     <span id="graphtitle">{{launcher.structure_title}}</span>
     <button id="graphclose">{{launcher.close}}</button>
   </div>
-  <div id="rules"></div>
-  <button id="graphstart" style="margin-top:8px">{{launcher.start_this}}</button>
-  <pre id="graph"></pre>
+  <div class="tree" id="tree"></div>
+  <div style="margin-top:10px; display:flex; gap:10px; align-items:center">
+    <button id="graphstart">{{launcher.start_this}}</button>
+    <span class="meta" id="offcount" style="margin:0"></span>
+  </div>
 </div>
 
 <script>
 ${ERRORS}
 
 const KIND_ORDER = [
-  ['world', '世界'], ['rule', '规则'], ['component', '组件'],
-  ['template', '模板'], ['terrain', '地形'], ['space', '空间'], ['entity', '实体'],
+  ['rule', '规则'], ['component', '组件'], ['template', '模板'],
+  ['terrain', '地形'], ['space', '空间'], ['entity', '实体'], ['world', '世界'],
 ];
 
 function render(state) {
@@ -168,76 +181,144 @@ function render(state) {
   }
 }
 
+let currentWorld = null;
+
 async function showGraph(id) {
+  currentWorld = id;
   const panel = document.getElementById('graphpanel');
-  const box = document.getElementById('graph');
-  document.getElementById('graphtitle').textContent = '世界结构 · ' + id;
+  const tree = document.getElementById('tree');
+  document.getElementById('graphtitle').textContent = '{{launcher.structure_title}} · ' + id;
   panel.hidden = false;
-  box.textContent = '{{launcher.reading}}';
+  tree.textContent = '{{launcher.reading}}';
 
   let result;
   try {
     result = await api('/api/graph', { id });
   } catch (error) {
-    box.textContent = '请求失败：' + error;
+    tree.textContent = '请求失败：' + error;
     return;
   }
-
   if (!result || result.ok !== true) {
-    box.textContent = '读不出来：' + (result && result.error ? result.error : '未知错误');
+    tree.textContent = '读不出来：' + (result && result.error ? result.error : '未知错误');
     return;
   }
 
-  renderRuleToggles(id, result.nodes);
+  tree.textContent = '';
+  buildTree(tree, result.nodes);
+  updateOffCount();
+}
 
-  const lines = [];
-  for (const [kind, title] of KIND_ORDER) {
-    const nodes = result.nodes.filter((node) => node.kind === kind).sort((a, b) => (a.label < b.label ? -1 : 1));
-    if (nodes.length === 0) continue;
-    lines.push('── ' + title + ' (' + nodes.length + ') ──');
-    for (const node of nodes) {
-      const used = node.usedBy.length === 0 ? '—' : '被 ' + node.usedBy.length + ' 处引用';
-      const shown = node.display && node.display !== node.label ? node.display + ' (' + node.label + ')' : String(node.label);
-      lines.push('  ' + shown.padEnd(30, ' ') + ' ' + String(node.origin).padEnd(16, ' ') + used);
+/** 包 → 类别 → 条目；规则和规则组带勾选。 */
+function buildTree(root, nodes) {
+  const packs = new Map();
+  for (const node of nodes) {
+    if (!packs.has(node.origin)) packs.set(node.origin, []);
+    packs.get(node.origin).push(node);
+  }
+
+  for (const [origin, list] of packs) {
+    const packBox = document.createElement('details');
+    packBox.open = true;
+    const summary = document.createElement('summary');
+    summary.innerHTML = '<b>' + origin + '</b> · ' + list.length + ' 项';
+    packBox.appendChild(summary);
+
+    const byKind = new Map();
+    for (const node of list) {
+      if (!byKind.has(node.kind)) byKind.set(node.kind, []);
+      byKind.get(node.kind).push(node);
     }
-    lines.push('');
+
+    for (const [kind, title] of KIND_ORDER) {
+      const items = byKind.get(kind);
+      if (!items || items.length === 0) continue;
+      packBox.appendChild(kindGroup(kind, title, items));
+    }
+
+    root.appendChild(packBox);
   }
-  box.textContent = lines.join('\\n');
 }
 
-/** 规则开关：勾上=启用，取消=启动时不注册。 */
-function renderRuleToggles(worldId, nodes) {
-  const box = document.getElementById('rules');
-  box.textContent = '';
-  const title = document.createElement('div');
-  title.textContent = '{{launcher.rules_toggle}}';
-  title.style.color = '#8b929e';
-  title.style.marginBottom = '6px';
-  box.appendChild(title);
+function kindGroup(kind, title, items) {
+  const box = document.createElement('details');
+  box.open = kind === 'rule';
 
-  for (const node of nodes.filter((item) => item.kind === 'rule').sort((a, b) => (a.label < b.label ? -1 : 1))) {
-    const row = document.createElement('label');
-    row.style.display = 'block';
-    row.style.cursor = 'pointer';
-    const box2 = document.createElement('input');
-    box2.type = 'checkbox';
-    box2.checked = true;
-    box2.value = node.label;
-    box2.dataset.rule = node.label;
-    row.appendChild(box2);
-    row.appendChild(document.createTextNode(' ' + (node.display || node.label) + (node.description ? '  —  ' + node.description : '')));
-    box.appendChild(row);
+  const summary = document.createElement('summary');
+  if (kind === 'rule') {
+    // 组开关：整组一起启停
+    const label = document.createElement('label');
+    label.className = 'group';
+    const group = document.createElement('input');
+    group.type = 'checkbox';
+    group.checked = true;
+    group.dataset.group = kind;
+    group.addEventListener('click', (event) => event.stopPropagation());
+    group.addEventListener('change', () => {
+      for (const input of box.querySelectorAll('input[data-rule]')) {
+        input.checked = group.checked;
+      }
+      updateOffCount();
+    });
+    label.appendChild(group);
+    label.appendChild(document.createTextNode(' ' + title + ' (' + items.length + ')'));
+    summary.appendChild(label);
+  } else {
+    summary.textContent = title + ' (' + items.length + ')';
+  }
+  box.appendChild(summary);
+
+  for (const node of items.sort((a, b) => (a.label < b.label ? -1 : 1))) {
+    const leaf = document.createElement('div');
+    leaf.className = 'leaf';
+
+    if (kind === 'rule') {
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.checked = true;
+      input.dataset.rule = node.label;
+      input.addEventListener('change', updateOffCount);
+      leaf.appendChild(input);
+    }
+
+    const name = document.createElement('span');
+    name.textContent = node.display || node.label;
+    leaf.appendChild(name);
+
+    const id = document.createElement('span');
+    id.className = 'id';
+    id.textContent = node.label !== node.display ? node.label : '';
+    leaf.appendChild(id);
+
+    if (node.description) {
+      const desc = document.createElement('span');
+      desc.className = 'desc';
+      desc.textContent = '— ' + node.description;
+      leaf.appendChild(desc);
+    }
+
+    box.appendChild(leaf);
   }
 
-  document.getElementById('graphstart').onclick = () => {
-    const disabled = [...box.querySelectorAll('input[data-rule]')]
-      .filter((input) => !input.checked)
-      .map((input) => input.value);
-    const query = '/game?world=' + encodeURIComponent(worldId) +
-      (disabled.length > 0 ? '&off=' + encodeURIComponent(disabled.join(',')) : '');
-    location.href = query;
-  };
+  return box;
 }
+
+function disabledRules() {
+  return Array.from(document.querySelectorAll('input[data-rule]'))
+    .filter((input) => !input.checked)
+    .map((input) => input.dataset.rule);
+}
+
+function updateOffCount() {
+  const off = disabledRules();
+  document.getElementById('offcount').textContent = off.length === 0 ? '' : '关掉 ' + off.length + ' 条规则';
+}
+
+document.getElementById('graphstart').addEventListener('click', () => {
+  const off = disabledRules();
+  const query = '/game?world=' + encodeURIComponent(currentWorld) +
+    (off.length > 0 ? '&off=' + encodeURIComponent(off.join(',')) : '');
+  location.href = query;
+});
 
 document.getElementById('graphclose').addEventListener('click', () => {
   document.getElementById('graphpanel').hidden = true;
