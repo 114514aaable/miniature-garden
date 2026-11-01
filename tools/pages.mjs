@@ -303,6 +303,17 @@ export const GAME_PAGE = `<!doctype html>
   </details>
 </div>
 
+<script>
+// 模块脚本加载失败时，这段（经典脚本）还能报错。
+window.addEventListener('error', function (event) {
+  var bar = document.getElementById('errbar');
+  if (!bar) return;
+  bar.hidden = false;
+  bar.textContent = '页面出错：' + (event.message || '脚本加载失败') +
+    (event.filename ? '  @' + event.filename + ':' + event.lineno : '');
+});
+</script>
+
 <script type="module">
 import { attach } from '/web/systems/render/browser.js';
 
@@ -328,7 +339,7 @@ function formatDebug(debug) {
       lines.push('      意图：打 ' + tiles + '  伤害 ' + actor.intent.damage + '  结算 @' + actor.intent.resolveAt);
     }
   }
-  return lines.join('\n');
+  return lines.join('\\n');
 }
 
 function render(state) {
@@ -348,8 +359,8 @@ function render(state) {
 
   document.getElementById('meta').textContent = state.packs.join(' + ');
   document.getElementById('message').textContent = state.message;
-  document.getElementById('logbox').textContent = (state.events || []).slice(-5).join('\n');
-  document.getElementById('devlog').textContent = (state.devlog || []).join('\n');
+  document.getElementById('logbox').textContent = (state.events || []).slice(-5).join('\\n');
+  document.getElementById('devlog').textContent = (state.devlog || []).join('\\n');
   document.getElementById('debug').textContent = formatDebug(state.debug);
 
   const skills = document.getElementById('skills');
