@@ -142,7 +142,20 @@ function scanWorlds() {
 
 let session = null;
 
-function buildSession(ordered) {
+/** 规则表：签名 + 处理器。关掉一条规则就是把它从这里跳过。 */
+const RULE_TABLE = [
+  { signature: moveSignature, handler: moveHandler },
+  { signature: takeSignature, handler: takeHandler },
+  { signature: dropSignature, handler: dropHandler },
+  { signature: attackSignature, handler: attackHandler },
+  { signature: enemyTurnSignature, handler: enemyTurnHandler },
+  { signature: windupSignature, handler: windupHandler },
+  { signature: strikeSignature, handler: strikeHandler },
+  { signature: waitSignature, handler: waitHandler },
+  { signature: aimSignature, handler: aimHandler },
+];
+
+function buildSession(ordered, disabled = new Set()) {
   const merged = mergePacks(ordered);
   const loaded = loadWorld(merged);
 
@@ -167,28 +180,13 @@ function buildSession(ordered) {
   }
 
   const registry = new Registry();
-  registry.define(moveSignature);
-  registry.define(takeSignature);
-  registry.define(dropSignature);
-  registry.define(attackSignature);
-  registry.define(enemyTurnSignature);
-  registry.define(windupSignature);
-  registry.define(strikeSignature);
-  registry.define(waitSignature);
-  registry.define(aimSignature);
+  const active = RULE_TABLE.filter((rule) => !disabled.has(rule.signature.tag));
+  for (const rule of active) {
+    registry.define(rule.signature);
+  }
   const link = registry.link();
 
-  const handlers = new Map([
-    [link.tags.get("core.move"), moveHandler],
-    [link.tags.get("core.take"), takeHandler],
-    [link.tags.get("core.drop"), dropHandler],
-    [link.tags.get("core.attack"), attackHandler],
-    [link.tags.get("core.enemy_turn"), enemyTurnHandler],
-    [link.tags.get("core.enemy_windup"), windupHandler],
-    [link.tags.get("core.enemy_strike"), strikeHandler],
-    [link.tags.get("core.wait"), waitHandler],
-    [link.tags.get("core.aim"), aimHandler],
-  ]);
+  const handlers = new Map(active.map((rule) => [link.tags.get(rule.signature.tag), rule.handler]));
 
   const skills = link.signatures
     .filter((signature) => signature.skill !== undefined)
@@ -687,10 +685,12 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.method === "POST" && request.url === "/api/start") {
-      const { id } = await readBody(request);
+      const { id, off } = await readBody(request);
+      const disabled = new Set(Array.isArray(off) ? off : []);
       try {
         const { byId } = collectPacks();
-        session = buildSession(closureOf(String(id), byId));
+        session = buildSession(closureOf(String(id), byId), disabled);
+        session.disabled = [...disabled];
         sendJson(response, snapshot("世界已载入"));
       } catch (error) {
         sendJson(response, { launcher: true, worlds: [], errors: [{ id, error: messageOf(error) }] });

@@ -99,6 +99,8 @@ export const LAUNCHER_PAGE = `<!doctype html>
     <span id="graphtitle">世界结构</span>
     <button id="graphclose">关闭</button>
   </div>
+  <div id="rules"></div>
+  <button id="graphstart" style="margin-top:8px">用这个配置开始</button>
   <pre id="graph"></pre>
 </div>
 
@@ -186,6 +188,8 @@ async function showGraph(id) {
     return;
   }
 
+  renderRuleToggles(id, result.nodes);
+
   const lines = [];
   for (const [kind, title] of KIND_ORDER) {
     const nodes = result.nodes.filter((node) => node.kind === kind).sort((a, b) => (a.label < b.label ? -1 : 1));
@@ -198,6 +202,40 @@ async function showGraph(id) {
     lines.push('');
   }
   box.textContent = lines.join('\\n');
+}
+
+/** 规则开关：勾上=启用，取消=启动时不注册。 */
+function renderRuleToggles(worldId, nodes) {
+  const box = document.getElementById('rules');
+  box.textContent = '';
+  const title = document.createElement('div');
+  title.textContent = '规则（取消勾选 = 本局不加载）';
+  title.style.color = '#8b929e';
+  title.style.marginBottom = '6px';
+  box.appendChild(title);
+
+  for (const node of nodes.filter((item) => item.kind === 'rule').sort((a, b) => (a.label < b.label ? -1 : 1))) {
+    const row = document.createElement('label');
+    row.style.display = 'block';
+    row.style.cursor = 'pointer';
+    const box2 = document.createElement('input');
+    box2.type = 'checkbox';
+    box2.checked = true;
+    box2.value = node.label;
+    box2.dataset.rule = node.label;
+    row.appendChild(box2);
+    row.appendChild(document.createTextNode(' ' + node.label));
+    box.appendChild(row);
+  }
+
+  document.getElementById('graphstart').onclick = () => {
+    const disabled = [...box.querySelectorAll('input[data-rule]')]
+      .filter((input) => !input.checked)
+      .map((input) => input.value);
+    const query = '/game?world=' + encodeURIComponent(worldId) +
+      (disabled.length > 0 ? '&off=' + encodeURIComponent(disabled.join(',')) : '');
+    location.href = query;
+  };
 }
 
 document.getElementById('graphclose').addEventListener('click', () => {
@@ -250,7 +288,9 @@ import { attach } from '/web/systems/render/browser.js';
 
 ${ERRORS}
 
-const worldId = new URLSearchParams(location.search).get('world');
+const params = new URLSearchParams(location.search);
+const worldId = params.get('world');
+const off = (params.get('off') || '').split(',').filter(Boolean);
 let renderer = null;
 let lastTile = 40;
 let aimTimer = 0;
@@ -358,7 +398,7 @@ window.addEventListener('keydown', (event) => {
     document.getElementById('errbar').textContent = '没有指定世界：请从启动器进入。';
     return;
   }
-  const state = await api('/api/start', { id: worldId });
+  const state = await api('/api/start', { id: worldId, off });
   if (!state || state.launcher) {
     document.getElementById('errbar').hidden = false;
     document.getElementById('errbar').textContent = '世界载入失败：' + (state && state.errors && state.errors[0] ? state.errors[0].error : '未知');
