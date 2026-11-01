@@ -40,6 +40,8 @@ export interface Renderer {
   setState(state: ClientState): void;
   /** 屏幕坐标（相对 canvas）→ 格子。 */
   cellAt(x: number, y: number): Vec;
+  /** 鼠标下的格子：画一个选中框。 */
+  setCursor(cell: { x: number; y: number } | null): void;
   /** 指针高亮：[[x, y], ...] */
   setAim(cells: ReadonlyArray<readonly [number, number]>): void;
   /** 改视觉速度（格/秒），设置界面用。 */
@@ -65,6 +67,7 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
   let running = true;
   let aimCells: ReadonlyArray<readonly [number, number]> = [];
   let camera: Vec = { x: 0, y: 0 };
+  let cursor: { x: number; y: number } | null = null;
 
   function setState(next: ClientState): void {
     state = next;
@@ -135,6 +138,7 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
       );
 
       draw(context as CanvasRenderingContext2D, commands, imageOf);
+      drawCursor(context as CanvasRenderingContext2D, cursor, options.tile, camera);
       drawAim(context as CanvasRenderingContext2D, aimCells, options.tile, camera);
     }
 
@@ -155,6 +159,9 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
     setAim(cells) {
       aimCells = cells;
     },
+    setCursor(cell) {
+      cursor = cell;
+    },
     setVisualSpeed(speed) {
       config = { ...config, speed };
     },
@@ -163,6 +170,22 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
       window.removeEventListener("resize", resize);
     },
   };
+}
+
+
+/** 选中框：只表示「鼠标在这」，不表示能不能打。 */
+function drawCursor(
+  context: CanvasRenderingContext2D,
+  cursor: { x: number; y: number } | null,
+  tile: number,
+  camera: Vec,
+): void {
+  if (cursor === null) return;
+  const sx = (cursor.x - camera.x) * tile;
+  const sy = (cursor.y - camera.y) * tile;
+  context.strokeStyle = "rgba(230,235,245,0.85)";
+  context.lineWidth = 2;
+  context.strokeRect(sx + 1, sy + 1, tile - 2, tile - 2);
 }
 
 /** 指针高亮：画在成品之上，不参与指令生成。 */

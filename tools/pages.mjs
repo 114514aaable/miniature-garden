@@ -480,6 +480,7 @@ document.getElementById('map').addEventListener('mousemove', (event) => {
   aimTimer = now;
 
   const cell = cellAt(event);
+  renderer.setCursor(cell);
   api('/api/aim', { tag: 'core.attack', x: cell.x, y: cell.y }).then((result) => {
     renderer.setAim(result.ok ? result.cells : []);
   });
@@ -513,7 +514,10 @@ function showTooltip(info, clientX, clientY) {
 
 document.getElementById('map').addEventListener('mouseleave', () => {
   document.getElementById('tooltip').hidden = true;
-  if (renderer !== null) renderer.setAim([]);
+  if (renderer !== null) {
+    renderer.setAim([]);
+    renderer.setCursor(null);
+  }
 });
 
 document.getElementById('map').addEventListener('click', (event) => {
