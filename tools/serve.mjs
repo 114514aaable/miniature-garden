@@ -32,6 +32,7 @@ import { dropHandler, dropSignature, takeHandler, takeSignature } from "../engin
 import { attackHandler, attackSignature } from "../engine/core/src/rules/attack.ts";
 import { enemyTurnHandler, enemyTurnSignature } from "../engine/core/src/rules/ai.ts";
 import { waitHandler, waitSignature } from "../engine/core/src/rules/wait.ts";
+import { aimHandler, aimSignature } from "../engine/core/src/rules/aim.ts";
 import {
   strikeHandler,
   strikeSignature,
@@ -172,6 +173,7 @@ function buildSession(ordered) {
   registry.define(windupSignature);
   registry.define(strikeSignature);
   registry.define(waitSignature);
+  registry.define(aimSignature);
   const link = registry.link();
 
   const handlers = new Map([
@@ -183,6 +185,7 @@ function buildSession(ordered) {
     [link.tags.get("core.enemy_windup"), windupHandler],
     [link.tags.get("core.enemy_strike"), strikeHandler],
     [link.tags.get("core.wait"), waitHandler],
+    [link.tags.get("core.aim"), aimHandler],
   ]);
 
   const skills = link.signatures
@@ -394,6 +397,34 @@ function act(command) {
   }
 
   return snapshot("不懂这个指令（w/a/s/d 走，e 捡，r 放）");
+}
+/** 问：这个技能能不能落在这一格。 */
+function aimAt(tag, x, y) {
+  const sym = session.link.tags.get(tag);
+  const signature = sym === undefined ? undefined : session.link.signatures[sym];
+  if (signature === undefined || signature.skill === undefined) {
+    return { ok: false, cells: [], reason: "没有这个技能" };
+  }
+  if (signature.skill.target.kind === "self") {
+    return { ok: false, cells: [], reason: "这个技能不需要目标" };
+  }
+
+  const kind = signature.skill.target.kind === "entity" ? "entity" : "cell";
+  const result = evaluate(
+    {
+      id: session.store.now() + 1,
+      tag: "core.aim",
+      params: { actor: session.playerHandle, kind, range: signature.skill.target.range, x, y },
+    },
+    session.link,
+    session.handlers,
+    currentView(),
+  );
+
+  if (!result.ok || !result.value) {
+    return { ok: false, cells: [], reason: "指向失败" };
+  }
+  return result.value;
 }
 
 function useSkill(tag) {
@@ -663,6 +694,12 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    if (request.method === "POST" && request.url === "/api/aim") {
+      const { tag, x, y } = await readBody(request);
+      sendJson(response, aimAt(String(tag), Number(x), Number(y)));
+      return;
+    }
+
     if (request.method === "POST" && request.url === "/api/skill") {
       const { tag } = await readBody(request);
       sendJson(response, useSkill(String(tag)));
@@ -776,6 +813,8 @@ const PAGE = `<!doctype html>
 import { attach } from '/web/systems/render/browser.js';
 
 let renderer = null;
+let lastTile = 40;
+let aimTimer = 0;
 
 async function api(path, body) {
   const options = body === undefined ? {} : {
@@ -855,6 +894,7 @@ function render(state) {
   if (renderer === null) {
     renderer = attach(document.getElementById('map'), { tile: state.tile });
   }
+  lastTile = state.tile;
   renderer.setState(state);
   document.getElementById('hud').innerHTML =
     'HP <b>' + state.hud.hp + '/' + state.hud.hpMax + '</b>' +
@@ -897,6 +937,26 @@ document.querySelectorAll('button[data-dir]').forEach((button) => {
 });
 document.getElementById('back').addEventListener('click', async () => {
   renderLauncher(await api('/api/leave', {}));
+});
+
+// 鼠标指向：悬停格 → 问服务端能不能落，能就高亮
+document.getElementById('map').addEventListener('mousemove', (event) => {
+  if (renderer === null) return;
+  const canvas = event.currentTarget;
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor(((event.clientX - rect.left) / rect.width) * (canvas.width / lastTile));
+  const y = Math.floor(((event.clientY - rect.top) / rect.height) * (canvas.height / lastTile));
+
+  const now = Date.now();
+  if (now - aimTimer < 40) return;
+  aimTimer = now;
+
+  api('/api/aim', { tag: 'core.attack', x, y }).then((result) => {
+    renderer.setAim(result.ok ? result.cells : []);
+    const message = document.getElementById('message');
+    if (result.ok) message.textContent = '可以劈砍 (' + x + ',' + y + ')';
+    else if (result.reason) message.textContent = result.reason;
+  });
 });
 window.addEventListener('keydown', (event) => {
   if (!document.getElementById('game').hidden && ['w','a','s','d','e','r'].includes(event.key)) {

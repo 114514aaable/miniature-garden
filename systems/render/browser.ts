@@ -35,6 +35,8 @@ export interface ClientOptions {
 
 export interface Renderer {
   setState(state: ClientState): void;
+  /** 指针高亮：[[x, y], ...] */
+  setAim(cells: ReadonlyArray<readonly [number, number]>): void;
   stop(): void;
 }
 
@@ -54,6 +56,7 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
   let last = 0;
   let previous = 0;
   let running = true;
+  let aimCells: ReadonlyArray<readonly [number, number]> = [];
 
   function setState(next: ClientState): void {
     state = next;
@@ -106,6 +109,7 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
       );
 
       draw(context as CanvasRenderingContext2D, commands, imageOf);
+      drawAim(context as CanvasRenderingContext2D, aimCells, options.tile);
     }
 
     requestAnimationFrame(frame);
@@ -119,10 +123,28 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
 
   return {
     setState,
+    setAim(cells) {
+      aimCells = cells;
+    },
     stop() {
       running = false;
     },
   };
+}
+
+/** 指针高亮：画在成品之上，不参与指令生成。 */
+function drawAim(
+  context: CanvasRenderingContext2D,
+  cells: ReadonlyArray<readonly [number, number]>,
+  tile: number,
+): void {
+  for (const [x, y] of cells) {
+    context.fillStyle = "rgba(138,180,248,0.22)";
+    context.fillRect(x * tile, y * tile, tile, tile);
+    context.strokeStyle = "rgba(138,180,248,0.9)";
+    context.lineWidth = 2;
+    context.strokeRect(x * tile + 1, y * tile + 1, tile - 2, tile - 2);
+  }
 }
 
 function draw(
