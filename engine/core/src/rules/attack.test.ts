@@ -59,7 +59,7 @@ function run(params: Record<string, number>, view: ReturnType<typeof setup>["vie
 
 test("相邻攻击：扣 攻击−防御 的血", () => {
   const { view, actor, target } = setup();
-  const result = run({ actor, target }, view) as {
+  const result = run({ actor, x: 2, y: 1 }, view) as {
     ok: boolean;
     damage: number;
     effects: Array<{ kind: string; data?: { hp: number } }>;
@@ -76,24 +76,24 @@ test("血被打光：直接 despawn", () => {
   const { view, entities, actor, target } = setup();
   entities.setOverrides(target, { "core.health": { hp: 2 } });
 
-  const result = run({ actor, target }, view) as { ok: boolean; effects: Array<{ kind: string }> };
+  const result = run({ actor, x: 2, y: 1 }, view) as { ok: boolean; effects: Array<{ kind: string }> };
   assert.deepEqual(result.effects, [{ kind: "despawn", handle: target }]);
 });
 
 test("够不着就不让打", () => {
   const { view, entities, actor } = setup();
-  const far = entities.create("npc_salt", 1, { x: 4, y: 4 });
+  entities.create("npc_salt", 1, { x: 4, y: 4 });
 
-  const result = run({ actor, target: far }, view) as { ok: boolean; reason: string };
+  const result = run({ actor, x: 4, y: 4 }, view) as { ok: boolean; reason: string };
   assert.equal(result.ok, false);
   assert.match(result.reason, /够不着/);
 });
 
 test("没有生命值的东西打不动", () => {
   const { view, entities, actor } = setup();
-  const crate = entities.create("crate", 1, { x: 1, y: 2 });
+  entities.create("crate", 1, { x: 1, y: 2 });
 
-  const result = run({ actor, target: crate }, view) as { ok: boolean; reason: string };
+  const result = run({ actor, x: 1, y: 2 }, view) as { ok: boolean; reason: string };
   assert.equal(result.ok, false);
-  assert.match(result.reason, /没有生命值/);
+  assert.match(result.reason, /没有可以打的东西/);
 });

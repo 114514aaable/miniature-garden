@@ -427,7 +427,7 @@ function aimAt(tag, x, y) {
   return result.value;
 }
 
-function useSkill(tag) {
+function useSkill(tag, x, y) {
   const sym = session.link.tags.get(tag);
   const signature = sym === undefined ? undefined : session.link.signatures[sym];
   if (signature === undefined || signature.skill === undefined) {
@@ -438,15 +438,11 @@ function useSkill(tag) {
     return run(tag, { actor: session.playerHandle }, signature.skill.cost);
   }
 
-  if (signature.skill.target.kind === "entity") {
-    const target = adjacentTarget();
-    if (target === null) {
-      return snapshot(`${signature.skill.name}：旁边没有可以打的东西`);
-    }
-    return run(tag, { actor: session.playerHandle, target }, signature.skill.cost);
+  if (x === undefined || y === undefined) {
+    return snapshot(`${signature.skill.name} 需要先指出目标格`);
   }
 
-  return snapshot(`${signature.skill.name} 需要选目标：先用方向键`);
+  return run(tag, { actor: session.playerHandle, x, y }, signature.skill.cost);
 }
 
 function adjacentTarget() {
@@ -701,8 +697,8 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.method === "POST" && request.url === "/api/skill") {
-      const { tag } = await readBody(request);
-      sendJson(response, useSkill(String(tag)));
+      const { tag, x, y } = await readBody(request);
+      sendJson(response, useSkill(String(tag), x === undefined ? undefined : Number(x), y === undefined ? undefined : Number(y)));
       return;
     }
 
@@ -937,6 +933,16 @@ document.querySelectorAll('button[data-dir]').forEach((button) => {
 });
 document.getElementById('back').addEventListener('click', async () => {
   renderLauncher(await api('/api/leave', {}));
+});
+
+// 点击：对指向的格子用技能（默认劈砍）
+document.getElementById('map').addEventListener('click', (event) => {
+  if (renderer === null) return;
+  const canvas = event.currentTarget;
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor(((event.clientX - rect.left) / rect.width) * (canvas.width / lastTile));
+  const y = Math.floor(((event.clientY - rect.top) / rect.height) * (canvas.height / lastTile));
+  api('/api/skill', { tag: 'core.attack', x, y }).then(render);
 });
 
 // 鼠标指向：悬停格 → 问服务端能不能落，能就高亮

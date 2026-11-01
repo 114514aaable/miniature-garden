@@ -19,7 +19,7 @@ export const attackSignature: Signature = {
   tag: "core.attack",
   params: {
     t: "object",
-    fields: { actor: { t: "int" }, target: { t: "int" } },
+    fields: { actor: { t: "int" }, x: { t: "int" }, y: { t: "int" } },
   },
   result: { t: "any" },
   returnsEffects: true,
@@ -38,18 +38,29 @@ function numberIn(component: JsonValue | undefined, key: string, fallback: numbe
 export function attackHandler(params: JsonValue, context: EvaluateContext): JsonValue {
   const p = params as Record<string, number>;
   const actor = context.view.entity(p.actor);
-  const target = context.view.entity(p.target);
 
-  if (actor.space === null || actor.pos === null || target.pos === null || target.space !== actor.space) {
-    return { ok: false, reason: "它不在同一个空间" };
+  if (actor.space === null || actor.pos === null) {
+    return { ok: false, reason: "它不在任何地方" };
   }
 
-  const distance = Math.abs(target.pos.x - actor.pos.x) + Math.abs(target.pos.y - actor.pos.y);
+  const cell = { x: p.x, y: p.y };
+  const distance = Math.abs(cell.x - actor.pos.x) + Math.abs(cell.y - actor.pos.y);
   if (distance !== 1) {
     return { ok: false, reason: "够不着" };
   }
 
-  const health = target.components["core.health"];
+  // 技能按格子作用：打谁由规则查，不由调用方指定。
+  const space = context.view.space(actor.space);
+  const target = space
+    .occupantsAt(cell)
+    .find((handle) => handle !== p.actor && context.view.entity(handle).components["core.health"] !== undefined);
+
+  if (target === undefined) {
+    return { ok: false, reason: "那里没有可以打的东西" };
+  }
+
+  const targetEntity = context.view.entity(target);
+  const health = targetEntity.components["core.health"];
   if (health === undefined) {
     return { ok: false, reason: "它没有生命值，打不动" };
   }
@@ -57,17 +68,17 @@ export function attackHandler(params: JsonValue, context: EvaluateContext): Json
   const max = numberIn(health, "max", 0);
   const hp = numberIn(health, "hp", max);
   const power = numberIn(actor.components["core.stats"], "attack", 1);
-  const armor = numberIn(target.components["core.stats"], "defense", 0);
+  const armor = numberIn(targetEntity.components["core.stats"], "defense", 0);
   const damage = Math.max(1, power - armor);
   const next = hp - damage;
 
   if (next <= 0) {
-    return { ok: true, damage, effects: [{ kind: "despawn", handle: p.target }] };
+    return { ok: true, damage, effects: [{ kind: "despawn", handle: target }] };
   }
 
   return {
     ok: true,
     damage,
-    effects: [{ kind: "patch", handle: p.target, component: "core.health", data: { hp: next } }],
+    effects: [{ kind: "patch", handle: target, component: "core.health", data: { hp: next } }],
   };
 }
