@@ -127,6 +127,11 @@ export class Store {
     return this.entities.all();
   }
 
+  /** 句柄还活着吗。 */
+  hasEntity(handle: Handle): boolean {
+    return this.entities.has(handle);
+  }
+
   /**
    * 提交一个变更意图。只是排队——状态一个字节都不会动，直到下一次 step。
    * 故意不在此时校验：真正该校验的是「应用那一刻的状态」。

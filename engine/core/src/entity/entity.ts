@@ -90,6 +90,12 @@ export class EntityTable {
     return handle;
   }
 
+  /** 句柄还活着吗？调度器清理死者要用。 */
+  has(handle: Handle): boolean {
+    const slot = this.slots[handleIndex(handle)];
+    return slot !== undefined && slot.entity !== null && slot.generation === handleGeneration(handle);
+  }
+
   /** 查实体。句柄过期或已销毁都会报错，不会返回一个陌生的实体。 */
   get(handle: Handle): Entity {
     const slot = this.slots[handleIndex(handle)];
@@ -100,11 +106,6 @@ export class EntityTable {
       throw new Error(`实体句柄已过期：${handle}（该槽位现在是第 ${slot.generation} 代）`);
     }
     return slot.entity;
-  }
-
-  has(handle: Handle): boolean {
-    const slot = this.slots[handleIndex(handle)];
-    return slot !== undefined && slot.entity !== null && slot.generation === handleGeneration(handle);
   }
 
   /** 销毁。槽位回收，代数 +1，旧句柄从此作废。 */

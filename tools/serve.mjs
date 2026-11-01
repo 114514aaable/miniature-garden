@@ -490,6 +490,8 @@ function advanceTo(target) {
       session.lastEvents.push(entry);
       session.devlog.effect(entry);
     }
+    // 被打死的敌人要从调度器里清掉，否则会和它的句柄一起留在队列里
+    session.scheduler.prune((handle) => session.store.hasEntity(handle));
     drainEnemies();
   }
   applyPending();

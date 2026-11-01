@@ -56,6 +56,15 @@ export class Scheduler {
     this.readyAt.delete(handle);
   }
 
+  /** 清理已经死掉的单位（被 despawn 的敌人）。 */
+  prune(alive: (handle: number) => boolean): void {
+    for (const handle of [...this.readyAt.keys()]) {
+      if (!alive(handle)) {
+        this.readyAt.delete(handle);
+      }
+    }
+  }
+
   readyAtOf(handle: number): number | undefined {
     return this.readyAt.get(handle);
   }
