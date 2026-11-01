@@ -405,6 +405,7 @@ window.addEventListener('error', function (event) {
 <script type="module">
 import { attach } from '/web/systems/render/browser.js';
 import { row, col, text, button, toggle, modal } from '/web/systems/ui/spec.js';
+import { resolveBindings, commandFor, parseCommand } from '/web/systems/input/bindings.js';
 import { mount, render as renderNode } from '/web/systems/ui/dom.js';
 
 ${ERRORS}
@@ -416,6 +417,9 @@ const off = (params.get('off') || '').split(',').filter(Boolean);
 let renderer = null;
 let aimTimer = 0;
 let tile = 32;
+
+// 按键：物理键 → 命令。用户设置覆盖默认。
+const bindings = resolveBindings(JSON.parse(localStorage.getItem('nw.bindings') || '{}'));
 
 function formatDebug(debug) {
   if (!debug) return '';
@@ -573,13 +577,22 @@ document.getElementById('savebtn').addEventListener('click', async () => { rende
 document.getElementById('loadbtn').addEventListener('click', async () => { render(await api('/api/load', {})); });
 
 window.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') {
-    const box = document.getElementById('settings');
-    if (box.hidden) openSettings(); else closeSettings();
+  const command = commandFor(bindings, event.code);
+  if (command === undefined) return;
+
+  const parsed = parseCommand(command);
+
+  if (parsed.kind === 'ui') {
+    if (parsed.value === 'settings') {
+      const box = document.getElementById('settings');
+      if (box.hidden) openSettings(); else closeSettings();
+    }
     return;
   }
+
   if (!document.getElementById('settings').hidden) return;
-  if (['w', 'a', 's', 'd', 'e', 'r'].includes(event.key)) act(event.key);
+  if (parsed.kind === 'move') act(parsed.value);
+  else if (parsed.kind === 'skill') useSkill(parsed.value);
 });
 
 (async () => {
