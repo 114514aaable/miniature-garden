@@ -42,6 +42,8 @@ export interface Renderer {
   cellAt(x: number, y: number): Vec;
   /** 指针高亮：[[x, y], ...] */
   setAim(cells: ReadonlyArray<readonly [number, number]>): void;
+  /** 改视觉速度（格/秒），设置界面用。 */
+  setVisualSpeed(speed: number): void;
   stop(): void;
 }
 
@@ -52,7 +54,7 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
     throw new Error("这个 canvas 拿不到 2d 上下文");
   }
 
-  const config = options.visual ?? DEFAULT_VISUAL;
+  let config = options.visual ?? DEFAULT_VISUAL;
   const visuals = new Map<number, Vec2>();
   const images = new Map<string, HTMLImageElement>();
 
@@ -152,6 +154,9 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
     },
     setAim(cells) {
       aimCells = cells;
+    },
+    setVisualSpeed(speed) {
+      config = { ...config, speed };
     },
     stop() {
       running = false;

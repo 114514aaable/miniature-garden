@@ -296,6 +296,8 @@ export const GAME_PAGE = `<!doctype html>
   <div id="message"></div>
   <div id="logbox"></div>
 
+  <div id="settings" hidden></div>
+
   <details id="devpanel">
     <summary>{{game.devlog}}</summary>
     <pre id="debug"></pre>
@@ -316,8 +318,8 @@ window.addEventListener('error', function (event) {
 
 <script type="module">
 import { attach } from '/web/systems/render/browser.js';
-import { row, button } from '/web/systems/ui/spec.js';
-import { mount } from '/web/systems/ui/dom.js';
+import { row, col, text, button, toggle, modal } from '/web/systems/ui/spec.js';
+import { mount, render as renderNode } from '/web/systems/ui/dom.js';
 
 ${ERRORS}
 
@@ -405,10 +407,59 @@ document.getElementById('map').addEventListener('click', (event) => {
   useSkill('core.attack', cell.x, cell.y);
 });
 
+const settings = {
+  speed: Number(localStorage.getItem('nw.speed') || '10'),
+  devlog: localStorage.getItem('nw.devlog') !== '0',
+};
+
+function applySettings() {
+  if (renderer !== null) renderer.setVisualSpeed(settings.speed);
+  document.getElementById('devpanel').style.display = settings.devlog ? '' : 'none';
+  localStorage.setItem('nw.speed', String(settings.speed));
+  localStorage.setItem('nw.devlog', settings.devlog ? '1' : '0');
+}
+
+function closeSettings() {
+  const box = document.getElementById('settings');
+  box.hidden = true;
+  box.textContent = '';
+}
+
+function openSettings() {
+  const speeds = [5, 10, 20].map((value) =>
+    button((settings.speed === value ? '● ' : '') + value + ' 格/秒', () => {
+      settings.speed = value;
+      applySettings();
+      openSettings();
+    }),
+  );
+
+  const body = col({ gap: 10 },
+    row({ gap: 8, align: 'center' }, text('动画速度'), ...speeds),
+    toggle('显示开发日志', settings.devlog, (next) => {
+      settings.devlog = next;
+      applySettings();
+      openSettings();
+    }),
+    row({ gap: 8, justify: 'end' }, button('关闭', closeSettings)),
+  );
+
+  const box = document.getElementById('settings');
+  box.hidden = false;
+  box.textContent = '';
+  box.appendChild(renderNode(modal(body, { title: '设置' })));
+}
+
 document.getElementById('savebtn').addEventListener('click', async () => { render(await api('/api/save', {})); });
 document.getElementById('loadbtn').addEventListener('click', async () => { render(await api('/api/load', {})); });
 
 window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    const box = document.getElementById('settings');
+    if (box.hidden) openSettings(); else closeSettings();
+    return;
+  }
+  if (!document.getElementById('settings').hidden) return;
   if (['w', 'a', 's', 'd', 'e', 'r'].includes(event.key)) act(event.key);
 });
 
@@ -425,6 +476,7 @@ window.addEventListener('keydown', (event) => {
     return;
   }
   render(state);
+  applySettings();
 })();
 </script>
 </html>`;

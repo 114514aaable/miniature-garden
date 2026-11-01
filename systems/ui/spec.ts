@@ -133,3 +133,49 @@ function node(
     ...(options.className === undefined ? {} : { className: options.className }),
   };
 }
+
+/** 全屏浮层：盖住整个视口，背景变暗，内容居中。 */
+export function modal(content: UiNode, options: { readonly title?: string } = {}): UiNode {
+  const backdrop: Record<string, string> = {
+    position: "fixed",
+    inset: "0",
+    display: "flex",
+    "align-items": "center",
+    "justify-content": "center",
+    background: "rgba(0,0,0,0.55)",
+    "pointer-events": "auto",
+    "z-index": "40",
+  };
+
+  const card = panel({ padding: 20, gap: 12, width: 420 });
+  const children: UiNode[] = [];
+  if (options.title !== undefined) {
+    children.push(text(options.title, { policy: "fixed" }));
+  }
+  children.push(content);
+
+  return { tag: "div", style: backdrop, children: [{ ...card, children }] };
+}
+
+/** 进度条：value/max → 填充宽度。两端都夹住，不会溢出。 */
+export function bar(value: number, max: number, options: BoxOptions = {}): UiNode {
+  const ratio = max <= 0 ? 0 : Math.min(1, Math.max(0, value / max));
+  const track = boxStyle({ ...options, policy: options.policy ?? "fixed" }, "row");
+  track.background = "#22262f";
+  track["border-radius"] = "6px";
+  track.overflow = "hidden";
+
+  const fill: Record<string, string> = {
+    display: "block",
+    width: `${Math.round(ratio * 100)}%`,
+    height: "100%",
+    background: "#4fd658",
+  };
+
+  return { tag: "div", style: track, children: [{ tag: "div", style: fill, children: [] }] };
+}
+
+/** 开关：显示勾选状态，点击切换。 */
+export function toggle(label: string, checked: boolean, onChange: (next: boolean) => void): UiNode {
+  return button((checked ? "☑ " : "☐ ") + label, () => onChange(!checked));
+}

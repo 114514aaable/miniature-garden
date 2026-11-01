@@ -10,7 +10,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { boxStyle, button, col, panel, row, text } from "./spec.ts";
+import { bar, boxStyle, button, col, modal, panel, row, text, toggle } from "./spec.ts";
 
 test("row / col 的区别只有方向", () => {
   assert.equal(boxStyle({}, "row")["flex-direction"], "row");
@@ -75,4 +75,35 @@ test("col 里的子节点保持列方向", () => {
   assert.equal(list.style["flex-direction"], "column");
   assert.equal(list.style.gap, "6px");
   assert.equal(list.children.length, 3);
+});
+
+test("modal 盖住视口并居中", () => {
+  const node = modal(text("设置"), { title: "设置" });
+  assert.equal(node.style.position, "fixed");
+  assert.equal(node.style.inset, "0");
+  assert.equal(node.style["justify-content"], "center");
+
+  const card = node.children[0];
+  assert.equal(card.children[0].text, "设置");
+});
+
+test("bar 的填充按比例，且夹在 0..100%", () => {
+  const half = bar(5, 10);
+  assert.equal(half.children[0].style.width, "50%");
+  assert.equal(bar(20, 10).children[0].style.width, "100%");
+  assert.equal(bar(-5, 10).children[0].style.width, "0%");
+  assert.equal(bar(5, 0).children[0].style.width, "0%");
+});
+
+test("toggle 显示勾选状态并能切换", () => {
+  let next = null;
+  const on = toggle("开发日志", true, (value) => {
+    next = value;
+  });
+  assert.equal(on.text, "☑ 开发日志");
+  on.onClick?.();
+  assert.equal(next, false);
+
+  const off = toggle("开发日志", false, () => {});
+  assert.equal(off.text, "☐ 开发日志");
 });
