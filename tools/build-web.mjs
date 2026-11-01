@@ -40,7 +40,7 @@ if (TS_PATH === undefined) {
 
 const ts = (await import(pathToFileURL(TS_PATH).href)).default;
 
-const ROOTS = ["systems/render", "engine/core/src"];
+const ROOTS = ["systems", "engine/core/src"];
 const OUT = "web";
 
 /** 收集 .ts，跳过测试。 */

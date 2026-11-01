@@ -18,10 +18,13 @@ import {
   type RenderStyle,
 } from "./draw.ts";
 import { type FrameSnapshot } from "./project.ts";
+import { cameraFor, screenToWorld, type Vec } from "../camera/camera.ts";
 import { clampDelta, DEFAULT_VISUAL, stepVisual, type Vec2, type VisualConfig } from "./visual.ts";
 
 /** 服务端发来的东西。 */
 export interface ClientState {
+  /** 玩家句柄：相机跟着他走。 */
+  readonly playerHandle?: number;
   readonly snapshot: FrameSnapshot;
   readonly style?: RenderStyle;
   /** 原始图集 JSON（可选）。 */
@@ -35,6 +38,8 @@ export interface ClientOptions {
 
 export interface Renderer {
   setState(state: ClientState): void;
+  /** 屏幕坐标（相对 canvas）→ 格子。 */
+  cellAt(x: number, y: number): Vec;
   /** 指针高亮：[[x, y], ...] */
   setAim(cells: ReadonlyArray<readonly [number, number]>): void;
   stop(): void;
@@ -57,6 +62,7 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
   let previous = 0;
   let running = true;
   let aimCells: ReadonlyArray<readonly [number, number]> = [];
+  let camera: Vec = { x: 0, y: 0 };
 
   function setState(next: ClientState): void {
     state = next;
@@ -64,12 +70,18 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
       atlas = parseAtlas(next.atlas);
     }
 
-    const space = next.snapshot.spaces[0];
-    if (space !== undefined) {
-      canvas.width = space.width * options.tile;
-      canvas.height = space.height * options.tile;
-    }
+    resize();
   }
+
+  function resize(): void {
+    const rect = canvas.getBoundingClientRect();
+    const width = Math.max(1, Math.round(rect.width));
+    const height = Math.max(1, Math.round(rect.height));
+    if (canvas.width !== width) canvas.width = width;
+    if (canvas.height !== height) canvas.height = height;
+  }
+
+  window.addEventListener("resize", resize);
 
   function imageOf(src: string): HTMLImageElement {
     let image = images.get(src);
@@ -97,19 +109,31 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
         return { ...entity, x: visual.x, y: visual.y };
       });
 
+      const space = state.snapshot.spaces[0];
+      if (space !== undefined) {
+        // 相机跟「视觉位置」走，不跟逻辑位置——否则补间时画面会抖。
+        const playerHandle = state.playerHandle;
+        const player =
+          playerHandle === undefined
+            ? null
+            : entities.find((entity) => entity.handle === playerHandle) ?? null;
+        const focus = player === null ? { x: space.width / 2, y: space.height / 2 } : { x: player.x, y: player.y };
+        camera = cameraFor(focus, { width: canvas.width, height: canvas.height }, space, options.tile);
+      }
+
       const commands = buildFrame(
         { ...state.snapshot, entities },
         {
           tile: options.tile,
           viewport: { width: canvas.width, height: canvas.height },
-          camera: { x: 0, y: 0 },
+          camera,
           style: state.style ?? DEFAULT_STYLE,
           ...(atlas === null ? {} : { atlas }),
         },
       );
 
       draw(context as CanvasRenderingContext2D, commands, imageOf);
-      drawAim(context as CanvasRenderingContext2D, aimCells, options.tile);
+      drawAim(context as CanvasRenderingContext2D, aimCells, options.tile, camera);
     }
 
     requestAnimationFrame(frame);
@@ -123,11 +147,15 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
 
   return {
     setState,
+    cellAt(x, y) {
+      return screenToWorld({ x, y }, camera, options.tile);
+    },
     setAim(cells) {
       aimCells = cells;
     },
     stop() {
       running = false;
+      window.removeEventListener("resize", resize);
     },
   };
 }
@@ -137,13 +165,16 @@ function drawAim(
   context: CanvasRenderingContext2D,
   cells: ReadonlyArray<readonly [number, number]>,
   tile: number,
+  camera: Vec,
 ): void {
   for (const [x, y] of cells) {
+    const sx = (x - camera.x) * tile;
+    const sy = (y - camera.y) * tile;
     context.fillStyle = "rgba(138,180,248,0.22)";
-    context.fillRect(x * tile, y * tile, tile, tile);
+    context.fillRect(sx, sy, tile, tile);
     context.strokeStyle = "rgba(138,180,248,0.9)";
     context.lineWidth = 2;
-    context.strokeRect(x * tile + 1, y * tile + 1, tile - 2, tile - 2);
+    context.strokeRect(sx + 1, sy + 1, tile - 2, tile - 2);
   }
 }
 
