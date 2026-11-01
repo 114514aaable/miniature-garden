@@ -414,6 +414,49 @@ function act(command) {
 
   return snapshot("不懂这个指令（w/a/s/d 走，e 捡，r 放）");
 }
+/** 看：这一格有什么。地形 + 站在上面的东西。 */
+function inspectCell(x, y) {
+  if (session === null) return { ok: false, error: "没有进行中的世界" };
+
+  const view = currentView();
+  const player = session.playerHandle === null ? null : session.store.entity(session.playerHandle);
+  const spaceId = player && player.space !== null ? player.space : session.loaded.spaces[0].id;
+  const space = view.space(spaceId);
+
+  if (x < 0 || y < 0 || x >= space.width || y >= space.height) {
+    return { ok: false, error: "那里没有格子" };
+  }
+
+  const terrain = space.terrainAt({ x, y });
+  const entities = space
+    .occupantsAt({ x, y })
+    .map((handle) => {
+      const entity = view.entity(handle);
+      const health = entity.components["core.health"];
+      const intent = entity.components["core.intent"];
+      return {
+        handle,
+        template: entity.template,
+        name: MESSAGES["template." + entity.template + ".name"] ?? entity.template,
+        description: MESSAGES["template." + entity.template + ".desc"] ?? "",
+        hp: health ? { cur: health.hp ?? health.max, max: health.max } : null,
+        intent: intent && Array.isArray(intent.tiles) && intent.tiles.length > 0
+          ? { damage: intent.damage, resolveAt: intent.resolveAt, count: intent.tiles.length }
+          : null,
+      };
+    });
+
+  return {
+    ok: true,
+    cell: { x, y },
+    terrain: {
+      id: terrain,
+      name: MESSAGES["terrain." + terrain + ".name"] ?? "地形 " + terrain,
+    },
+    entities,
+  };
+}
+
 /** 问：这个技能能不能落在这一格。 */
 function aimAt(tag, x, y) {
   const sym = session.link.tags.get(tag);
@@ -797,6 +840,12 @@ const server = createServer(async (request, response) => {
       } catch (error) {
         sendJson(response, { ok: false, error: messageOf(error) });
       }
+      return;
+    }
+
+    if (request.method === "POST" && request.url === "/api/inspect") {
+      const { x, y } = await readBody(request);
+      sendJson(response, inspectCell(Number(x), Number(y)));
       return;
     }
 

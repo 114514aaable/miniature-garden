@@ -356,6 +356,9 @@ export const GAME_PAGE = `<!doctype html>
   #logbox { position: absolute; bottom: 14px; left: 10px; width: 340px; max-height: 180px;
             overflow: hidden; padding: 6px 10px; background: rgba(16,19,26,0.7);
             border-radius: 8px; color: #9aa3b2; font-size: 12px; }
+  #tooltip { position: fixed; z-index: 30; pointer-events: none; max-width: 320px;
+             padding: 6px 10px; background: rgba(10,12,16,0.92); border: 1px solid #2a303c;
+             border-radius: 6px; color: #c7cdd6; font-size: 12px; white-space: pre-wrap; }
   #devpanel { position: absolute; top: 10px; right: 10px; max-width: 460px; }
   #devpanel[open] { background: rgba(16,19,26,0.92); padding: 8px 10px; border-radius: 8px; }
 </style>
@@ -379,6 +382,7 @@ export const GAME_PAGE = `<!doctype html>
   <div id="logbox"></div>
 
   <div id="settings" hidden></div>
+  <div id="tooltip" hidden></div>
 
   <details id="devpanel">
     <summary>{{game.devlog}}</summary>
@@ -478,9 +482,38 @@ document.getElementById('map').addEventListener('mousemove', (event) => {
   const cell = cellAt(event);
   api('/api/aim', { tag: 'core.attack', x: cell.x, y: cell.y }).then((result) => {
     renderer.setAim(result.ok ? result.cells : []);
-    document.getElementById('message').textContent =
-      result.ok ? '可以劈砍 (' + cell.x + ',' + cell.y + ')' : (result.reason || '');
   });
+  api('/api/inspect', { x: cell.x, y: cell.y }).then((info) => {
+    showTooltip(info, event.clientX, event.clientY);
+  });
+});
+
+/** 信息槽：鼠标附近显示这一格有什么。以后加字段只改这里。 */
+function showTooltip(info, clientX, clientY) {
+  const tip = document.getElementById('tooltip');
+  if (!info || info.ok !== true) {
+    tip.hidden = true;
+    return;
+  }
+
+  const lines = ['(' + info.cell.x + ',' + info.cell.y + ') ' + info.terrain.name];
+  for (const entity of info.entities) {
+    let line = entity.name;
+    if (entity.hp) line += '  ' + entity.hp.cur + '/' + entity.hp.max;
+    if (entity.intent) line += '  意图 ' + entity.intent.count + ' 格 @' + entity.intent.resolveAt;
+    lines.push(line);
+    if (entity.description) lines.push('  ' + entity.description);
+  }
+
+  tip.textContent = lines.join('\\n');
+  tip.style.left = Math.min(clientX + 16, window.innerWidth - 340) + 'px';
+  tip.style.top = Math.min(clientY + 16, window.innerHeight - 120) + 'px';
+  tip.hidden = false;
+}
+
+document.getElementById('map').addEventListener('mouseleave', () => {
+  document.getElementById('tooltip').hidden = true;
+  if (renderer !== null) renderer.setAim([]);
 });
 
 document.getElementById('map').addEventListener('click', (event) => {
