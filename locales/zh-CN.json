@@ -1,0 +1,21 @@
+{
+  "app.title": "新世界",
+  "launcher.pick": "选择一个世界开始",
+  "launcher.start": "开始",
+  "launcher.structure": "结构",
+  "launcher.close": "关闭",
+  "launcher.structure_title": "世界结构",
+  "launcher.rules_toggle": "规则（取消勾选 = 本局不加载）",
+  "launcher.start_this": "用这个配置开始",
+  "launcher.reading": "读取结构…",
+  "game.back": "← 启动器",
+  "game.save": "存档",
+  "game.load": "读档",
+  "game.devlog": "开发日志",
+  "game.hp": "HP",
+  "game.bag": "背包",
+  "game.tick": "tick",
+  "game.recovering": "恢复中 还要 {n} 回合",
+  "game.ready": "可以行动",
+  "game.can_attack": "可以劈砍 ({x},{y})"
+}

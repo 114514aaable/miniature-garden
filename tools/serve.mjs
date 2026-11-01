@@ -47,6 +47,21 @@ import { createProjector } from "../systems/render/project.ts";
 import { buildGraph } from "../engine/core/src/pack/graph.ts";
 import { DevLog, formatLine } from "../systems/log/devlog.ts";
 
+const LOCALE = "zh-CN";
+let MESSAGES = {};
+try {
+  MESSAGES = JSON.parse(readFileSync(`locales/${LOCALE}.json`, "utf8"));
+} catch {
+  console.warn("没有找到语言包，界面会显示 key");
+}
+
+/** 把页面里的 {{key}} 换成译文；查不到就保留原样（能一眼看出漏了）。 */
+function renderPage(html) {
+  return html.replace(/\{\{([\w.-]+)\}\}/g, (whole, key) =>
+    typeof MESSAGES[key] === "string" ? MESSAGES[key] : whole,
+  );
+}
+
 const PORT = Number(process.env.PORT ?? 8787);
 const WORLDS_DIR = "worlds";
 const TILE = 40;
@@ -679,13 +694,13 @@ const server = createServer(async (request, response) => {
   try {
     if (request.url === "/") {
       response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-      response.end(LAUNCHER_PAGE);
+      response.end(renderPage(LAUNCHER_PAGE));
       return;
     }
 
     if (request.url.startsWith("/game")) {
       response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-      response.end(GAME_PAGE);
+      response.end(renderPage(GAME_PAGE));
       return;
     }
 

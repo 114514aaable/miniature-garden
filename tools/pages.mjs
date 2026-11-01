@@ -88,19 +88,19 @@ export const LAUNCHER_PAGE = `<!doctype html>
 <style>${CSS}</style>
 <main>
   <div id="errbar" hidden></div>
-  <h1>新世界</h1>
-  <div class="meta" id="meta">选择一个世界开始</div>
+  <h1>{{app.title}}</h1>
+  <div class="meta" id="meta">{{launcher.pick}}</div>
   <div id="worlds"></div>
   <div id="errors"></div>
 </main>
 
 <div id="graphpanel" hidden>
   <div class="graphbar">
-    <span id="graphtitle">世界结构</span>
-    <button id="graphclose">关闭</button>
+    <span id="graphtitle">{{launcher.structure_title}}</span>
+    <button id="graphclose">{{launcher.close}}</button>
   </div>
   <div id="rules"></div>
-  <button id="graphstart" style="margin-top:8px">用这个配置开始</button>
+  <button id="graphstart" style="margin-top:8px">{{launcher.start_this}}</button>
   <pre id="graph"></pre>
 </div>
 
@@ -139,7 +139,7 @@ function render(state) {
 
     const actions = document.createElement('div');
     const startButton = document.createElement('button');
-    startButton.textContent = '开始';
+    startButton.textContent = '{{launcher.start}}';
     startButton.disabled = !world.ok;
     startButton.addEventListener('click', () => {
       location.href = '/game?world=' + encodeURIComponent(world.id);
@@ -147,7 +147,7 @@ function render(state) {
     actions.appendChild(startButton);
 
     const graphButton = document.createElement('button');
-    graphButton.textContent = '结构';
+    graphButton.textContent = '{{launcher.structure}}';
     graphButton.style.marginLeft = '8px';
     graphButton.addEventListener('click', () => showGraph(world.id));
     actions.appendChild(graphButton);
@@ -173,7 +173,7 @@ async function showGraph(id) {
   const box = document.getElementById('graph');
   document.getElementById('graphtitle').textContent = '世界结构 · ' + id;
   panel.hidden = false;
-  box.textContent = '读取结构…';
+  box.textContent = '{{launcher.reading}}';
 
   let result;
   try {
@@ -209,7 +209,7 @@ function renderRuleToggles(worldId, nodes) {
   const box = document.getElementById('rules');
   box.textContent = '';
   const title = document.createElement('div');
-  title.textContent = '规则（取消勾选 = 本局不加载）';
+  title.textContent = '{{launcher.rules_toggle}}';
   title.style.color = '#8b929e';
   title.style.marginBottom = '6px';
   box.appendChild(title);
@@ -243,7 +243,7 @@ document.getElementById('graphclose').addEventListener('click', () => {
 });
 
 api('/api/worlds').then((state) => {
-  document.getElementById('meta').textContent = '选择一个世界开始';
+  document.getElementById('meta').textContent = '{{launcher.pick}}';
   render(state);
 });
 </script>
@@ -284,9 +284,9 @@ export const GAME_PAGE = `<!doctype html>
   <div id="errbar" hidden></div>
 
   <div id="topbar">
-    <a href="/">← 启动器</a>
-    <button id="savebtn">存档</button>
-    <button id="loadbtn">读档</button>
+    <a href="/">{{game.back}}</a>
+    <button id="savebtn">{{game.save}}</button>
+    <button id="loadbtn">{{game.load}}</button>
     <span class="meta" id="meta" style="margin:0"></span>
   </div>
 
@@ -297,7 +297,7 @@ export const GAME_PAGE = `<!doctype html>
   <div id="logbox"></div>
 
   <details id="devpanel">
-    <summary>开发日志</summary>
+    <summary>{{game.devlog}}</summary>
     <pre id="debug"></pre>
     <pre id="devlog"></pre>
   </details>
