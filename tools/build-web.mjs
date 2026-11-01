@@ -13,13 +13,28 @@
  *   TSC_PATH=/path/to/typescript.js node tools/build-web.mjs
  */
 
-import { mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
+import { homedir } from "node:os";
 
-const TS_PATH = process.env.TSC_PATH;
+/** 找 TypeScript：环境变量 → 已安装的包 → 编辑器自带。 */
+function findTypeScript() {
+  const candidates = [
+    process.env.TSC_PATH,
+    join(process.cwd(), "node_modules", "typescript", "lib", "typescript.js"),
+    join(homedir(), "AppData", "Local", "Programs", "cursor", "resources", "app", "extensions", "node_modules", "typescript", "lib", "typescript.js"),
+    join(homedir(), "AppData", "Local", "Programs", "Microsoft VS Code", "resources", "app", "extensions", "node_modules", "typescript", "lib", "typescript.js"),
+    "/usr/lib/node_modules/typescript/lib/typescript.js",
+    "/usr/local/lib/node_modules/typescript/lib/typescript.js",
+  ].filter((path) => typeof path === "string" && path.length > 0);
+
+  return candidates.find((path) => existsSync(path));
+}
+
+const TS_PATH = findTypeScript();
 if (TS_PATH === undefined) {
-  console.error("需要设置 TSC_PATH 指向 typescript.js（和 typecheck.mjs 一样）");
+  console.error("找不到 TypeScript。设置 TSC_PATH 指向 typescript.js，或者 npm i -D typescript。");
   process.exit(2);
 }
 
