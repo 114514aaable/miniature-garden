@@ -585,11 +585,19 @@ window.addEventListener('error', function (event) {
 
 <script type="module">
 import { attach } from '/web/game/systems/render/browser.js';
-import { row, col, text, button, toggle, modal, withEvents } from '/web/game/systems/ui/spec.js';
+import { row, col, text, button, toggle, modal, grid, withEvents } from '/web/game/systems/ui/spec.js';
 import { resolveBindings, commandFor, parseCommand } from '/web/game/systems/input/bindings.js';
 import { mount, render as renderNode } from '/web/game/systems/ui/dom.js';
 
 ${ERRORS}
+
+// 游戏页面不该有浏览器的默认权力：拖拽不要导航、右键不要菜单、文字不要选中
+document.addEventListener('dragover', (event) => event.preventDefault());
+document.addEventListener('drop', (event) => event.preventDefault());
+document.addEventListener('contextmenu', (event) => event.preventDefault());
+document.addEventListener('selectstart', (event) => {
+  if (event.target instanceof HTMLElement && event.target.tagName !== 'INPUT') event.preventDefault();
+});
 
 const params = new URLSearchParams(location.search);
 const worldId = params.get('world');
@@ -654,6 +662,9 @@ function render(state) {
 let inventoryItems = [];
 let stateSkills = [];
 let selectedItem = null;
+let inventoryPage = 0;
+const INVENTORY_PER_PAGE = 30; // 6 × 5
+const INVENTORY_COLUMNS = 6;
 
 async function openInventory() {
   const box = document.getElementById('inventory');
@@ -662,71 +673,86 @@ async function openInventory() {
   const data = await api('/api/inventory');
   inventoryItems = (data && data.items) || [];
   selectedItem = inventoryItems[0] ?? null;
+  inventoryPage = 0;
   drawInventory();
 }
 
-/** 左详情 + 右 6 列格子；点格子只选中，不放动作。 */
+function inventoryCell(item) {
+  if (item === undefined) {
+    const empty = text('', { policy: 'fixed', width: 72, height: 72 });
+    empty.style.background = '#12151c';
+    empty.style.border = '1px solid #22262f';
+    empty.style['border-radius'] = '6px';
+    return empty;
+  }
+
+  const picked = selectedItem !== null && item.handle === selectedItem.handle;
+  const node = button(item.name, () => { selectedItem = item; drawInventory(); });
+  node.style.width = '72px';
+  node.style.height = '72px';
+  node.style['font-size'] = '11px';
+  node.style.background = picked ? '#2d3a52' : '#161a22';
+  node.style.border = picked ? '1px solid #4a6da8' : '1px solid #2a303c';
+
+  return withEvents(node, {
+    dragstart: (event) => {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', JSON.stringify({ kind: 'item', ref: item.handle }));
+    },
+  }, { draggable: 'true' });
+}
+
 function drawInventory() {
   const box = document.getElementById('inventory');
+  const pages = Math.max(1, Math.ceil(inventoryItems.length / INVENTORY_PER_PAGE));
+  inventoryPage = Math.min(inventoryPage, pages - 1);
+
+  const start = inventoryPage * INVENTORY_PER_PAGE;
+  const cells = [];
+  for (let i = 0; i < INVENTORY_PER_PAGE; i += 1) {
+    cells.push(inventoryCell(inventoryItems[start + i]));
+  }
 
   const detail = selectedItem === null
     ? col({ gap: 6 }, text('没有选中物品', { policy: 'fixed' }))
     : col({ gap: 6 },
         text(selectedItem.name, { policy: 'fixed' }),
         text(selectedItem.description, { policy: 'fixed' }),
-        row({ gap: 6 },
-          button('放下', () => dropSelected()),
-        ),
+        row({ gap: 6 }, button('放下', () => dropSelected())),
       );
 
-  const cells = inventoryItems.map((item) => {
-    const picked = selectedItem !== null && item.handle === selectedItem.handle;
-    const node = button(item.name, () => { selectedItem = item; drawInventory(); });
-    node.style.width = '72px';
-    node.style.height = '72px';
-    node.style.flex = '0 0 auto';
-    node.style.background = picked ? '#2d3a52' : '#161a22';
-    node.style.border = picked ? '1px solid #4a6da8' : '1px solid #2a303c';
-    return withEvents(node, {
-      dragstart: (event) => {
-        event.dataTransfer.setData('text/plain', JSON.stringify({ kind: 'item', ref: item.handle }));
-      },
-    }, { draggable: 'true' });
-  });
-
-  const grid = row({ gap: 6 },
-    ...cells,
-    ...(cells.length === 0 ? [text('空', { policy: 'fixed' })] : []),
-  );
-  grid.style['flex-wrap'] = 'wrap';
-  grid.style.width = '6px';
-
-  const skillChips = (stateSkills || []).map((skill) => {
+  const skillChips = stateSkills.map((skill) => {
     const node = button(skill.name, () => {});
     node.style['font-size'] = '11px';
     return withEvents(node, {
       dragstart: (event) => {
+        event.dataTransfer.effectAllowed = 'move';
         event.dataTransfer.setData('text/plain', JSON.stringify({ kind: 'skill', ref: skill.tag }));
       },
     }, { draggable: 'true' });
   });
 
+  const pager = row({ gap: 8, align: 'center' },
+    button('‹', () => { inventoryPage = Math.max(0, inventoryPage - 1); drawInventory(); }),
+    text('第 ' + (inventoryPage + 1) + ' / ' + pages + ' 页', { policy: 'fixed' }),
+    button('›', () => { inventoryPage = Math.min(pages - 1, inventoryPage + 1); drawInventory(); }),
+  );
+
   const body = row({ gap: 16, align: 'flex-start' },
     col({ gap: 8, width: 220 }, detail),
-    col({ gap: 8, width: 470 },
+    col({ gap: 10, width: 470 },
+      text('格子（拖到快捷栏）', { policy: 'fixed' }),
+      grid({ columns: INVENTORY_COLUMNS, cell: 72, gap: 6 }, ...cells),
+      pager,
       text('技能（拖到快捷栏）', { policy: 'fixed' }),
       row({ gap: 6 }, ...skillChips),
-      text('道具（拖到快捷栏）', { policy: 'fixed' }),
-      grid,
     ),
   );
 
   box.textContent = '';
   box.appendChild(renderNode(modal(col({ gap: 12 },
     body,
-    row({ gap: 8, justify: 'end' },
-      button('关闭 I', () => closeInventory()),
-    ),
+    row({ gap: 8, justify: 'end' }, button('关闭 I', () => closeInventory())),
   ), { title: '背包' })));
 }
 
@@ -807,7 +833,10 @@ function renderHotbar(state) {
     node.style.background = entry ? '#1d2432' : '#141821';
 
     return withEvents(node, {
-      dragover: (event) => event.preventDefault(),
+      dragover: (event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+      },
       drop: (event) => {
         event.preventDefault();
         const data = JSON.parse(event.dataTransfer.getData('text/plain'));

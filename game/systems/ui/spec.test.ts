@@ -10,7 +10,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { bar, boxStyle, button, col, field, input, modal, panel, row, text, toggle } from "./spec.ts";
+import { bar, boxStyle, button, col, field, grid, input, modal, panel, row, text, toggle } from "./spec.ts";
 
 test("row / col 的区别只有方向", () => {
   assert.equal(boxStyle({}, "row")["flex-direction"], "row");
@@ -129,4 +129,12 @@ test("field 是「标签 + 控件」一行", () => {
   assert.equal(node.children[0].text, "种子");
   assert.equal(node.children[0].style.width, "96px");
   assert.equal(node.children[1].tag, "input");
+});
+
+test("grid：等宽列、固定格宽", () => {
+  const node = grid({ columns: 6, cell: 72, gap: 6 }, text("a"), text("b"));
+  assert.equal(node.style.display, "grid");
+  assert.equal(node.style["grid-template-columns"], "repeat(6, 72px)");
+  assert.equal(node.style.gap, "6px");
+  assert.equal(node.children.length, 2);
 });

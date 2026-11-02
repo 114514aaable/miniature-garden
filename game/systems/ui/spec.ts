@@ -226,3 +226,15 @@ export function withEvents(
 ): UiNode {
   return { ...node, on, attrs: { ...(node.attrs ?? {}), ...attrs } };
 }
+
+/** 等宽网格：背包格子用。列数与格宽固定，空位由调用方补空节点。 */
+export function grid(
+  options: BoxOptions & { readonly columns: number; readonly cell?: number },
+  ...children: readonly UiNode[]
+): UiNode {
+  const style = boxStyle({ ...options, policy: options.policy ?? "fixed" }, "row");
+  style.display = "grid";
+  style["grid-template-columns"] = `repeat(${options.columns}, ${options.cell ?? 72}px)`;
+  if (options.gap !== undefined) style.gap = `${options.gap}px`;
+  return { tag: "div", style, children };
+}
