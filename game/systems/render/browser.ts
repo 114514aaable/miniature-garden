@@ -84,6 +84,8 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
   // 这样浏览器缩放 / 高分屏下不会糊，指针换算也不用改。
   let dpr = 1;
   let viewport = { width: 1, height: 1 };
+  let zoom = 1;
+  const tileSize = (): number => options.tile * zoom;
 
   function resize(): void {
     const rect = canvas.getBoundingClientRect();
@@ -103,6 +105,12 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
 
   // 容器尺寸变化（窗口缩放、侧栏展开、手机旋转）都要重算画布
   const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => resize());
+  canvas.addEventListener("wheel", (event) => {
+    if (!event.ctrlKey) return;
+    event.preventDefault();
+    zoom = Math.min(3, Math.max(0.5, zoom * (event.deltaY < 0 ? 1.1 : 1 / 1.1)));
+  }, { passive: false });
+
   observer?.observe(canvas);
   window.addEventListener("resize", resize);
 
@@ -141,7 +149,7 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
             ? null
             : entities.find((entity) => entity.handle === playerHandle) ?? null;
         const focus = player === null ? { x: space.width / 2, y: space.height / 2 } : { x: player.x, y: player.y };
-        camera = cameraFor(focus, viewport, space, options.tile);
+        camera = cameraFor(focus, viewport, space, tileSize());
       }
 
       // 缩放变了（浏览器 Ctrl+滚轮 / 系统 DPI 变化）就重建画布
@@ -156,7 +164,7 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
       const commands = buildFrame(
         { ...snapshot, entities },
         {
-          tile: options.tile,
+          tile: tileSize(),
           viewport,
           camera,
           style: state.style ?? DEFAULT_STYLE,
@@ -167,7 +175,7 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
 
       draw(context as CanvasRenderingContext2D, commands, imageOf);
       drawOverlay(context as CanvasRenderingContext2D, {
-        tile: options.tile,
+        tile: tileSize(),
         camera,
         entities: entities.map((entity) => ({
           x: entity.x,
@@ -177,8 +185,8 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
           pending: pendingFacts(entity.components?.["core.pending"], snapshot.tick),
         })),
       });
-      drawCursor(context as CanvasRenderingContext2D, cursor, options.tile, camera);
-      drawAim(context as CanvasRenderingContext2D, aimCells, options.tile, camera);
+      drawCursor(context as CanvasRenderingContext2D, cursor, tileSize(), camera);
+      drawAim(context as CanvasRenderingContext2D, aimCells, tileSize(), camera);
     }
 
     requestAnimationFrame(frame);
@@ -193,7 +201,7 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
   return {
     setState,
     cellAt(x, y) {
-      return screenToWorld({ x, y }, camera, options.tile);
+      return screenToWorld({ x, y }, camera, tileSize());
     },
     setAim(cells) {
       aimCells = cells;
