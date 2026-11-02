@@ -487,6 +487,15 @@ export const GAME_PAGE = `<!doctype html>
   #portrait { position: absolute; left: 10px; top: 54px; width: 168px;
               background: rgba(16,19,26,0.8); border: 1px solid #2a303c; border-radius: 10px;
               padding: 8px; text-align: center; }
+  #portrait-toggle { position: absolute; right: -12px; top: 50%; transform: translateY(-50%);
+                      width: 22px; height: 44px; padding: 0; border-radius: 6px;
+                      background: #1b1f27; border: 1px solid #333a4a; color: #9aa3b2;
+                      cursor: pointer; z-index: 2; }
+  #portrait.collapsed { width: 0; padding: 0; border-color: transparent; background: transparent; }
+  #portrait.collapsed #portrait-art,
+  #portrait.collapsed #nameplate { display: none; }
+  #portrait.collapsed #portrait-toggle { right: -22px; }
+  #portrait { transition: width 120ms ease; }
   #portrait-art { height: 190px; display: flex; align-items: center; justify-content: center;
                   background: #0f1116; border-radius: 6px; color: #8ab4f8; font-size: 48px; }
   #nameplate { margin-top: 6px; color: #d7dae0; font-weight: 600; }
@@ -540,6 +549,7 @@ export const GAME_PAGE = `<!doctype html>
   </div>
 
   <div id="portrait">
+    <button id="portrait-toggle" title="收起/展开">‹</button>
     <div id="portrait-art"><span id="portrait-glyph">@</span></div>
     <div id="nameplate">你</div>
   </div>
@@ -642,6 +652,19 @@ function render(state) {
     .map((skill) => button(skill.name + ' ' + skill.cost, () => useSkill(skill.tag)));
   mount(document.getElementById('skills'), row({ gap: 6, align: 'center' }, ...skillButtons));
 }
+
+function applyPortraitCollapsed() {
+  const box = document.getElementById('portrait');
+  const collapsed = localStorage.getItem('nw.portrait') === '0';
+  box.classList.toggle('collapsed', collapsed);
+  document.getElementById('portrait-toggle').textContent = collapsed ? '›' : '‹';
+}
+
+document.getElementById('portrait-toggle').addEventListener('click', () => {
+  const collapsed = localStorage.getItem('nw.portrait') === '0';
+  localStorage.setItem('nw.portrait', collapsed ? '1' : '0');
+  applyPortraitCollapsed();
+});
 
 function showDeath() {
   const box = document.getElementById('death');
@@ -809,6 +832,7 @@ window.addEventListener('keydown', (event) => {
   }
   render(state);
   applySettings();
+  applyPortraitCollapsed();
 })();
 </script>
 </html>`;
