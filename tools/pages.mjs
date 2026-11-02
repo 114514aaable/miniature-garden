@@ -494,10 +494,10 @@ export const GAME_PAGE = `<!doctype html>
                       width: 22px; height: 44px; padding: 0; border-radius: 6px;
                       background: #1b1f27; border: 1px solid #333a4a; color: #9aa3b2;
                       cursor: pointer; z-index: 2; }
-  #portrait.collapsed { width: 0; padding: 0; border-color: transparent; background: transparent; }
+  #portrait.collapsed { width: 20px; padding: 0; }
+  #portrait.collapsed #portrait-toggle { right: auto; left: 0; width: 20px; height: 56px; border-radius: 4px; }
   #portrait.collapsed #portrait-art,
   #portrait.collapsed #nameplate { display: none; }
-  #portrait.collapsed #portrait-toggle { right: -22px; }
   #portrait { transition: width 120ms ease; }
   #portrait-art { height: 190px; display: flex; align-items: center; justify-content: center;
                   background: #0f1116; border-radius: 6px; color: #8ab4f8; font-size: 48px; }
@@ -946,11 +946,20 @@ function loadQuick() {
 
 let quickSlots = loadQuick();
 
+const SKILL_FALLBACK = {
+  'core.take': '拾取',
+  'core.drop': '放下',
+  'core.wait': '等待',
+  'core.attack': '劈砍',
+  'core.cast': '蓄力',
+  'core.use': '使用',
+};
+
 function quickLabel(entry) {
   if (entry === null) return '';
   if (entry.kind === 'skill') {
     const skill = hotbarSkills.find((row) => row.tag === entry.ref);
-    return skill ? skill.name : entry.ref;
+    return skill ? skill.name : (SKILL_FALLBACK[entry.ref] ?? entry.ref);
   }
   return { inventory: '背包', settings: '设置', save: '存档', load: '读档' }[entry.ref] ?? entry.ref;
 }
