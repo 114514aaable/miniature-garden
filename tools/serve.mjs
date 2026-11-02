@@ -172,7 +172,7 @@ const RULE_TABLE = [
   { signature: castSignature, handler: castHandler },
 ];
 
-function buildSession(ordered, disabled = new Set(), seed = 0) {
+function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true) {
   const merged = mergePacks(ordered);
   const loaded = loadWorld(merged);
 
@@ -188,12 +188,14 @@ function buildSession(ordered, disabled = new Set(), seed = 0) {
   }
   const spawnEvents = store.step();
 
-  // 开局初始化：世界包写什么，就按顺序做什么（现在多数世界是空的）。
-  for (const effect of loaded.init) {
-    store.submit(effect);
-  }
-  if (loaded.init.length > 0) {
-    store.step(0);
+  // 开局初始化：只在「新开局」执行，读档时跳过（否则开局物品会发两次）。
+  if (runInit) {
+    for (const effect of loaded.init) {
+      store.submit(effect);
+    }
+    if (loaded.init.length > 0) {
+      store.step(0);
+    }
   }
 
 
@@ -799,8 +801,9 @@ function loadGame(slot = "quick") {
   }
 
   // 存档自带规则集：按它的 disabled 重建，再导入状态。
-  session = buildSession(ordered, new Set(data.disabled ?? []), data.seed ?? 0);
+  session = buildSession(ordered, new Set(data.disabled ?? []), data.seed ?? 0, false);
   session.world = data.world;
+  session.dead = false;
   session.store.importState(data.engine);
   session.playerHandle = data.playerHandle;
   session.seed = data.seed ?? 0;
