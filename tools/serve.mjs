@@ -47,6 +47,7 @@ import { extname, resolve } from "node:path";
 import { createProjector } from "../systems/render/project.ts";
 import { buildGraph } from "../engine/core/src/pack/graph.ts";
 import { DevLog, formatLine } from "../systems/log/devlog.ts";
+import { runPhases } from "../systems/tick/phases.ts";
 
 const LOCALE = "zh-CN";
 let MESSAGES = {};
@@ -586,22 +587,37 @@ function run(tag, params, costKey) {
  * 玩家用一次 cost 表示动作占多少回合，但敌人是逐 tick 结算的，
  * 所以不能 step(cost) 一次跳完——中间要给敌人行动的机会。
  */
+/**
+ * 每 tick 的阶段表。顺序就是语义：
+ *   推进 → 清理死者 → 结算挂起 → 敌人行动
+ */
+function tickPhases() {
+  return [
+    {
+      name: "step",
+      run: () => {
+        const events = session.store.step(1);
+        for (const entry of events) {
+          session.lastEvents.push(entry);
+          session.devlog.effect(entry);
+        }
+      },
+    },
+    { name: "prune", run: () => session.scheduler.prune((handle) => session.store.hasEntity(handle)) },
+    { name: "pending", run: () => resolvePending() },
+    { name: "enemies", run: () => drainEnemies() },
+  ];
+}
+
 function advanceTo(target) {
+  const phases = tickPhases();
   let guard = 0;
   while (session.store.now() < target) {
     if (guard++ > 512) {
       session.devlog.action(session.store.now(), "调度器", { error: "推进次数超限" });
       break;
     }
-    const events = session.store.step(1);
-    for (const entry of events) {
-      session.lastEvents.push(entry);
-      session.devlog.effect(entry);
-    }
-    // 被打死的敌人要从调度器里清掉，否则会和它的句柄一起留在队列里
-    session.scheduler.prune((handle) => session.store.hasEntity(handle));
-    resolvePending();
-    drainEnemies();
+    runPhases(phases, session.store.now());
   }
   applyPending();
 }
