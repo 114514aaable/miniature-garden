@@ -1,0 +1,528 @@
+{
+  "generated": true,
+  "entries": [
+    {
+      "kind": "rule",
+      "id": "core.move",
+      "name": "走一步",
+      "desc": "朝一个方向移动一格，成本由速度决定。",
+      "file": "rule-core.move.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "handle": {
+            "t": "int"
+          },
+          "space": {
+            "t": "int"
+          },
+          "x": {
+            "t": "int"
+          },
+          "y": {
+            "t": "int"
+          }
+        }
+      },
+      "returnsEffects": true
+    },
+    {
+      "kind": "rule",
+      "id": "core.take",
+      "name": "捡起",
+      "desc": "把脚下的物品放进背包。",
+      "file": "rule-core.take.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "actor": {
+            "t": "int"
+          }
+        }
+      },
+      "returnsEffects": true
+    },
+    {
+      "kind": "rule",
+      "id": "core.drop",
+      "name": "放下",
+      "desc": "把背包里的第一件物品放到脚下。",
+      "file": "rule-core.drop.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "actor": {
+            "t": "int"
+          },
+          "x": {
+            "t": "int"
+          },
+          "y": {
+            "t": "int"
+          }
+        }
+      },
+      "returnsEffects": true
+    },
+    {
+      "kind": "rule",
+      "id": "core.attack",
+      "name": "劈砍",
+      "desc": "攻击相邻格里的一个目标，伤害 = 攻击 − 防御。",
+      "file": "rule-core.attack.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "actor": {
+            "t": "int"
+          },
+          "x": {
+            "t": "int"
+          },
+          "y": {
+            "t": "int"
+          }
+        }
+      },
+      "returnsEffects": true
+    },
+    {
+      "kind": "rule",
+      "id": "core.wait",
+      "name": "等待",
+      "desc": "什么都不做，只让时间前进一回合。",
+      "file": "rule-core.wait.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "actor": {
+            "t": "int"
+          }
+        }
+      },
+      "returnsEffects": true
+    },
+    {
+      "kind": "rule",
+      "id": "core.aim",
+      "name": "指向",
+      "desc": "判断某个技能能不能落在指定的格子上，供鼠标与 AI 共用。",
+      "file": "rule-core.aim.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "actor": {
+            "t": "int"
+          },
+          "kind": {
+            "t": "enum",
+            "values": [
+              "cell",
+              "entity"
+            ]
+          },
+          "range": {
+            "t": "int"
+          },
+          "x": {
+            "t": "int"
+          },
+          "y": {
+            "t": "int"
+          }
+        }
+      },
+      "returnsEffects": false
+    },
+    {
+      "kind": "rule",
+      "id": "core.cast",
+      "name": "蓄力劈砍",
+      "desc": "先挂起，过几回合再结算；期间可以被打断。",
+      "file": "rule-core.cast.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "actor": {
+            "t": "int"
+          },
+          "tag": {
+            "t": "str"
+          },
+          "x": {
+            "t": "int"
+          },
+          "y": {
+            "t": "int"
+          },
+          "ticks": {
+            "t": "int"
+          }
+        },
+        "optional": [
+          "tag",
+          "ticks"
+        ]
+      },
+      "returnsEffects": true
+    },
+    {
+      "kind": "rule",
+      "id": "core.enemy_turn",
+      "name": "敌人思考",
+      "desc": "敌人每回合选一个动作：靠近、起手、或原地不动。",
+      "file": "rule-core.enemy_turn.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "enemy": {
+            "t": "int"
+          },
+          "target": {
+            "t": "int"
+          }
+        }
+      },
+      "returnsEffects": false
+    },
+    {
+      "kind": "rule",
+      "id": "core.enemy_windup",
+      "name": "敌人起手",
+      "desc": "敌人写下攻击意图，两回合后才结算，期间可以被躲开。",
+      "file": "rule-core.enemy_windup.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "enemy": {
+            "t": "int"
+          },
+          "dx": {
+            "t": "int"
+          },
+          "dy": {
+            "t": "int"
+          },
+          "damage": {
+            "t": "int"
+          },
+          "ticks": {
+            "t": "int"
+          }
+        }
+      },
+      "returnsEffects": true
+    },
+    {
+      "kind": "rule",
+      "id": "core.enemy_strike",
+      "name": "敌人出手",
+      "desc": "按意图里的格子结算伤害；玩家不在格子里就落空。",
+      "file": "rule-core.enemy_strike.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "enemy": {
+            "t": "int"
+          },
+          "target": {
+            "t": "int"
+          }
+        }
+      },
+      "returnsEffects": true
+    },
+    {
+      "kind": "component",
+      "id": "core.health",
+      "name": "生命",
+      "desc": "血量：最大生命与当前生命。",
+      "file": "component-core.health.md",
+      "schema": {
+        "t": "object",
+        "fields": {
+          "max": {
+            "t": "int"
+          },
+          "hp": {
+            "t": "int"
+          }
+        },
+        "optional": [
+          "hp"
+        ]
+      }
+    },
+    {
+      "kind": "component",
+      "id": "core.stats",
+      "name": "属性",
+      "desc": "速度、攻击、防御。速度决定动作成本。",
+      "file": "component-core.stats.md",
+      "schema": {
+        "t": "object",
+        "fields": {
+          "speed": {
+            "t": "int"
+          },
+          "attack": {
+            "t": "int"
+          },
+          "defense": {
+            "t": "int"
+          }
+        }
+      }
+    },
+    {
+      "kind": "component",
+      "id": "core.body",
+      "name": "部位",
+      "desc": "分部位的血量与状态，供以后的部位战斗使用。",
+      "file": "component-core.body.md",
+      "schema": {
+        "t": "object",
+        "fields": {
+          "parts": {
+            "t": "array",
+            "of": {
+              "t": "object",
+              "fields": {
+                "id": {
+                  "t": "str"
+                },
+                "name": {
+                  "t": "str"
+                },
+                "hp": {
+                  "t": "int"
+                },
+                "max": {
+                  "t": "int"
+                },
+                "armor": {
+                  "t": "int"
+                },
+                "state": {
+                  "t": "enum",
+                  "values": [
+                    "ok",
+                    "hurt",
+                    "disabled"
+                  ]
+                }
+              },
+              "optional": [
+                "hp",
+                "armor",
+                "state"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "kind": "component",
+      "id": "core.item",
+      "name": "物品",
+      "desc": "可拾取、可堆叠、可使用的标记。",
+      "file": "component-core.item.md",
+      "schema": {
+        "t": "object",
+        "fields": {
+          "stack": {
+            "t": "int"
+          },
+          "weight": {
+            "t": "int"
+          },
+          "use": {
+            "t": "str"
+          }
+        },
+        "optional": [
+          "use"
+        ]
+      }
+    },
+    {
+      "kind": "component",
+      "id": "core.container",
+      "name": "物品栏",
+      "desc": "格位与其中的物品句柄。",
+      "file": "component-core.container.md",
+      "schema": {
+        "t": "object",
+        "fields": {
+          "slots": {
+            "t": "int"
+          },
+          "items": {
+            "t": "array",
+            "of": {
+              "t": "int"
+            }
+          }
+        }
+      }
+    },
+    {
+      "kind": "component",
+      "id": "core.ai",
+      "name": "智能",
+      "desc": "有它就会被调度器接管，每回合自行行动。",
+      "file": "component-core.ai.md",
+      "schema": {
+        "t": "object",
+        "fields": {
+          "mode": {
+            "t": "enum",
+            "values": [
+              "idle",
+              "chase"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "kind": "component",
+      "id": "core.solid",
+      "name": "实心",
+      "desc": "占住格子，别人走不过来。",
+      "file": "component-core.solid.md",
+      "schema": {
+        "t": "object",
+        "fields": {}
+      }
+    },
+    {
+      "kind": "component",
+      "id": "core.sprite",
+      "name": "贴图",
+      "desc": "指向图集里的一帧；没有就退回字符。",
+      "file": "component-core.sprite.md",
+      "schema": {
+        "t": "object",
+        "fields": {
+          "sheet": {
+            "t": "str"
+          },
+          "frame": {
+            "t": "str"
+          }
+        }
+      }
+    },
+    {
+      "kind": "component",
+      "id": "core.intent",
+      "name": "意图",
+      "desc": "敌人下回合要打的格子与结算时刻，绘制和判定共用。",
+      "file": "component-core.intent.md",
+      "schema": {
+        "t": "object",
+        "fields": {
+          "kind": {
+            "t": "str"
+          },
+          "tiles": {
+            "t": "array",
+            "of": {
+              "t": "object",
+              "fields": {
+                "dx": {
+                  "t": "int"
+                },
+                "dy": {
+                  "t": "int"
+                }
+              }
+            }
+          },
+          "damage": {
+            "t": "int"
+          },
+          "resolveAt": {
+            "t": "int"
+          }
+        }
+      }
+    },
+    {
+      "kind": "component",
+      "id": "core.pending",
+      "name": "core.pending",
+      "desc": "",
+      "file": "component-core.pending.md",
+      "schema": {
+        "t": "object",
+        "fields": {
+          "tag": {
+            "t": "str"
+          },
+          "params": {
+            "t": "any"
+          },
+          "resolveAt": {
+            "t": "int"
+          }
+        }
+      }
+    },
+    {
+      "kind": "template",
+      "id": "pc",
+      "name": "你",
+      "desc": "玩家角色。",
+      "file": "template-pc.md",
+      "extends": null,
+      "components": [
+        "core.health",
+        "core.stats",
+        "core.container",
+        "core.solid",
+        "core.pending"
+      ]
+    },
+    {
+      "kind": "template",
+      "id": "prop_crate",
+      "name": "木箱",
+      "desc": "实心障碍，挡路。",
+      "file": "template-prop_crate.md",
+      "extends": null,
+      "components": [
+        "core.health",
+        "core.solid"
+      ]
+    },
+    {
+      "kind": "template",
+      "id": "item_lamp",
+      "name": "油灯",
+      "desc": "一盏可以捡起来的灯。",
+      "file": "template-item_lamp.md",
+      "extends": null,
+      "components": [
+        "core.item"
+      ]
+    },
+    {
+      "kind": "template",
+      "id": "npc_salt",
+      "name": "盐商",
+      "desc": "会靠近并起手打人的敌人。",
+      "file": "template-npc_salt.md",
+      "extends": null,
+      "components": [
+        "core.health",
+        "core.stats",
+        "core.ai",
+        "core.solid",
+        "core.intent"
+      ]
+    }
+  ]
+}

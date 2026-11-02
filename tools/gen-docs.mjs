@@ -41,6 +41,7 @@ rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 
 const index = [];
+const catalog = [];
 let rules = 0;
 let components = 0;
 let templates = 0;
@@ -81,6 +82,7 @@ for (const rule of RULE_TABLE) {
 
   writeFileSync(`${OUT}/rule-${tag}.md`, body.join("\n"), "utf8");
   index.push(`| 规则 | [${name}](rule-${tag}.md) | \`${tag}\` | ${desc} |`);
+  catalog.push({ kind: "rule", id: tag, name, desc, file: `rule-${tag}.md`, params: rule.signature.params, returnsEffects: rule.signature.returnsEffects });
   rules += 1;
 }
 
@@ -97,6 +99,7 @@ for (const component of componentsJson) {
   const body = [`# ${name}`, "", `\`${component.id}\`${desc ? " — " + desc : ""}`, "", "## Schema", json(component.schema), ""];
   writeFileSync(`${OUT}/component-${component.id}.md`, body.join("\n"), "utf8");
   index.push(`| 组件 | [${name}](component-${component.id}.md) | \`${component.id}\` | ${desc} |`);
+  catalog.push({ kind: "component", id: component.id, name, desc, file: `component-${component.id}.md`, schema: component.schema });
   components += 1;
 }
 
@@ -131,6 +134,7 @@ for (const dir of templatesDirs) {
 
       writeFileSync(`${OUT}/template-${template.id}.md`, body.join("\n"), "utf8");
       index.push(`| 模板 | [${name}](template-${template.id}.md) | \`${template.id}\` | ${desc} |`);
+      catalog.push({ kind: "template", id: template.id, name, desc, file: `template-${template.id}.md`, extends: template.extends ?? null, components });
       templates += 1;
     }
   }
@@ -151,4 +155,5 @@ const readme = [
 ];
 
 writeFileSync(`${OUT}/README.md`, readme.join("\n"), "utf8");
+writeFileSync(`${OUT}/index.json`, JSON.stringify({ generated: true, entries: catalog }, null, 2) + "\n", "utf8");
 console.log(`生成 ${rules + components + templates} 篇文档 → ${OUT}/`);
