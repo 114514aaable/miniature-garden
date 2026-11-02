@@ -1,9 +1,9 @@
 {
-  "name": "newworld-desktop",
+  "name": "hakoniwa-desktop",
   "version": "0.1.0",
   "private": true,
   "main": "main.cjs",
-  "description": "新世界的桌面壳：把调试台装进一个窗口",
+  "description": "箱庭的桌面壳：把调试台装进一个窗口",
   "scripts": {
     "start": "electron . --no-sandbox --disable-gpu",
     "start:debug": "electron . --no-sandbox --disable-gpu --enable-logging"

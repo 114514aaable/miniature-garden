@@ -1,9 +1,9 @@
 {
-  "name": "@newworld/core",
+  "name": "@hakoniwa/core",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "新世界的规则核心：纯逻辑，不依赖任何渲染。",
+  "description": "箱庭：规则先于故事的世界引擎内核。",
   "scripts": {
     "demo": "node src/demo-event.ts",
     "demo:sum": "node src/demo-sum.ts",
