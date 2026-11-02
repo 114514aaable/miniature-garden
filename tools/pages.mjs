@@ -528,6 +528,8 @@ export const GAME_PAGE = `<!doctype html>
              padding: 6px 10px; background: rgba(10,12,16,0.92); border: 1px solid #2a303c;
              border-radius: 6px; color: #c7cdd6; font-size: 12px; white-space: pre-wrap; }
   #quick { position: absolute; right: 10px; bottom: 10px; z-index: 3; }
+  #minimap { position: absolute; right: 10px; top: 54px; padding: 4px; z-index: 2;
+             background: rgba(16,19,26,0.8); border: 1px solid #2a303c; border-radius: 6px; }
   #devpanel { position: absolute; top: 10px; right: 10px; max-width: min(460px, 92vw); }
 
   /* 窄屏：HUD 收起来，别互相压 */
@@ -570,6 +572,7 @@ export const GAME_PAGE = `<!doctype html>
     <button id="settingsbtn">{{menu.settings}}</button>
   </div>
 
+  <div id="minimap"></div>
   <div id="skills"></div>
   <div id="quick"></div>
   <div id="message"></div>
@@ -602,7 +605,8 @@ window.addEventListener('error', function (event) {
 
 <script type="module">
 import { attach } from '/web/game/systems/render/browser.js';
-import { row, col, text, button, toggle, modal, grid, withEvents } from '/web/game/systems/ui/spec.js';
+import { row, col, text, button, toggle, modal, grid, bar, canvasNode, withEvents } from '/web/game/systems/ui/spec.js';
+import { drawMinimap, minimapSize } from '/web/game/systems/ui/minimap.js';
 import { clampCell, loadConfig, saveConfig, withBinding, withConfig } from '/web/game/systems/config/config.js';
 import { commandFor, parseCommand } from '/web/game/systems/input/bindings.js';
 import { mount, render as renderNode } from '/web/game/systems/ui/dom.js';
@@ -661,13 +665,17 @@ function render(state) {
   const plate = document.getElementById('nameplate');
   if (plate) plate.textContent = state.playerName || '你';
 
-  document.getElementById('status').innerHTML =
-    'HP <b>' + state.hud.hp + '/' + state.hud.hpMax + '</b>' +
-    ' · 背包 <b>' + state.hud.inventory.length + '</b>' +
-    ' · tick <b>' + state.tick + '</b><br>' +
-    (state.hud.readyAt > state.tick
-      ? '<span style="color:#f0c674">恢复中 还要 ' + (state.hud.readyAt - state.tick) + ' 回合</span>'
-      : '<span style="color:#98c379">可以行动</span>');
+  renderMinimap(state);
+
+  const ready = state.hud.readyAt > state.tick
+    ? '恢复中 还要 ' + (state.hud.readyAt - state.tick) + ' 回合'
+    : '可以行动';
+
+  mount(document.getElementById('status'), col({ gap: 6 },
+    bar(state.hud.hp, state.hud.hpMax, { label: 'HP', showValue: true, height: 16, color: state.hud.hp * 3 < state.hud.hpMax ? '#c96a5a' : '#4fd658' }),
+    text('背包 ' + state.hud.inventory.length + ' · tick ' + state.tick, { policy: 'fixed' }),
+    text(ready, { policy: 'fixed' }),
+  ));
 
   if (state.dead) showDeath();
   document.getElementById('message').textContent = state.message;
@@ -986,6 +994,29 @@ function activateQuick(index) {
   else if (entry.ref === 'settings') openSettings();
   else if (entry.ref === 'save') api('/api/save', {}).then((next) => { if (lastState !== null) render(next); });
   else if (entry.ref === 'load') api('/api/load', {}).then((next) => { if (lastState !== null) render(next); });
+}
+
+/** 小地图：把当前空间压成一张缩略图，玩家蓝、其他红。 */
+function renderMinimap(state) {
+  const box = document.getElementById('minimap');
+  if (box === null) return;
+
+  const space = (state.snapshot.spaces || [])[0];
+  if (space === undefined) return;
+
+  const cell = 4;
+  const size = minimapSize(space, cell);
+  const marks = (state.snapshot.entities || [])
+    .filter((entity) => entity.x !== undefined && entity.y !== undefined)
+    .map((entity) => ({
+      x: entity.x,
+      y: entity.y,
+      color: entity.handle === state.playerHandle ? "#8ab4f8" : "#c96a5a",
+    }));
+
+  mount(box, canvasNode(size.width, size.height, (context) => {
+    drawMinimap(context, { space, cell, marks });
+  }));
 }
 
 function renderQuick() {

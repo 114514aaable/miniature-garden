@@ -37,6 +37,16 @@ export function render(node: UiNode): HTMLElement {
   if (node.onClick !== undefined) {
     element.addEventListener("click", node.onClick);
   }
+  if (node.tag === "canvas" && node.draw !== undefined) {
+    const canvas = element as HTMLCanvasElement;
+    const width = Number.parseInt(node.style.width ?? "0", 10) || 0;
+    const height = Number.parseInt(node.style.height ?? "0", 10) || 0;
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (context !== null) node.draw(context, width, height);
+  }
+
   if (node.on !== undefined) {
     for (const [event, handler] of Object.entries(node.on)) {
       element.addEventListener(event, handler);

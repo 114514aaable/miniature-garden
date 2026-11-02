@@ -25,6 +25,8 @@ export interface UiNode {
   readonly onInput?: (value: string) => void;
   readonly className?: string;
   readonly attrs?: Readonly<Record<string, string>>;
+  /** canvas 节点的绘制回调。 */
+  readonly draw?: (context: CanvasRenderingContext2D, width: number, height: number) => void;
   /** DOM 事件：drop / dragover / contextmenu … */
   readonly on?: Readonly<Record<string, (event: Event) => void>>;
 }
@@ -169,21 +171,80 @@ export function modal(content: UiNode, options: { readonly title?: string } = {}
 }
 
 /** 进度条：value/max → 填充宽度。两端都夹住，不会溢出。 */
-export function bar(value: number, max: number, options: BoxOptions = {}): UiNode {
-  const ratio = max <= 0 ? 0 : Math.min(1, Math.max(0, value / max));
-  const track = boxStyle({ ...options, policy: options.policy ?? "fixed" }, "row");
-  track.background = "#22262f";
-  track["border-radius"] = "6px";
-  track.overflow = "hidden";
+export interface BarOptions extends BoxOptions {
+  /** 轨道高度（px）。 */
+  readonly height?: number;
+  /** 填充色。 */
+  readonly color?: string;
+  /** 左侧文字（比如「HP」）。 */
+  readonly label?: string;
+  /** 是否显示「14 / 20」。 */
+  readonly showValue?: boolean;
+}
 
-  const fill: Record<string, string> = {
-    display: "block",
-    width: `${Math.round(ratio * 100)}%`,
-    height: "100%",
-    background: "#4fd658",
+/**
+ * 条：血量、体力、蓄力……所有「有上限的当前值」都用它。
+ *
+ * 只画一条，不做分段、不做渐变——分段是另一层的事（以后加）。
+ */
+export function bar(value: number, max: number, options: BarOptions = {}): UiNode {
+  const ratio = max <= 0 ? 0 : Math.min(1, Math.max(0, value / max));
+  const height = options.height ?? 14;
+
+  const track: Record<string, string> = {
+    position: "relative",
+    height: `${height}px`,
+    background: "#22262f",
+    "border-radius": "4px",
+    overflow: "hidden",
+    flex: "1 1 auto",
   };
 
-  return { tag: "div", style: track, children: [{ tag: "div", style: fill, children: [] }] };
+  const fill: Record<string, string> = {
+    position: "absolute",
+    left: "0",
+    top: "0",
+    height: "100%",
+    width: `${Math.round(ratio * 100)}%`,
+    background: options.color ?? "#4fd658",
+    transition: "width 120ms ease",
+  };
+
+  const children: UiNode[] = [{ tag: "div", style: fill, children: [] }];
+
+  if (options.label !== undefined) {
+    children.push({
+      tag: "span",
+      style: { position: "absolute", left: "6px", top: "50%", transform: "translateY(-50%)", color: "#0d1015", "font-size": "10px", "font-weight": "600" },
+      children: [],
+      text: options.label,
+    });
+  }
+
+  if (options.showValue === true) {
+    children.push({
+      tag: "span",
+      style: { position: "absolute", right: "6px", top: "50%", transform: "translateY(-50%)", color: "#d7dae0", "font-size": "10px" },
+      children: [],
+      text: `${value} / ${max}`,
+    });
+  }
+
+  return { tag: "div", style: track, children };
+}
+
+/** 画布：小地图这类「自己会画」的部件用。 */
+export function canvasNode(
+  width: number,
+  height: number,
+  draw: (context: CanvasRenderingContext2D, width: number, height: number) => void,
+): UiNode {
+  return {
+    tag: "canvas",
+    style: { width: `${width}px`, height: `${height}px`, display: "block" },
+    children: [],
+    draw,
+  };
 }
 
 /** 开关：显示勾选状态，点击切换。 */
