@@ -104,8 +104,17 @@ export const LAUNCHER_PAGE = `<!doctype html>
   .tree .leaf .id { color: #5f6b7a; font-size: 11px; }
   .tree .leaf .desc { color: #6f7a89; font-size: 11px; }
   .tree label.group { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
-  .tree input[type=checkbox] { width: 13px; height: 13px; accent-color: #8ab4f8; cursor: pointer;
-                               flex: 0 0 auto; margin: 0; }
+  /* 自绘勾选框：不依赖系统主题，暗色背景下一定看得见 */
+  .tree input[type=checkbox] { appearance: none; -webkit-appearance: none; position: relative;
+                               width: 14px; height: 14px; border: 1px solid #4a6da8; border-radius: 3px;
+                               background: #0f1116; cursor: pointer; flex: 0 0 auto; margin: 0; }
+  .tree input[type=checkbox]:checked { background: #4a6da8; }
+  .tree input[type=checkbox]:checked::after { content: ""; position: absolute; left: 4px; top: 1px;
+                                              width: 4px; height: 8px; border: solid #fff;
+                                              border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  .tree input[type=checkbox]:indeterminate { background: #4a6da8; }
+  .tree input[type=checkbox]:indeterminate::after { content: ""; position: absolute; left: 3px; top: 6px;
+                                                    width: 8px; height: 2px; background: #fff; }
   .menu { display: flex; flex-direction: column; gap: 10px; width: min(320px, 100%); margin-top: 20px; }
   .menu button { padding: 12px 16px; text-align: left; font-size: 15px; }
   .panel { position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center;
