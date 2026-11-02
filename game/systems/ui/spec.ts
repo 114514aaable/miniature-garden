@@ -25,6 +25,8 @@ export interface UiNode {
   readonly onInput?: (value: string) => void;
   readonly className?: string;
   readonly attrs?: Readonly<Record<string, string>>;
+  /** DOM 事件：drop / dragover / contextmenu … */
+  readonly on?: Readonly<Record<string, (event: Event) => void>>;
 }
 
 export type Align = "start" | "center" | "end" | "stretch" | "baseline";
@@ -214,4 +216,13 @@ export function field(label: string, control: UiNode, options: BoxOptions = {}):
     text(label, { policy: "fixed", width: 96 }),
     control,
   );
+}
+
+/** 给节点挂事件与属性（不改原节点）。套件里唯一需要「碰 DOM 事件」的入口。 */
+export function withEvents(
+  node: UiNode,
+  on: Readonly<Record<string, (event: Event) => void>>,
+  attrs: Readonly<Record<string, string>> = {},
+): UiNode {
+  return { ...node, on, attrs: { ...(node.attrs ?? {}), ...attrs } };
 }

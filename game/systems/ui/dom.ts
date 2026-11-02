@@ -37,6 +37,11 @@ export function render(node: UiNode): HTMLElement {
   if (node.onClick !== undefined) {
     element.addEventListener("click", node.onClick);
   }
+  if (node.on !== undefined) {
+    for (const [event, handler] of Object.entries(node.on)) {
+      element.addEventListener(event, handler);
+    }
+  }
   for (const child of node.children) {
     element.appendChild(render(child));
   }

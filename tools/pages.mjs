@@ -585,7 +585,7 @@ window.addEventListener('error', function (event) {
 
 <script type="module">
 import { attach } from '/web/game/systems/render/browser.js';
-import { row, col, text, button, toggle, modal } from '/web/game/systems/ui/spec.js';
+import { row, col, text, button, toggle, modal, withEvents } from '/web/game/systems/ui/spec.js';
 import { resolveBindings, commandFor, parseCommand } from '/web/game/systems/input/bindings.js';
 import { mount, render as renderNode } from '/web/game/systems/ui/dom.js';
 
@@ -687,11 +687,11 @@ function drawInventory() {
     node.style.flex = '0 0 auto';
     node.style.background = picked ? '#2d3a52' : '#161a22';
     node.style.border = picked ? '1px solid #4a6da8' : '1px solid #2a303c';
-    node.draggable = true;
-    node.addEventListener('dragstart', (event) => {
-      event.dataTransfer.setData('text/plain', JSON.stringify({ kind: 'item', ref: item.handle }));
-    });
-    return node;
+    return withEvents(node, {
+      dragstart: (event) => {
+        event.dataTransfer.setData('text/plain', JSON.stringify({ kind: 'item', ref: item.handle }));
+      },
+    }, { draggable: 'true' });
   });
 
   const grid = row({ gap: 6 },
@@ -704,11 +704,11 @@ function drawInventory() {
   const skillChips = (stateSkills || []).map((skill) => {
     const node = button(skill.name, () => {});
     node.style['font-size'] = '11px';
-    node.draggable = true;
-    node.addEventListener('dragstart', (event) => {
-      event.dataTransfer.setData('text/plain', JSON.stringify({ kind: 'skill', ref: skill.tag }));
-    });
-    return node;
+    return withEvents(node, {
+      dragstart: (event) => {
+        event.dataTransfer.setData('text/plain', JSON.stringify({ kind: 'skill', ref: skill.tag }));
+      },
+    }, { draggable: 'true' });
   });
 
   const body = row({ gap: 16, align: 'flex-start' },
@@ -806,27 +806,22 @@ function renderHotbar(state) {
     node.style.padding = '2px';
     node.style.background = entry ? '#1d2432' : '#141821';
 
-    // 拖入绑定
-    node.addEventListener('dragover', (event) => event.preventDefault());
-    node.addEventListener('drop', (event) => {
-      event.preventDefault();
-      try {
+    return withEvents(node, {
+      dragover: (event) => event.preventDefault(),
+      drop: (event) => {
+        event.preventDefault();
         const data = JSON.parse(event.dataTransfer.getData('text/plain'));
         hotbarSlots[index] = { kind: data.kind, ref: data.ref };
         saveHotbar(hotbarSlots);
         renderHotbar(state);
-      } catch {
-        // 拖进来不是 JSON，忽略
-      }
+      },
+      contextmenu: (event) => {
+        event.preventDefault();
+        hotbarSlots[index] = null;
+        saveHotbar(hotbarSlots);
+        renderHotbar(state);
+      },
     });
-    // 右键清空
-    node.addEventListener('contextmenu', (event) => {
-      event.preventDefault();
-      hotbarSlots[index] = null;
-      saveHotbar(hotbarSlots);
-      renderHotbar(state);
-    });
-    return node;
   });
 
   const extras = [
