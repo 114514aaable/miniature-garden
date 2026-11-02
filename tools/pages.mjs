@@ -630,6 +630,7 @@ function formatDebug(debug) {
 }
 
 function render(state) {
+  lastState = state;
   if (renderer === null) {
     renderer = attach(document.getElementById('map'), { tile: state.tile });
   }
@@ -661,96 +662,134 @@ function render(state) {
 
 let inventoryItems = [];
 let stateSkills = [];
-let selectedItem = null;
+let selectedCell = null;
 let inventoryPage = 0;
-const INVENTORY_PER_PAGE = 30; // 6 × 5
-const INVENTORY_COLUMNS = 6;
+let lastState = null;
+const INVENTORY_COLUMNS = 8;
+const INVENTORY_ROWS = 5;
+const INVENTORY_PER_PAGE = INVENTORY_COLUMNS * INVENTORY_ROWS;
+const INVENTORY_CELL = 56;
+const HOTBAR_CELL = 44;
+
+/** 技能也当成「物品」：统一成 {kind, ref, name, desc}。 */
+function allEntries() {
+  const skills = stateSkills
+    .filter((skill) => skill.tag !== 'core.move')
+    .map((skill) => ({ kind: 'skill', ref: skill.tag, name: skill.name, desc: '技能' }));
+  const items = inventoryItems.map((item) => ({
+    kind: 'item', ref: item.handle, name: item.name, desc: item.description,
+  }));
+  return [...skills, ...items];
+}
 
 async function openInventory() {
   const box = document.getElementById('inventory');
   box.hidden = false;
-
   const data = await api('/api/inventory');
   inventoryItems = (data && data.items) || [];
-  selectedItem = inventoryItems[0] ?? null;
+  selectedCell = null;
   inventoryPage = 0;
   drawInventory();
 }
 
-function inventoryCell(item) {
-  if (item === undefined) {
-    const empty = text('', { policy: 'fixed', width: 72, height: 72 });
-    empty.style.background = '#12151c';
-    empty.style.border = '1px solid #22262f';
-    empty.style['border-radius'] = '6px';
+/** 方格纸风格：直角、细线、无间隙。 */
+function cellStyle(node, size, picked) {
+  node.style.width = size + 'px';
+  node.style.height = size + 'px';
+  node.style.flex = '0 0 auto';
+  node.style['border-radius'] = '0';
+  node.style.border = '1px solid #2a303c';
+  node.style.background = picked ? '#26303f' : 'transparent';
+  node.style['font-size'] = '10px';
+  node.style.padding = '0';
+  return node;
+}
+
+function entryCell(entry, index) {
+  if (entry === undefined) {
+    const empty = text('', { policy: 'fixed', width: INVENTORY_CELL, height: INVENTORY_CELL });
+    cellStyle(empty, INVENTORY_CELL, false);
     return empty;
   }
 
-  const picked = selectedItem !== null && item.handle === selectedItem.handle;
-  const node = button(item.name, () => { selectedItem = item; drawInventory(); });
-  node.style.width = '72px';
-  node.style.height = '72px';
-  node.style['font-size'] = '11px';
-  node.style.background = picked ? '#2d3a52' : '#161a22';
-  node.style.border = picked ? '1px solid #4a6da8' : '1px solid #2a303c';
-
+  const picked = selectedCell !== null && selectedCell.kind === entry.kind && selectedCell.ref === entry.ref;
+  const node = button(entry.name, () => { selectedCell = entry; drawInventory(); });
+  cellStyle(node, INVENTORY_CELL, picked);
   return withEvents(node, {
     dragstart: (event) => {
       event.dataTransfer.effectAllowed = 'move';
-      event.dataTransfer.setData('text/plain', JSON.stringify({ kind: 'item', ref: item.handle }));
+      event.dataTransfer.setData('text/plain', JSON.stringify({ kind: entry.kind, ref: entry.ref }));
     },
   }, { draggable: 'true' });
 }
 
+function hotbarMiniCell(index) {
+  const entry = hotbarSlots[index];
+  const node = button(entry === null ? String(index + 1) : hotbarLabel(entry), () => {});
+  cellStyle(node, HOTBAR_CELL, false);
+  node.style['font-size'] = '9px';
+  return withEvents(node, {
+    dragover: (event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; },
+    drop: (event) => {
+      event.preventDefault();
+      const data = JSON.parse(event.dataTransfer.getData('text/plain'));
+      hotbarSlots[index] = { kind: data.kind, ref: data.ref };
+      saveHotbar(hotbarSlots);
+      if (lastState !== null) renderHotbar(lastState);
+      drawInventory();
+    },
+    contextmenu: (event) => {
+      event.preventDefault();
+      hotbarSlots[index] = null;
+      saveHotbar(hotbarSlots);
+      if (lastState !== null) renderHotbar(lastState);
+      drawInventory();
+    },
+  });
+}
+
 function drawInventory() {
   const box = document.getElementById('inventory');
-  const pages = Math.max(1, Math.ceil(inventoryItems.length / INVENTORY_PER_PAGE));
+  const entries = allEntries();
+  const pages = Math.max(1, Math.ceil(entries.length / INVENTORY_PER_PAGE));
   inventoryPage = Math.min(inventoryPage, pages - 1);
 
   const start = inventoryPage * INVENTORY_PER_PAGE;
   const cells = [];
   for (let i = 0; i < INVENTORY_PER_PAGE; i += 1) {
-    cells.push(inventoryCell(inventoryItems[start + i]));
+    cells.push(entryCell(entries[start + i], i));
   }
 
-  const detail = selectedItem === null
-    ? col({ gap: 6 }, text('没有选中物品', { policy: 'fixed' }))
-    : col({ gap: 6 },
-        text(selectedItem.name, { policy: 'fixed' }),
-        text(selectedItem.description, { policy: 'fixed' }),
-        row({ gap: 6 }, button('放下', () => dropSelected())),
+  const detail = selectedCell === null
+    ? col({ gap: 4 }, text('没有选中格子', { policy: 'fixed' }))
+    : col({ gap: 4 },
+        text(selectedCell.name, { policy: 'fixed' }),
+        text(selectedCell.desc, { policy: 'fixed' }),
       );
 
-  const skillChips = stateSkills.map((skill) => {
-    const node = button(skill.name, () => {});
-    node.style['font-size'] = '11px';
-    return withEvents(node, {
-      dragstart: (event) => {
-        event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.setData('text/plain', JSON.stringify({ kind: 'skill', ref: skill.tag }));
-      },
-    }, { draggable: 'true' });
-  });
-
-  const pager = row({ gap: 8, align: 'center' },
+  const pager = row({ gap: 6, align: 'center' },
     button('‹', () => { inventoryPage = Math.max(0, inventoryPage - 1); drawInventory(); }),
     text('第 ' + (inventoryPage + 1) + ' / ' + pages + ' 页', { policy: 'fixed' }),
     button('›', () => { inventoryPage = Math.min(pages - 1, inventoryPage + 1); drawInventory(); }),
   );
 
-  const body = row({ gap: 16, align: 'flex-start' },
-    col({ gap: 8, width: 220 }, detail),
-    col({ gap: 10, width: 470 },
-      text('格子（拖到快捷栏）', { policy: 'fixed' }),
-      grid({ columns: INVENTORY_COLUMNS, cell: 72, gap: 6 }, ...cells),
+  const miniHotbar = grid({ columns: 9, cell: HOTBAR_CELL, gap: 0 },
+    ...hotbarSlots.map((_, index) => hotbarMiniCell(index)),
+  );
+
+  const body = row({ gap: 12, align: 'flex-start' },
+    col({ gap: 6, width: 160 }, detail),
+    col({ gap: 8 },
+      text('背包（拖到下面的快捷栏）', { policy: 'fixed' }),
+      grid({ columns: INVENTORY_COLUMNS, cell: INVENTORY_CELL, gap: 0 }, ...cells),
       pager,
-      text('技能（拖到快捷栏）', { policy: 'fixed' }),
-      row({ gap: 6 }, ...skillChips),
+      text('快捷栏 1–9（右键清空）', { policy: 'fixed' }),
+      miniHotbar,
     ),
   );
 
   box.textContent = '';
-  box.appendChild(renderNode(modal(col({ gap: 12 },
+  box.appendChild(renderNode(modal(col({ gap: 10 },
     body,
     row({ gap: 8, justify: 'end' }, button('关闭 I', () => closeInventory())),
   ), { title: '背包' })));
@@ -825,12 +864,14 @@ function renderHotbar(state) {
   const cells = hotbarSlots.map((entry, index) => {
     const label = hotbarLabel(entry);
     const node = button(String(index + 1) + (label ? ' ' + label : ''), () => activateSlot(index));
-    node.style.width = '72px';
-    node.style.height = '72px';
+    node.style.width = '56px';
+    node.style.height = '56px';
     node.style.flex = '0 0 auto';
-    node.style['font-size'] = '11px';
-    node.style.padding = '2px';
-    node.style.background = entry ? '#1d2432' : '#141821';
+    node.style['font-size'] = '10px';
+    node.style.padding = '0';
+    node.style['border-radius'] = '0';
+    node.style.border = '1px solid #2a303c';
+    node.style.background = entry ? '#1d2432' : 'transparent';
 
     return withEvents(node, {
       dragover: (event) => {
@@ -859,13 +900,15 @@ function renderHotbar(state) {
     button('设置', () => openSettings()),
   ];
   for (const node of extras) {
-    node.style.width = '56px';
-    node.style.height = '72px';
+    node.style.width = '48px';
+    node.style.height = '56px';
     node.style.flex = '0 0 auto';
-    node.style['font-size'] = '12px';
+    node.style['font-size'] = '11px';
+    node.style['border-radius'] = '0';
+    node.style['margin-left'] = '6px';
   }
 
-  mount(document.getElementById('skills'), row({ gap: 6, align: 'center' }, ...cells, ...extras));
+  mount(document.getElementById('skills'), row({ gap: 0, align: 'center' }, ...cells, ...extras));
 }
 
 function activateSlot(index) {
