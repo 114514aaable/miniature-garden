@@ -117,8 +117,14 @@ export function buildFrame(snapshot: FrameSnapshot, spec: FrameSpec): readonly D
 
   for (let y = 0; y < space.height; y++) {
     for (let x = 0; x < space.width; x++) {
-      const screenX = originX + x * spec.tile;
-      const screenY = originY + y * spec.tile;
+      // 按「取整后的左右边」算宽高：相邻格共用一条边，
+      // 相机是浮点的时候也不会出现 1px 缝或重叠。
+      const left = round(originX + x * spec.tile);
+      const top = round(originY + y * spec.tile);
+      const right = round(originX + (x + 1) * spec.tile);
+      const bottom = round(originY + (y + 1) * spec.tile);
+      const screenX = left;
+      const screenY = top;
       if (!visible(screenX, screenY, spec.tile, spec.viewport)) {
         continue;
       }
@@ -127,10 +133,10 @@ export function buildFrame(snapshot: FrameSnapshot, spec: FrameSpec): readonly D
       const style = spec.style.terrain[terrain] ?? spec.style.terrain[0];
       commands.push({
         kind: "rect",
-        x: round(screenX),
-        y: round(screenY),
-        w: spec.tile,
-        h: spec.tile,
+        x: left,
+        y: top,
+        w: right - left,
+        h: bottom - top,
         color: style?.fill ?? spec.style.background,
       });
 
