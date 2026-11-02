@@ -30,6 +30,8 @@ export interface PackFiles {
   readonly terrains?: readonly string[];
   /** 组件定义：名字 + schema。RPG 的组件在 official.base，别的玩法可以在自己包里定义。 */
   readonly components?: readonly string[];
+  /** 预制件：一组实体 + 相对偏移。 */
+  readonly groups?: readonly string[];
   /** 世界的出生点与规则清单。base 包可以没有。 */
   readonly world?: readonly string[];
   readonly patches?: readonly string[];
@@ -85,10 +87,11 @@ const MANIFEST_SCHEMA: Schema = {
         entities: FILE_LIST,
         terrains: FILE_LIST,
         components: FILE_LIST,
+        groups: FILE_LIST,
         world: FILE_LIST,
         patches: FILE_LIST,
       },
-      optional: ["spaces", "templates", "entities", "terrains", "components", "world", "patches"],
+      optional: ["spaces", "templates", "entities", "terrains", "components", "groups", "world", "patches"],
     },
     generator: {
       t: "object",

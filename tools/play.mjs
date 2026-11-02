@@ -14,6 +14,7 @@
 import { readPack } from "./pack-reader.mjs";
 
 import { loadWorld } from "../engine/core/src/pack/load.ts";
+import { applyInit } from "../engine/core/src/pack/init.ts";
 import { mergePacks } from "../engine/core/src/pack/merge.ts";
 import { orderPacks } from "../engine/core/src/pack/order.ts";
 import { Store } from "../engine/core/src/store.ts";
@@ -45,6 +46,7 @@ function main(dirs) {
     });
   }
   const spawned = store.step();
+applyInit(store, loaded);
 
   console.log(`包：${ordered.map((content) => `${content.pack.id}@${content.pack.version}`).join(" + ")}`);
   console.log(`定义：${merged.definitions.size} 条，警告：${merged.warnings.length} 条`);
@@ -58,11 +60,12 @@ function main(dirs) {
 }
 
 function draw(store, loaded, spawned) {
+  void spawned;
   const space = loaded.spaces[0];
   const byHandle = new Map();
-  for (const entry of spawned) {
-    const handle = entry.data.handle;
-    const entity = store.entity(handle);
+  // 画的是「现在世界里有谁」，不是「开局 spawn 了谁」——init 之后才算完整
+  for (const entity of store.allEntities()) {
+    if (entity.pos === null) continue;
     const key = `${entity.pos.x},${entity.pos.y}`;
     if (!byHandle.has(key)) {
       byHandle.set(key, GLYPH[entity.template] ?? "?");

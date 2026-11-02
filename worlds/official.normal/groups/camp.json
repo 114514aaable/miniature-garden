@@ -1,0 +1,10 @@
+[
+  {
+    "id": "camp",
+    "entities": [
+      { "template": "item_lamp", "dx": 0, "dy": 0 },
+      { "template": "prop_crate", "dx": 1, "dy": 0 },
+      { "template": "prop_crate", "dx": 2, "dy": 0 }
+    ]
+  }
+]

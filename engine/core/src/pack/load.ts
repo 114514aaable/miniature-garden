@@ -23,6 +23,8 @@ import {
   isPassable,
   parseComponentDef,
   parseEntityDef,
+  parseGroupDef,
+  type GroupDef,
   parseSpaceDef,
   parseTemplateDef,
   type SpaceDef,
@@ -59,12 +61,14 @@ export interface LoadedWorld {
   readonly rules: readonly string[];
   /** 开局一次性效果（世界包声明，宿主按顺序应用）。 */
   readonly init: readonly JsonValue[];
+  /** 预制件：一组实体 + 相对偏移，供 stamp 使用。 */
+  readonly groups: ReadonlyMap<string, GroupDef>;
   readonly onConflict: ConflictPolicy;
   readonly world: WorldDef;
   readonly hash: string;
 }
 
-const KNOWN_KINDS = new Set(["space", "template", "entity", "terrain", "component", "world"]);
+const KNOWN_KINDS = new Set(["space", "template", "entity", "terrain", "component", "group", "world"]);
 
 export function loadWorld(
   merged: MergedWorld,
@@ -76,6 +80,7 @@ export function loadWorld(
   const terrains = new Map<number, TerrainDef>();
   const worldDefs: WorldDef[] = [];
   const componentDefs: ComponentDef[] = [];
+  const groupDefs: GroupDef[] = [];
 
   for (const [key, def] of merged.definitions) {
     if (!KNOWN_KINDS.has(def.kind)) {
@@ -96,6 +101,9 @@ export function loadWorld(
         terrains.set(terrain.id, terrain);
         break;
       }
+      case "group":
+        groupDefs.push(parseGroupDef(def.data, def.id, `$group.${def.id}`));
+        break;
       case "component":
         componentDefs.push(parseComponentDef(def.data, def.id, `$component.${def.id}`));
         break;
@@ -152,6 +160,7 @@ export function loadWorld(
     spaceIds,
     rules: world.rules ?? [],
     init: world.init ?? [],
+    groups: new Map(groupDefs.map((def) => [def.id, def])),
     onConflict: world.onConflict ?? "error",
     world,
     hash: hashOf(merged.hash, sortedSpaces, templateDefs, [...terrains.values()], entities, start),

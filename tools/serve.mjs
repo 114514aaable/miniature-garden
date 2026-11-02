@@ -20,6 +20,7 @@ import { join } from "node:path";
 import { readPack } from "./pack-reader.mjs";
 import { GAME_PAGE, LAUNCHER_PAGE } from "./pages.mjs";
 import { loadWorld } from "../engine/core/src/pack/load.ts";
+import { applyInit } from "../engine/core/src/pack/init.ts";
 import { mergePacks } from "../engine/core/src/pack/merge.ts";
 import { orderPacks } from "../engine/core/src/pack/order.ts";
 import { evaluate } from "../engine/core/src/event/evaluate.ts";
@@ -166,16 +167,10 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true) {
   }
   const spawnEvents = store.step();
 
-  // 开局初始化：只在「新开局」执行，读档时跳过（否则开局物品会发两次）。
+  // 开局初始化：只在「新开局」执行（读档跳过）。
   if (runInit) {
-    for (const effect of loaded.init) {
-      store.submit(effect);
-    }
-    if (loaded.init.length > 0) {
-      store.step(0);
-    }
+    applyInit(store, loaded);
   }
-
 
   let playerHandle = null;
   for (const entry of spawnEvents) {

@@ -103,6 +103,34 @@ for (const component of componentsJson) {
   components += 1;
 }
 
+// ── 预制件 ────────────────────────────────────────────
+for (const dir of ["worlds/official.normal/groups"]) {
+  let files = [];
+  try {
+    files = readdirSync(dir);
+  } catch {
+    continue;
+  }
+  for (const file of files) {
+    if (!file.endsWith(".json")) continue;
+    const list = JSON.parse(readFileSync(`${dir}/${file}`, "utf8"));
+    for (const group of Array.isArray(list) ? list : [list]) {
+      const body = [
+        "# 预制件 " + group.id,
+        "",
+        "一组实体 + 相对偏移，用 `stamp` 盖到地图上。",
+        "",
+        "## 组成",
+        ...group.entities.map((part) => `- \`${part.template}\` 偏移 (${part.dx}, ${part.dy})`),
+        "",
+      ];
+      writeFileSync(`${OUT}/group-${group.id}.md`, body.join("\n"), "utf8");
+      index.push(`| 预制件 | ${group.id} | \`${group.id}\` | ${group.entities.length} 个实体 |`);
+      catalog.push({ kind: "group", id: group.id, name: group.id, desc: "", file: `group-${group.id}.md`, entities: group.entities });
+    }
+  }
+}
+
 // ── 模板（base + normal）──────────────────────────────
 const templatesDirs = ["worlds/official.base/templates", "worlds/official.normal/templates"];
 for (const dir of templatesDirs) {

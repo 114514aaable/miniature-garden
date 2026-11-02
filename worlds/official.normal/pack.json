@@ -7,11 +7,24 @@
   "license": "CC-BY-SA-4.0",
   "engine": ">=0.1.0",
   "extends": "official.base@0.1.0",
-  "requires": { "official.base": "^0.1.0" },
+  "requires": {
+    "official.base": "^0.1.0"
+  },
   "files": {
-    "world": ["world.json"],
-    "spaces": ["spaces/harbor.json"],
-    "templates": ["templates/people.json"],
-    "entities": ["entities/harbor.json"]
+    "world": [
+      "world.json"
+    ],
+    "spaces": [
+      "spaces/harbor.json"
+    ],
+    "templates": [
+      "templates/people.json"
+    ],
+    "entities": [
+      "entities/harbor.json"
+    ],
+    "groups": [
+      "groups/camp.json"
+    ]
   }
 }

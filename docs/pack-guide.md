@@ -194,12 +194,42 @@ node tools/serve.mjs
 
 ```json
 "init": [
-  { "kind": "patch", "handle": 0, "component": "core.health", "data": { "hp": 10 } }
+  { "kind": "stamp", "group": "camp", "space": "harbor", "x": 4, "y": 4 }
 ]
 ```
 
-**注意**：`handle` 是运行时句柄，写死在数据里不靠谱。当前 `init` 还是空壳——
-真正的开局物品需要「按名字找实体」这类效果，等需求明确了再加。
+### 预制件 stamp
+
+`groups/` 目录里放预制件：一组实体 + 相对偏移。
+
+```json
+[
+  {
+    "id": "camp",
+    "entities": [
+      { "template": "item_lamp", "dx": 0, "dy": 0 },
+      { "template": "prop_crate", "dx": 1, "dy": 0 },
+      { "template": "prop_crate", "dx": 2, "dy": 0 }
+    ]
+  }
+]
+```
+
+在 `pack.json` 里登记 `"groups": ["groups/camp.json"]`，然后就能用 `stamp` 盖上去了。
+
+**它怎么实现的**：`stamp` 由引擎的 `applyInit` 展开成若干 `spawn`——所以
+`play.mjs`、`serve.mjs`、以后的地图生成器看到的开局完全一致。
+
+### 其它效果
+
+普通效果原样提交，比如：
+
+```json
+{ "kind": "patch", "handle": 0, "component": "core.health", "data": { "hp": 10 } }
+```
+
+**注意**：`handle` 是运行时句柄，写死在数据里不靠谱。位置类的东西用 `stamp`，
+按模板生成的用以后的效果词表。
 
 ## 5. 补丁（patches）
 

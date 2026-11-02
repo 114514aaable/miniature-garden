@@ -26,6 +26,7 @@
 | 组件 | [贴图](component-core.sprite.md) | `core.sprite` | 指向图集里的一帧；没有就退回字符。 |
 | 组件 | [意图](component-core.intent.md) | `core.intent` | 敌人下回合要打的格子与结算时刻，绘制和判定共用。 |
 | 组件 | [core.pending](component-core.pending.md) | `core.pending` |  |
+| 预制件 | camp | `camp` | 3 个实体 |
 | 模板 | [你](template-pc.md) | `pc` | 玩家角色。 |
 | 模板 | [木箱](template-prop_crate.md) | `prop_crate` | 实心障碍，挡路。 |
 | 模板 | [油灯](template-item_lamp.md) | `item_lamp` | 一盏可以捡起来的灯。 |

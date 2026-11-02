@@ -17,5 +17,13 @@
     "core.cast"
   ],
   "onConflict": "error",
-  "init": []
+  "init": [
+    {
+      "kind": "stamp",
+      "group": "camp",
+      "space": "harbor",
+      "x": 4,
+      "y": 4
+    }
+  ]
 }

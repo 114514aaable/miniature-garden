@@ -97,6 +97,37 @@ const TERRAIN_SCHEMA: Schema = {
   fields: { name: STR, passable: { t: "bool" } },
 };
 
+/** 预制件：一组实体 + 相对偏移。 */
+export interface GroupDef {
+  readonly id: string;
+  readonly entities: ReadonlyArray<{
+    readonly template: string;
+    readonly dx: number;
+    readonly dy: number;
+    readonly overrides?: Readonly<Record<string, JsonValue>>;
+  }>;
+}
+
+const GROUP_SCHEMA: Schema = {
+  t: "object",
+  fields: {
+    entities: {
+      t: "array",
+      of: {
+        t: "object",
+        fields: {
+          template: STR,
+          dx: INT,
+          dy: INT,
+          overrides: { t: "record", of: { t: "any" } },
+        },
+        optional: ["overrides"],
+      },
+      max: 64,
+    },
+  },
+};
+
 const WORLD_SCHEMA: Schema = {
   t: "object",
   fields: {
@@ -164,6 +195,15 @@ export function parseTerrainDef(raw: unknown, idKey: string, path = "$terrain"):
 
   const def = raw as { name: string; passable: boolean };
   return { id, name: def.name, passable: def.passable };
+}
+
+export function parseGroupDef(raw: unknown, idKey: string, path = "$group"): GroupDef {
+  if (!ID.test(idKey)) {
+    throw new SchemaError(`${path}.id`, `预制件 id 非法：${idKey}`);
+  }
+  validate(raw, GROUP_SCHEMA, path);
+  const def = raw as { entities: GroupDef["entities"] };
+  return { id: idKey, entities: def.entities };
 }
 
 export function parseWorldDef(raw: unknown, path = "$world"): WorldDef {

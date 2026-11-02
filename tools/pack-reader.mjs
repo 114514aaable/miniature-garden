@@ -32,6 +32,7 @@ const KIND_BY_FOLDER = {
   entities: "entity",
   terrains: "terrain",
   components: "component",
+  groups: "group",
   world: "world",
 };
 
@@ -82,7 +83,7 @@ function toDefinition(kind, item, where) {
   }
 
   // entity / terrain / component 的 id 只用于合并与补丁定位，不进运行时数据。
-  if (kind === "entity" || kind === "terrain" || kind === "component") {
+  if (kind === "entity" || kind === "terrain" || kind === "component" || kind === "group") {
     const { id: _ignored, ...data } = item;
     return { kind, id, data };
   }
