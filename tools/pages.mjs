@@ -483,8 +483,17 @@ export const GAME_PAGE = `<!doctype html>
   #hud > * { pointer-events: auto; }
   #topbar { position: absolute; top: 10px; left: 10px; display: flex; gap: 8px; align-items: center;
             padding: 4px 8px; background: rgba(16,19,26,0.75); border-radius: 8px; }
-  #status { position: absolute; top: 10px; right: 10px; padding: 6px 10px;
-            background: rgba(16,19,26,0.75); border-radius: 8px; }
+  /* 左侧立绘：现在只有占位，以后换成图 */
+  #portrait { position: absolute; left: 10px; top: 54px; width: 168px;
+              background: rgba(16,19,26,0.8); border: 1px solid #2a303c; border-radius: 10px;
+              padding: 8px; text-align: center; }
+  #portrait-art { height: 190px; display: flex; align-items: center; justify-content: center;
+                  background: #0f1116; border-radius: 6px; color: #8ab4f8; font-size: 48px; }
+  #nameplate { margin-top: 6px; color: #d7dae0; font-weight: 600; }
+
+  #status { position: absolute; left: 10px; top: 320px; width: 168px; padding: 8px 10px;
+            background: rgba(16,19,26,0.8); border: 1px solid #2a303c; border-radius: 8px;
+            font-size: 13px; line-height: 1.6; }
   #skills { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 6px; margin: 0; }
   #skills button { min-width: 64px; height: 52px; }
@@ -492,9 +501,9 @@ export const GAME_PAGE = `<!doctype html>
   #message { position: absolute; bottom: 78px; left: 50%; transform: translateX(-50%);
              margin: 0; padding: 4px 10px; background: rgba(16,19,26,0.7); border-radius: 6px;
              white-space: nowrap; }
-  #logbox { position: absolute; bottom: 14px; left: 10px; width: 340px; max-height: 180px;
-            overflow: hidden; padding: 6px 10px; background: rgba(16,19,26,0.7);
-            border-radius: 8px; color: #9aa3b2; font-size: 12px; }
+  #logbox { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: min(560px, 60vw);
+            max-height: 92px; overflow: hidden; padding: 6px 12px; background: rgba(16,19,26,0.72);
+            border-radius: 8px; color: #9aa3b2; font-size: 12px; white-space: pre; }
   #tooltip { position: fixed; z-index: 30; pointer-events: none; max-width: 320px;
              padding: 6px 10px; background: rgba(10,12,16,0.92); border: 1px solid #2a303c;
              border-radius: 6px; color: #c7cdd6; font-size: 12px; white-space: pre-wrap; }
@@ -503,6 +512,9 @@ export const GAME_PAGE = `<!doctype html>
   /* 窄屏：HUD 收起来，别互相压 */
   @media (max-width: 900px) {
     #logbox { display: none; }
+    #portrait { width: 120px; }
+    #portrait-art { height: 130px; font-size: 34px; }
+    #status { width: 120px; top: 250px; font-size: 12px; }
     #message { bottom: 74px; max-width: 92vw; overflow: hidden; text-overflow: ellipsis; }
   }
   @media (max-width: 640px) {
@@ -525,6 +537,11 @@ export const GAME_PAGE = `<!doctype html>
     <button id="savebtn">{{game.save}}</button>
     <button id="loadbtn">{{game.load}}</button>
     <span class="meta" id="meta" style="margin:0"></span>
+  </div>
+
+  <div id="portrait">
+    <div id="portrait-art"><span id="portrait-glyph">@</span></div>
+    <div id="nameplate">你</div>
   </div>
 
   <div id="status"></div>
@@ -599,6 +616,11 @@ function render(state) {
   }
   tile = state.tile;
   renderer.setState(state);
+
+  const portrait = document.getElementById('portrait-glyph');
+  if (portrait) portrait.textContent = state.playerGlyph || '@';
+  const plate = document.getElementById('nameplate');
+  if (plate) plate.textContent = state.playerName || '你';
 
   document.getElementById('status').innerHTML =
     'HP <b>' + state.hud.hp + '/' + state.hud.hpMax + '</b>' +
