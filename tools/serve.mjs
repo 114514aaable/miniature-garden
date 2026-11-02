@@ -151,12 +151,13 @@ let session = null;
 
 /** 规则表：签名 + 处理器。关掉一条规则就是把它从这里跳过。 */
 
-function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true) {
+function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, offTemplates = new Set()) {
   const merged = mergePacks(ordered);
   const loaded = loadWorld(merged);
 
   const store = new Store(loaded.spaces, { templates: loaded.templates });
   for (const entity of loaded.entities) {
+    if (offTemplates.has(entity.template)) continue;
     store.submit({
       kind: "spawn",
       space: entity.space,
@@ -912,15 +913,23 @@ const server = createServer(async (request, response) => {
 
       if (request.method === "GET") {
         const all = readSelection();
-        sendJson(response, { ok: true, world, off: world ? (all[world] ?? []) : [], all });
+        const entry = world ? all[world] : null;
+        const off = Array.isArray(entry) ? entry : (entry?.off ?? []);
+        const offTemplates = Array.isArray(entry) ? [] : (entry?.offTemplates ?? []);
+        sendJson(response, { ok: true, world, off, offTemplates, all });
         return;
       }
 
       const body = await readBody(request);
       const all = readSelection();
-      all[String(body.world)] = Array.isArray(body.off) ? body.off.filter((r) => typeof r === "string") : [];
+      all[String(body.world)] = {
+        off: Array.isArray(body.off) ? body.off.filter((r) => typeof r === "string") : [],
+        offTemplates: Array.isArray(body.offTemplates)
+          ? body.offTemplates.filter((r) => typeof r === "string")
+          : [],
+      };
       writeSelection(all);
-      sendJson(response, { ok: true, world: body.world, off: all[String(body.world)] });
+      sendJson(response, { ok: true, world: body.world, ...all[String(body.world)] });
       return;
     }
 
@@ -972,7 +981,9 @@ const server = createServer(async (request, response) => {
       const disabled = new Set(Array.isArray(off) ? off : []);
       try {
         const { byId } = collectPacks();
-        session = buildSession(closureOf(String(id), byId), disabled, Number(seed) || 0);
+        const entry = readSelection()[String(id)];
+        const offTemplates = new Set(Array.isArray(entry) ? [] : (entry?.offTemplates ?? []));
+        session = buildSession(closureOf(String(id), byId), disabled, Number(seed) || 0, true, offTemplates);
         session.world = String(id);
         session.dead = false;
         session.disabled = [...disabled];

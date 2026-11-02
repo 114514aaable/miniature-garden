@@ -104,6 +104,8 @@ export const LAUNCHER_PAGE = `<!doctype html>
   .tree .leaf .id { color: #5f6b7a; font-size: 11px; }
   .tree .leaf .desc { color: #6f7a89; font-size: 11px; }
   .tree label.group { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  .tree input[type=checkbox] { width: 13px; height: 13px; accent-color: #8ab4f8; cursor: pointer;
+                               flex: 0 0 auto; margin: 0; }
   .menu { display: flex; flex-direction: column; gap: 10px; width: min(320px, 100%); margin-top: 20px; }
   .menu button { padding: 12px 16px; text-align: left; font-size: 15px; }
   .panel { position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center;
@@ -278,8 +280,10 @@ async function showGraph(id) {
   // 这个世界的选择存在 saves/selection.json（AI 也能读写）
   const saved = await api('/api/selection?world=' + encodeURIComponent(id));
   const off = new Set((saved && saved.off) || []);
+  const offTemplates = new Set((saved && saved.offTemplates) || []);
   for (const input of tree.querySelectorAll('input[data-rule]')) {
-    input.checked = !off.has(input.dataset.rule);
+    const id = input.dataset.rule;
+    input.checked = input.dataset.kind === 'template' ? !offTemplates.has(id) : !off.has(id);
   }
   syncGroupStates();
   updateOffCount();
@@ -348,12 +352,14 @@ function kindGroup(kind, title, items) {
   for (const node of items.sort((a, b) => (a.label < b.label ? -1 : 1))) {
     const leaf = document.createElement('div');
     leaf.className = 'leaf';
-    if (kind === 'rule') {
-      const input = document.createElement('input');
-      input.type = 'checkbox'; input.checked = true; input.dataset.rule = node.label;
-      input.addEventListener('change', updateOffCount);
-      leaf.appendChild(input);
-    }
+    // 每一类都能勾：规则真正生效，其余先记录（模板会影响生成）
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.checked = true;
+    input.dataset.rule = node.label;
+    input.dataset.kind = node.kind;
+    input.addEventListener('change', () => { syncGroupStates(); updateOffCount(); });
+    leaf.appendChild(input);
     const name = document.createElement('span');
     name.textContent = node.display || node.label;
     leaf.appendChild(name);
@@ -397,7 +403,13 @@ function syncGroupStates() {
 
 function disabledRules() {
   return Array.from(document.querySelectorAll('input[data-rule]'))
-    .filter((input) => !input.checked)
+    .filter((input) => !input.checked && (input.dataset.kind === 'rule' || input.dataset.kind === undefined))
+    .map((input) => input.dataset.rule);
+}
+
+function disabledTemplates() {
+  return Array.from(document.querySelectorAll('input[data-rule]'))
+    .filter((input) => !input.checked && input.dataset.kind === 'template')
     .map((input) => input.dataset.rule);
 }
 
@@ -405,7 +417,7 @@ function updateOffCount() {
   const off = disabledRules();
   localStorage.setItem('nw.off', JSON.stringify(off));
   if (inspecting !== null) {
-    api('/api/selection', { world: inspecting, off });
+    api('/api/selection', { world: inspecting, off, offTemplates: disabledTemplates() });
   }
   document.getElementById('offcount').textContent = off.length === 0 ? '' : '关掉 ' + off.length + ' 条规则';
 }
@@ -934,7 +946,8 @@ function hotbarLabel(entry) {
   if (entry === null) return '';
   if (entry.kind === 'skill') {
     const skill = hotbarSkills.find((item) => item.tag === entry.ref);
-    return skill ? skill.name : entry.ref;
+    // 技能被关掉了：显示占位符，不显示内部 id
+    return skill ? skill.name : '—';
   }
   const item = hotbarItems.find((row) => row.handle === entry.ref);
   return item ? item.name : '道具 ' + entry.ref;
@@ -1127,7 +1140,13 @@ function activateSlot(index) {
     document.getElementById('message').textContent = '这个槽是空的：从背包拖一个技能或道具上来。';
     return;
   }
-  if (entry.kind === 'skill') useSkill(entry.ref, undefined, undefined, {});
+  if (entry.kind === 'skill') {
+    if (!hotbarSkills.some((skill) => skill.tag === entry.ref)) {
+      document.getElementById('message').textContent = '这个技能现在不可用（规则被关掉了）。';
+      return;
+    }
+    useSkill(entry.ref, undefined, undefined, {});
+  }
   else useSkill('core.use', undefined, undefined, { item: entry.ref });
 }
 
