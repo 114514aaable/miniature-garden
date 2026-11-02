@@ -672,8 +672,49 @@ function speedOf(handle) {
 const SAVE_DIR = "saves";
 const SAVE_FILE = "saves/quicksave.json";
 
+/** 槽位名只允许字母数字下划线短横，防止路径穿越。 */
+function slotPath(slot) {
+  if (!/^[a-zA-Z0-9_-]{1,32}$/.test(slot)) {
+    throw new Error("槽位名只能用字母、数字、下划线、短横（1–32 个字）");
+  }
+  return SAVE_DIR + "/" + slot + ".json";
+}
+
+/** 列出所有存档（按时间倒序）。坏的存档跳过，不拖垮列表。 */
+function listSaves() {
+  let names = [];
+  try {
+    names = readdirSync(SAVE_DIR);
+  } catch {
+    return [];
+  }
+
+  const saves = [];
+  for (const name of names) {
+    if (!name.endsWith(".json")) continue;
+    const slot = name.slice(0, -".json".length);
+    try {
+      const data = JSON.parse(readFileSync(SAVE_DIR + "/" + name, "utf8"));
+      saves.push({
+        slot,
+        world: data.world ?? null,
+        seed: data.seed ?? 0,
+        savedAt: data.savedAt ?? null,
+        tick: data.engine?.tick ?? 0,
+        packs: data.packs ?? [],
+        bytes: readFileSync(SAVE_DIR + "/" + name).length,
+      });
+    } catch {
+      saves.push({ slot, broken: true });
+    }
+  }
+
+  return saves.sort((a, b) => String(b.savedAt ?? "").localeCompare(String(a.savedAt ?? "")));
+}
+
+
 /** 存档：引擎状态 + 宿主侧（玩家、就绪时刻、调度器、关掉的规则）。 */
-function saveGame() {
+function saveGame(slot = "quick") {
   if (session === null) return { ok: false, error: "没有进行中的世界" };
   const data = {
     version: 1,
@@ -688,15 +729,15 @@ function saveGame() {
     disabled: session.disabled ?? [],
   };
   mkdirSync(SAVE_DIR, { recursive: true });
-  writeFileSync(SAVE_FILE, JSON.stringify(data), "utf8");
+  writeFileSync(slotPath(slot), JSON.stringify(data), "utf8");
   return { ok: true, message: "已存档（" + session.store.now() + "）" };
 }
 
 /** 读档：把世界恢复到存档那一刻。 */
-function loadGame() {
+function loadGame(slot = "quick") {
   let data;
   try {
-    data = JSON.parse(readFileSync(SAVE_FILE, "utf8"));
+    data = JSON.parse(readFileSync(slotPath(slot), "utf8"));
   } catch {
     return { ok: false, error: "还没有存档" };
   }
@@ -795,6 +836,11 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    if (request.url === "/api/saves") {
+      sendJson(response, { ok: true, saves: listSaves() });
+      return;
+    }
+
     if (request.url === "/api/worlds") {
       // 启动器专用：永远返回世界列表，不受「已有会话」影响。
       sendJson(response, scanWorlds());
@@ -856,13 +902,15 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.method === "POST" && request.url === "/api/save") {
-      const result = saveGame();
+      const { slot } = await readBody(request);
+      const result = saveGame(typeof slot === "string" && slot.length > 0 ? slot : "quick");
       sendJson(response, result.ok ? snapshot(result.message) : { error: result.error });
       return;
     }
 
     if (request.method === "POST" && request.url === "/api/load") {
-      const result = loadGame();
+      const { slot } = await readBody(request);
+      const result = loadGame(typeof slot === "string" && slot.length > 0 ? slot : "quick");
       sendJson(response, result.ok ? snapshot(result.message) : snapshot(result.error));
       return;
     }

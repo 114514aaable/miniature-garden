@@ -414,32 +414,45 @@ function renderSettings() {
 async function renderLoad() {
   const box = document.getElementById('load');
 
-  const draw = (message, detail) => {
-    const parts = [
-      text('读档', { policy: 'fixed' }),
+  const draw = (saves, message) => {
+    const rows = saves.map((save) => {
+      const label = save.broken
+        ? save.slot + '（损坏）'
+        : save.slot + ' · ' + (save.world || '?') + ' · 种子 ' + save.seed + ' · tick ' + save.tick +
+          (save.savedAt ? ' · ' + save.savedAt.slice(0, 16).replace('T', ' ') : '');
+      return row({ gap: 8, align: 'center' },
+        text(label, { policy: 'fill' }),
+        save.broken ? text('—', { policy: 'fixed' }) : button('读取', () => tryLoad(save.slot)),
+      );
+    });
+
+    mount(box, modal(col({ gap: 10 },
       text(message, { policy: 'fixed' }),
-    ];
-    if (detail) parts.push(text(detail, { policy: 'fixed' }));
-    parts.push(row({ gap: 8, justify: 'end' },
-      button('读取最新存档', () => runLoad()),
-      button('← 返回', () => show(null)),
-    ));
-    mount(box, modal(col({ gap: 10 }, ...parts), { title: '读档' }));
+      ...rows,
+      row({ gap: 8, justify: 'end' }, button('← 返回', () => show(null))),
+    ), { title: '读档' }));
   };
 
-  const runLoad = async () => {
-    draw('正在读取…', '');
-    const result = await api('/api/load', {});
+  const tryLoad = async (slot) => {
+    draw([], '正在读取…');
+    const result = await api('/api/load', { slot });
     if (result && result.ok === false) {
       const missing = result.missing && result.missing.length ? '缺：' + result.missing.join(', ') : '';
       const extra = result.extra && result.extra.length ? '多：' + result.extra.join(', ') : '';
-      draw(result.error, [missing, extra].filter(Boolean).join('   '));
+      const saves = await api('/api/saves');
+      draw(saves.saves || [], result.error + '   ' + [missing, extra].filter(Boolean).join('   '));
       return;
     }
     location.href = '/game?world=' + encodeURIComponent(result.world || activeWorld || '') + '&loaded=1';
   };
 
-  draw('点下面读取最新存档。', '');
+  draw([], '正在读取存档列表…');
+  const result = await api('/api/saves');
+  if (!result || result.ok !== true) {
+    draw([], '读不出存档列表：' + (result && result.error ? result.error : '未知'));
+    return;
+  }
+  draw(result.saves || [], (result.saves || []).length === 0 ? '还没有存档。游戏里点「存档」会写一份。' : '选择一个存档读取：');
 }
 
 document.getElementById('quit-back').textContent = '{{menu.back}}';
