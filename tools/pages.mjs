@@ -44,12 +44,16 @@ const CSS = `
   #devlog, #debug { margin: 8px 0 0; padding: 8px; max-height: 200px; overflow: auto; color: #8b929e;
                     background: #0f1116; border: 1px solid #232733; border-radius: 6px; white-space: pre; }
   #graphpanel[hidden] { display: none; }
-  #graphpanel { position: fixed; inset: 40px 60px; z-index: 20; display: flex; flex-direction: column;
+  #graphpanel { position: fixed; inset: 40px 60px; z-index: 60; display: flex; flex-direction: column;
                 background: #10131a; border: 1px solid #2a303c; border-radius: 10px;
                 box-shadow: 0 20px 60px rgba(0,0,0,0.6); padding: 12px 16px; }
   .graphbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
   .graphbar span { color: #8ab4f8; font-weight: 600; }
-  #graph { margin: 0; flex: 1; overflow: auto; color: #9aa3b2; font-size: 12px; white-space: pre; }
+  #tree { margin: 0; flex: 1 1 auto; min-height: 0; overflow: auto; color: #9aa3b2; font-size: 12px;
+          padding-right: 6px; }
+  #tree::-webkit-scrollbar { width: 10px; }
+  #tree::-webkit-scrollbar-thumb { background: #2a303c; border-radius: 5px; }
+  #tree::-webkit-scrollbar-track { background: #0f1116; }
   #errbar { position: sticky; top: 0; z-index: 30; margin-bottom: 12px; padding: 8px 12px;
             background: #3a1d22; color: #ff9aa2; border: 1px solid #5c2a32; border-radius: 6px;
             font-size: 12px; white-space: pre-wrap; }
