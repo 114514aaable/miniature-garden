@@ -547,9 +547,6 @@ export const GAME_PAGE = `<!doctype html>
   <div id="topbar">
     <a href="/">{{game.back}}</a>
     <button id="settingsbtn">{{menu.settings}}</button>
-    <button id="savebtn">{{game.save}}</button>
-    <button id="loadbtn">{{game.load}}</button>
-    <span class="meta" id="meta" style="margin:0"></span>
   </div>
 
   <div id="portrait">
@@ -656,7 +653,6 @@ function render(state) {
       ? '<span style="color:#f0c674">恢复中 还要 ' + (state.hud.readyAt - state.tick) + ' 回合</span>'
       : '<span style="color:#98c379">可以行动</span>');
 
-  document.getElementById('meta').textContent = state.packs.join(' + ');
   if (state.dead) showDeath();
   document.getElementById('message').textContent = state.message;
   document.getElementById('logbox').textContent = (state.events || []).slice(-5).join('\\n');
@@ -1021,61 +1017,96 @@ function applySettings() {
   localStorage.setItem('nw.devlog', settings.devlog ? '1' : '0');
 }
 
+let capturingBinding = false;
+let settingsPage = 'root';
+
+async function openSettings(page = 'root') {
+  settingsPage = page;
+  const box = document.getElementById('settings');
+  box.hidden = false;
+  box.textContent = '';
+
+  const back = button('← 返回', () => openSettings('root'));
+  let body;
+
+  if (page === 'root') {
+    body = col({ gap: 8 },
+      text('设置', { policy: 'fixed' }),
+      row({ gap: 8 },
+        button('配置', () => openSettings('config')),
+        button('按键', () => openSettings('keys')),
+        button('世界', () => openSettings('world')),
+        button('存档 / 读档', () => openSettings('saves')),
+      ),
+      row({ gap: 8, justify: 'end' }, button('关闭 Esc', () => closeSettings())),
+    );
+  } else if (page === 'config') {
+    const cellRow = (label, key) => {
+      const value = config[key];
+      return row({ gap: 6, align: 'center' },
+        text(label, { policy: 'fixed', width: 96 }),
+        button('−', () => { config = withConfig(config, { [key]: clampCell(value - 4) }); saveConfig(config); refreshSizes(); openSettings('config'); }),
+        text(String(value), { policy: 'fixed', width: 40 }),
+        button('+', () => { config = withConfig(config, { [key]: clampCell(value + 4) }); saveConfig(config); refreshSizes(); openSettings('config'); }),
+      );
+    };
+
+    body = col({ gap: 8 },
+      text('配置', { policy: 'fixed' }),
+      cellRow('快捷栏格子', 'hotbarCell'),
+      cellRow('背包格子', 'inventoryCell'),
+      row({ gap: 6, align: 'center' },
+        text('开发者模式', { policy: 'fixed', width: 96 }),
+        button(config.devMode ? '开' : '关', () => {
+          config = withConfig(config, { devMode: !config.devMode });
+          saveConfig(config);
+          applyDevMode();
+          openSettings('config');
+        }),
+      ),
+      back,
+    );
+  } else if (page === 'keys') {
+    const rows = Object.entries(config.bindings).map(([code, command]) =>
+      row({ gap: 6, align: 'center' },
+        text(code, { policy: 'fixed', width: 96 }),
+        text(command, { policy: 'fixed' }),
+        button('改', () => { capturingBinding = code; openSettings('keys'); }),
+      ),
+    );
+
+    body = col({ gap: 6 },
+      text('按键', { policy: 'fixed' }),
+      text(capturingBinding ? '按下新的键…（Esc 取消）' : '点「改」再按一个键', { policy: 'fixed' }),
+      ...rows,
+      back,
+    );
+  } else if (page === 'world') {
+    const info = lastState === null ? '（未开局）'
+      : '世界 ' + (lastState.world || '?') + ' · 种子 ' + lastState.seed + ' · tick ' + lastState.tick;
+    body = col({ gap: 8 },
+      text('世界', { policy: 'fixed' }),
+      text(info, { policy: 'fixed' }),
+      back,
+    );
+  } else {
+    body = col({ gap: 8 },
+      text('存档 / 读档', { policy: 'fixed' }),
+      row({ gap: 8 },
+        button('存档', async () => { render(await api('/api/save', {})); openSettings('saves'); }),
+        button('读档', async () => { render(await api('/api/load', {})); openSettings('saves'); }),
+      ),
+      back,
+    );
+  }
+
+  box.appendChild(renderNode(modal(body, { title: '设置' })));
+}
+
 function closeSettings() {
   const box = document.getElementById('settings');
   box.hidden = true;
   box.textContent = '';
-}
-
-let capturingBinding = false;
-
-function openSettings() {
-  const info = lastState === null ? '（未开局）'
-    : '世界 ' + (lastState.world || '?') + ' · 种子 ' + lastState.seed + ' · tick ' + lastState.tick;
-
-  const cellRow = (label, key) => {
-    const value = config[key];
-    return row({ gap: 6, align: 'center' },
-      text(label, { policy: 'fixed', width: 96 }),
-      button('−', () => { config = withConfig(config, { [key]: clampCell(value - 4) }); saveConfig(config); refreshSizes(); openSettings(); }),
-      text(String(value), { policy: 'fixed', width: 40 }),
-      button('+', () => { config = withConfig(config, { [key]: clampCell(value + 4) }); saveConfig(config); refreshSizes(); openSettings(); }),
-    );
-  };
-
-  const bindingRows = Object.entries(config.bindings).map(([code, command]) =>
-    row({ gap: 6, align: 'center' },
-      text(code, { policy: 'fixed', width: 96 }),
-      text(command, { policy: 'fixed' }),
-      button('改', () => { capturingBinding = code; openSettings(); }),
-    ),
-  );
-
-  const body = col({ gap: 8 },
-    text('世界', { policy: 'fixed' }),
-    text(info, { policy: 'fixed' }),
-    text('按键', { policy: 'fixed' }),
-    ...bindingRows,
-    text(capturingBinding ? '按下新的键…（Esc 取消）' : '点「改」再按一个键', { policy: 'fixed' }),
-    text('界面', { policy: 'fixed' }),
-    cellRow('快捷栏格子', 'hotbarCell'),
-    cellRow('背包格子', 'inventoryCell'),
-    row({ gap: 6, align: 'center' },
-      text('开发者模式', { policy: 'fixed', width: 96 }),
-      button(config.devMode ? '开' : '关', () => {
-        config = withConfig(config, { devMode: !config.devMode });
-        saveConfig(config);
-        applyDevMode();
-        openSettings();
-      }),
-    ),
-    row({ gap: 8, justify: 'end' }, button('关闭 Esc', () => closeSettings())),
-  );
-
-  const box = document.getElementById('settings');
-  box.hidden = false;
-  box.textContent = '';
-  box.appendChild(renderNode(modal(body, { title: '设置' })));
 }
 
 function refreshSizes() {
@@ -1094,8 +1125,6 @@ document.getElementById('settingsbtn').addEventListener('click', () => {
   const box = document.getElementById('settings');
   if (box.hidden) openSettings(); else closeSettings();
 });
-document.getElementById('savebtn').addEventListener('click', async () => { render(await api('/api/save', {})); });
-document.getElementById('loadbtn').addEventListener('click', async () => { render(await api('/api/load', {})); });
 
 window.addEventListener('keydown', (event) => {
   if (capturingBinding !== false) {
