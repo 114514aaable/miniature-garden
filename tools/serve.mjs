@@ -500,7 +500,7 @@ function aimAt(tag, x, y) {
   return result.value;
 }
 
-function useSkill(tag, x, y) {
+function useSkill(tag, x, y, extra = {}) {
   const sym = session.link.tags.get(tag);
   const signature = sym === undefined ? undefined : session.link.signatures[sym];
   if (signature === undefined || signature.skill === undefined) {
@@ -508,14 +508,14 @@ function useSkill(tag, x, y) {
   }
 
   if (signature.skill.target.kind === "self") {
-    return run(tag, { actor: session.playerHandle }, signature.skill.cost);
+    return run(tag, { actor: session.playerHandle, ...extra }, signature.skill.cost);
   }
 
   if (x === undefined || y === undefined) {
     return snapshot(`${signature.skill.name} 需要先指出目标格`);
   }
 
-  return run(tag, { actor: session.playerHandle, x, y }, signature.skill.cost);
+  return run(tag, { actor: session.playerHandle, x, y, ...extra }, signature.skill.cost);
 }
 
 function adjacentTarget() {
@@ -1007,8 +1007,13 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.method === "POST" && request.url === "/api/skill") {
-      const { tag, x, y } = await readBody(request);
-      sendJson(response, useSkill(String(tag), x === undefined ? undefined : Number(x), y === undefined ? undefined : Number(y)));
+      const { tag, x, y, item } = await readBody(request);
+      sendJson(response, useSkill(
+        String(tag),
+        x === undefined ? undefined : Number(x),
+        y === undefined ? undefined : Number(y),
+        item === undefined ? {} : { item: Number(item) },
+      ));
       return;
     }
 

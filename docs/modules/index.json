@@ -168,6 +168,25 @@
     },
     {
       "kind": "rule",
+      "id": "core.use",
+      "name": "使用",
+      "desc": "把背包里的东西用出去，效果由物品自己声明。",
+      "file": "rule-core.use.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "actor": {
+            "t": "int"
+          },
+          "item": {
+            "t": "int"
+          }
+        }
+      },
+      "returnsEffects": true
+    },
+    {
+      "kind": "rule",
       "id": "core.enemy_turn",
       "name": "敌人思考",
       "desc": "敌人每回合选一个动作：靠近、起手、或原地不动。",
@@ -487,6 +506,31 @@
       }
     },
     {
+      "kind": "component",
+      "id": "core.use",
+      "name": "用法",
+      "desc": "这东西怎么用：效果列表 + 是否消耗。",
+      "file": "component-core.use.md",
+      "schema": {
+        "t": "object",
+        "fields": {
+          "effects": {
+            "t": "array",
+            "of": {
+              "t": "any"
+            },
+            "max": 16
+          },
+          "consume": {
+            "t": "bool"
+          }
+        },
+        "optional": [
+          "consume"
+        ]
+      }
+    },
+    {
       "kind": "group",
       "id": "camp",
       "name": "camp",
@@ -561,6 +605,19 @@
         "core.ai",
         "core.solid",
         "core.intent"
+      ]
+    },
+    {
+      "kind": "template",
+      "id": "item_potion",
+      "name": "药水",
+      "desc": "喝一口，回满血。",
+      "file": "template-item_potion.md",
+      "extends": null,
+      "components": [
+        "core.item",
+        "core.sprite",
+        "core.use"
       ]
     }
   ]

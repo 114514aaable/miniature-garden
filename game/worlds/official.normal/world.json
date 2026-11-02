@@ -14,7 +14,8 @@
     "core.enemy_turn",
     "core.enemy_windup",
     "core.enemy_strike",
-    "core.cast"
+    "core.cast",
+    "core.use"
   ],
   "onConflict": "error",
   "init": [

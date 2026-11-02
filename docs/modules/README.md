@@ -2,7 +2,7 @@
 
 > 由 `node tools/gen-docs.mjs` 生成。**不要手改**——改语言包或代码。
 
-规则 10 条 · 组件 10 个 · 模板 4 个
+规则 11 条 · 组件 11 个 · 模板 5 个
 
 | 类型 | 名字 | id | 说明 |
 |---|---|---|---|
@@ -13,6 +13,7 @@
 | 规则 | [等待](rule-core.wait.md) | `core.wait` | 什么都不做，只让时间前进一回合。 |
 | 规则 | [指向](rule-core.aim.md) | `core.aim` | 判断某个技能能不能落在指定的格子上，供鼠标与 AI 共用。 |
 | 规则 | [蓄力劈砍](rule-core.cast.md) | `core.cast` | 先挂起，过几回合再结算；期间可以被打断。 |
+| 规则 | [使用](rule-core.use.md) | `core.use` | 把背包里的东西用出去，效果由物品自己声明。 |
 | 规则 | [敌人思考](rule-core.enemy_turn.md) | `core.enemy_turn` | 敌人每回合选一个动作：靠近、起手、或原地不动。 |
 | 规则 | [敌人起手](rule-core.enemy_windup.md) | `core.enemy_windup` | 敌人写下攻击意图，两回合后才结算，期间可以被躲开。 |
 | 规则 | [敌人出手](rule-core.enemy_strike.md) | `core.enemy_strike` | 按意图里的格子结算伤害；玩家不在格子里就落空。 |
@@ -26,8 +27,10 @@
 | 组件 | [贴图](component-core.sprite.md) | `core.sprite` | 指向图集里的一帧；没有就退回字符。 |
 | 组件 | [意图](component-core.intent.md) | `core.intent` | 敌人下回合要打的格子与结算时刻，绘制和判定共用。 |
 | 组件 | [core.pending](component-core.pending.md) | `core.pending` |  |
+| 组件 | [用法](component-core.use.md) | `core.use` | 这东西怎么用：效果列表 + 是否消耗。 |
 | 预制件 | camp | `camp` | 3 个实体 |
 | 模板 | [你](template-pc.md) | `pc` | 玩家角色。 |
 | 模板 | [木箱](template-prop_crate.md) | `prop_crate` | 实心障碍，挡路。 |
 | 模板 | [油灯](template-item_lamp.md) | `item_lamp` | 一盏可以捡起来的灯。 |
 | 模板 | [盐商](template-npc_salt.md) | `npc_salt` | 会靠近并起手打人的敌人。 |
+| 模板 | [药水](template-item_potion.md) | `item_potion` | 喝一口，回满血。 |

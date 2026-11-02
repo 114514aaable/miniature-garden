@@ -519,6 +519,7 @@ export const GAME_PAGE = `<!doctype html>
   #tooltip { position: fixed; z-index: 30; pointer-events: none; max-width: 320px;
              padding: 6px 10px; background: rgba(10,12,16,0.92); border: 1px solid #2a303c;
              border-radius: 6px; color: #c7cdd6; font-size: 12px; white-space: pre-wrap; }
+  #quick { position: absolute; right: 10px; bottom: 10px; z-index: 3; }
   #devpanel { position: absolute; top: 10px; right: 10px; max-width: min(460px, 92vw); }
 
   /* 窄屏：HUD 收起来，别互相压 */
@@ -558,6 +559,7 @@ export const GAME_PAGE = `<!doctype html>
   <div id="status"></div>
 
   <div id="skills"></div>
+  <div id="quick"></div>
   <div id="message"></div>
   <div id="logbox"></div>
 
@@ -914,14 +916,95 @@ function renderHotbar(state) {
   mount(document.getElementById('skills'), row({ gap: 8, align: 'center' }, bar, ...extras));
 }
 
+const QUICK_COLUMNS = 3;
+const QUICK_SLOTS = 12;
+
+const DEFAULT_QUICK = [
+  { kind: 'skill', ref: 'core.take' },
+  { kind: 'skill', ref: 'core.drop' },
+  { kind: 'skill', ref: 'core.wait' },
+  { kind: 'skill', ref: 'core.attack' },
+  { kind: 'ui', ref: 'inventory' },
+  { kind: 'ui', ref: 'settings' },
+  { kind: 'ui', ref: 'save' },
+  { kind: 'ui', ref: 'load' },
+  null, null, null, null,
+];
+
+function loadQuick() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('nw.quick') || 'null');
+    if (!Array.isArray(raw)) return [...DEFAULT_QUICK];
+    const slots = new Array(QUICK_SLOTS).fill(null);
+    for (let i = 0; i < QUICK_SLOTS; i += 1) slots[i] = raw[i] ?? null;
+    return slots;
+  } catch {
+    return [...DEFAULT_QUICK];
+  }
+}
+
+let quickSlots = loadQuick();
+
+function quickLabel(entry) {
+  if (entry === null) return '';
+  if (entry.kind === 'skill') {
+    const skill = hotbarSkills.find((row) => row.tag === entry.ref);
+    return skill ? skill.name : entry.ref;
+  }
+  return { inventory: '背包', settings: '设置', save: '存档', load: '读档' }[entry.ref] ?? entry.ref;
+}
+
+function activateQuick(index) {
+  const entry = quickSlots[index];
+  if (entry === null) return;
+  if (entry.kind === 'skill') { useSkill(entry.ref); return; }
+  if (entry.ref === 'inventory') toggleInventory();
+  else if (entry.ref === 'settings') openSettings();
+  else if (entry.ref === 'save') api('/api/save', {}).then((next) => { if (lastState !== null) render(next); });
+  else if (entry.ref === 'load') api('/api/load', {}).then((next) => { if (lastState !== null) render(next); });
+}
+
+function renderQuick() {
+  const cells = quickSlots.map((entry, index) => {
+    const label = quickLabel(entry);
+    const node = button(label, () => activateQuick(index));
+    node.style.width = config.hotbarCell + 'px';
+    node.style.height = config.hotbarCell + 'px';
+    node.style['font-size'] = '10px';
+    node.style.padding = '0';
+    node.style['border-radius'] = '0';
+    node.style.border = '1px solid #2a303c';
+    node.style.background = entry ? '#1d2432' : 'transparent';
+
+    return withEvents(node, {
+      dragover: (event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; },
+      drop: (event) => {
+        event.preventDefault();
+        const data = JSON.parse(event.dataTransfer.getData('text/plain'));
+        quickSlots[index] = { kind: data.kind, ref: data.ref };
+        localStorage.setItem('nw.quick', JSON.stringify(quickSlots));
+        renderQuick();
+      },
+      contextmenu: (event) => {
+        event.preventDefault();
+        quickSlots[index] = null;
+        localStorage.setItem('nw.quick', JSON.stringify(quickSlots));
+        renderQuick();
+      },
+    });
+  });
+
+  mount(document.getElementById('quick'), grid({ columns: QUICK_COLUMNS, cell: config.hotbarCell, gap: 0 }, ...cells));
+}
+
 function activateSlot(index) {
   const entry = hotbarSlots[index];
   if (entry === null) {
     document.getElementById('message').textContent = '这个槽是空的：从背包拖一个技能或道具上来。';
     return;
   }
-  if (entry.kind === 'skill') useSkill(entry.ref);
-  else document.getElementById('message').textContent = '物品还不能直接用（等 core.use）。';
+  if (entry.kind === 'skill') useSkill(entry.ref, undefined, undefined, {});
+  else useSkill('core.use', undefined, undefined, { item: entry.ref });
 }
 
 function showDeath() {
@@ -940,11 +1023,19 @@ function showDeath() {
   box.hidden = false;
 }
 
+/** 玩家现在站在哪（快照里找自己）。 */
+function playerCell(state) {
+  const me = (state.snapshot.entities || []).find((entity) => entity.handle === state.playerHandle);
+  if (me === undefined || me.x === undefined || me.y === undefined) return null;
+  return { x: me.x, y: me.y };
+}
+
 async function act(dir) {
   render(await api('/api/act', { dir }));
 }
-async function useSkill(tag, x, y) {
+async function useSkill(tag, x, y, extra = {}) {
   const body = x === undefined ? { tag } : { tag, x, y };
+  if (extra.item !== undefined) body.item = extra.item;
   render(await api('/api/skill', body));
 }
 
@@ -1002,8 +1093,16 @@ document.getElementById('map').addEventListener('mouseleave', () => {
 });
 
 document.getElementById('map').addEventListener('click', (event) => {
-  if (renderer === null) return;
+  if (renderer === null || lastState === null) return;
   const cell = cellAt(event);
+  const me = playerCell(lastState);
+
+  // 点自己脚下：捡东西（这就是「拾取键」）
+  if (me !== null && me.x === cell.x && me.y === cell.y) {
+    useSkill('core.take');
+    return;
+  }
+
   useSkill('core.attack', cell.x, cell.y);
 });
 
@@ -1059,6 +1158,7 @@ async function openSettings(page = 'root') {
           config = withConfig(config, { devMode: !config.devMode });
           saveConfig(config);
           applyDevMode();
+  renderQuick();
           openSettings('config');
         }),
       ),

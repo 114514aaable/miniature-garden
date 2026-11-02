@@ -212,5 +212,26 @@
         }
       }
     }
+  },
+  {
+    "id": "core.use",
+    "schema": {
+      "t": "object",
+      "fields": {
+        "effects": {
+          "t": "array",
+          "of": {
+            "t": "any"
+          },
+          "max": 16
+        },
+        "consume": {
+          "t": "bool"
+        }
+      },
+      "optional": [
+        "consume"
+      ]
+    }
   }
 ]

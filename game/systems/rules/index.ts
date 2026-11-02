@@ -21,6 +21,7 @@ import {
   windupSignature,
 } from "../../engine/core/src/rules/enemy-actions.ts";
 import { castHandler, castSignature } from "../../engine/core/src/rules/pending.ts";
+import { useHandler, useSignature } from "../../engine/core/src/rules/use.ts";
 import { type Signature } from "../../engine/core/src/event/registry.ts";
 import { type EvaluateContext } from "../../engine/core/src/event/evaluate.ts";
 import { type JsonValue } from "../../engine/core/src/time.ts";
@@ -38,6 +39,7 @@ export const RULE_TABLE: readonly RuleEntry[] = [
   { signature: waitSignature, handler: waitHandler },
   { signature: aimSignature, handler: aimHandler },
   { signature: castSignature, handler: castHandler },
+  { signature: useSignature, handler: useHandler },
   { signature: enemyTurnSignature, handler: enemyTurnHandler },
   { signature: windupSignature, handler: windupHandler },
   { signature: strikeSignature, handler: strikeHandler },

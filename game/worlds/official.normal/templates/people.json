@@ -2,11 +2,51 @@
   {
     "id": "npc_salt",
     "components": {
-      "core.health": { "max": 10, "hp": 10 },
-      "core.stats": { "speed": 4, "attack": 2, "defense": 1 },
-      "core.ai": { "mode": "idle" },
+      "core.health": {
+        "max": 10,
+        "hp": 10
+      },
+      "core.stats": {
+        "speed": 4,
+        "attack": 2,
+        "defense": 1
+      },
+      "core.ai": {
+        "mode": "idle"
+      },
       "core.solid": {},
-      "core.intent": { "kind": "melee", "tiles": [], "damage": 0, "resolveAt": 0 }
+      "core.intent": {
+        "kind": "melee",
+        "tiles": [],
+        "damage": 0,
+        "resolveAt": 0
+      }
+    }
+  },
+  {
+    "id": "item_potion",
+    "components": {
+      "core.item": {
+        "stack": 1,
+        "weight": 1
+      },
+      "core.sprite": {
+        "sheet": "atlas",
+        "frame": "Items/Potion.png"
+      },
+      "core.use": {
+        "consume": true,
+        "effects": [
+          {
+            "kind": "patch",
+            "handle": "$actor",
+            "component": "core.health",
+            "data": {
+              "hp": 20
+            }
+          }
+        ]
+      }
     }
   }
 ]
