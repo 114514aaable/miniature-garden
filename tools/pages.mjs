@@ -1090,7 +1090,6 @@ function applyDevMode() {
   if (panel !== null) panel.hidden = !config.devMode;
 }
 
-document.getElementById('settingsbtn').addEventListener('click', () => { const box = document.getElementById('settings'); if (box.hidden) openSettings(); else closeSettings(); });
 document.getElementById('settingsbtn').addEventListener('click', () => {
   const box = document.getElementById('settings');
   if (box.hidden) openSettings(); else closeSettings();
