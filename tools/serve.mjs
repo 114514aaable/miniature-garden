@@ -724,6 +724,21 @@ function speedOf(handle) {
 }
 
 const SAVE_DIR = "saves";
+const SELECTION_FILE = "saves/selection.json";
+
+/** 每个世界「关掉了哪些规则」。给 AI 和界面共用的外置接口。 */
+function readSelection() {
+  try {
+    return JSON.parse(readFileSync(SELECTION_FILE, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+function writeSelection(all) {
+  mkdirSync(SAVE_DIR, { recursive: true });
+  writeFileSync(SELECTION_FILE, JSON.stringify(all, null, 2), "utf8");
+}
 const SAVE_FILE = "saves/quicksave.json";
 
 /** 槽位名只允许字母数字下划线短横，防止路径穿越。 */
@@ -888,6 +903,24 @@ const server = createServer(async (request, response) => {
     if (request.url.startsWith("/game")) {
       response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
       response.end(renderPage(GAME_PAGE));
+      return;
+    }
+
+    if (request.url.startsWith("/api/selection")) {
+      const url = new URL(request.url, "http://x");
+      const world = url.searchParams.get("world");
+
+      if (request.method === "GET") {
+        const all = readSelection();
+        sendJson(response, { ok: true, world, off: world ? (all[world] ?? []) : [], all });
+        return;
+      }
+
+      const body = await readBody(request);
+      const all = readSelection();
+      all[String(body.world)] = Array.isArray(body.off) ? body.off.filter((r) => typeof r === "string") : [];
+      writeSelection(all);
+      sendJson(response, { ok: true, world: body.world, off: all[String(body.world)] });
       return;
     }
 

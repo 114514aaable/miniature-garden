@@ -51,6 +51,8 @@ POST /api/act {dir}
 POST /api/skill {tag,x,y,item?}
 POST /api/aim {tag,x,y}    能不能落在这一格
 POST /api/inspect {x,y}    这一格有什么
+GET  /api/selection?world= 这个世界关掉了哪些规则（外置接口）
+POST /api/selection {world,off}  写入选择，AI 与界面共用
 GET  /api/inventory        背包
 POST /api/save {slot?}     默认 quick
 POST /api/load {slot?}

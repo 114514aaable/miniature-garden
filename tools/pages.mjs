@@ -271,6 +271,14 @@ async function showGraph(id) {
 
   tree.textContent = '';
   buildTree(tree, result.nodes);
+
+  // 这个世界的选择存在 saves/selection.json（AI 也能读写）
+  const saved = await api('/api/selection?world=' + encodeURIComponent(id));
+  const off = new Set((saved && saved.off) || []);
+  for (const input of tree.querySelectorAll('input[data-rule]')) {
+    input.checked = !off.has(input.dataset.rule);
+  }
+  syncGroupStates();
   updateOffCount();
 }
 
@@ -316,6 +324,7 @@ function kindGroup(kind, title, items) {
     group.addEventListener('click', (event) => event.stopPropagation());
     group.addEventListener('change', () => {
       for (const input of box.querySelectorAll('input[data-rule]')) input.checked = group.checked;
+      syncGroupStates();
       updateOffCount();
     });
     label.appendChild(group);
@@ -348,9 +357,32 @@ function kindGroup(kind, title, items) {
       desc.textContent = '— ' + node.description;
       leaf.appendChild(desc);
     }
+
+    // 被谁用：0 引用就是死模块，值得一眼看出来
+    if (Array.isArray(node.usedBy)) {
+      const refs = document.createElement('span');
+      refs.className = 'desc';
+      refs.style.marginLeft = 'auto';
+      refs.style.color = node.usedBy.length === 0 ? '#c96a5a' : '#5f6b7a';
+      refs.textContent = node.usedBy.length === 0 ? '未被引用' : '被 ' + node.usedBy.length + ' 处引用';
+      leaf.appendChild(refs);
+    }
     box.appendChild(leaf);
   }
   return box;
+}
+
+/** 让分组勾选框显示「全选 / 半选 / 未选」。 */
+function syncGroupStates() {
+  for (const box of document.querySelectorAll('.tree details')) {
+    const group = box.querySelector('summary input');
+    if (group === null) continue;
+    const inputs = Array.from(box.querySelectorAll('input[data-rule]'));
+    if (inputs.length === 0) continue;
+    const on = inputs.filter((input) => input.checked).length;
+    group.checked = on === inputs.length;
+    group.indeterminate = on > 0 && on < inputs.length;
+  }
 }
 
 function disabledRules() {
@@ -362,6 +394,9 @@ function disabledRules() {
 function updateOffCount() {
   const off = disabledRules();
   localStorage.setItem('nw.off', JSON.stringify(off));
+  if (inspecting !== null) {
+    api('/api/selection', { world: inspecting, off });
+  }
   document.getElementById('offcount').textContent = off.length === 0 ? '' : '关掉 ' + off.length + ' 条规则';
 }
 
@@ -369,7 +404,13 @@ function loadRules() {
   try { return JSON.parse(localStorage.getItem('nw.off') || '[]'); } catch { return []; }
 }
 
-document.getElementById('m-start').addEventListener('click', () => {
+document.getElementById('m-start').addEventListener('click', async () => {
+  if (activeWorld !== null) {
+    const saved = await api('/api/selection?world=' + encodeURIComponent(activeWorld));
+    if (saved && Array.isArray(saved.off)) {
+      localStorage.setItem('nw.off', JSON.stringify(saved.off));
+    }
+  }
   if (!activeWorld) {
     document.getElementById('meta').textContent = '{{menu.no_world}}';
     show('packs');
