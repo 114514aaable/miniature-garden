@@ -152,7 +152,7 @@ export function modal(content: UiNode, options: { readonly title?: string } = {}
     "justify-content": "center",
     background: "rgba(0,0,0,0.55)",
     "pointer-events": "auto",
-    "z-index": "40",
+    "z-index": "var(--z-modal, 90)",
   };
 
   // 宽度交给内容：窄了会挤，宽了会撑开——不再写死 420

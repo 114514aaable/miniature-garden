@@ -44,7 +44,7 @@ const CSS = `
   #devlog, #debug { margin: 8px 0 0; padding: 8px; max-height: 200px; overflow: auto; color: #8b929e;
                     background: #0f1116; border: 1px solid #232733; border-radius: 6px; white-space: pre; }
   #graphpanel[hidden] { display: none; }
-  #graphpanel { position: fixed; inset: 40px 60px; z-index: 100; display: flex; flex-direction: column;
+  #graphpanel { position: fixed; inset: 40px 60px; z-index: var(--z-global-mask); display: flex; flex-direction: column;
                 pointer-events: auto;
                 background: #10131a; border: 1px solid #2a303c; border-radius: 10px;
                 box-shadow: 0 20px 60px rgba(0,0,0,0.6); padding: 12px 16px; }
@@ -56,7 +56,8 @@ const CSS = `
   #tree::-webkit-scrollbar { width: 10px; }
   #tree::-webkit-scrollbar-thumb { background: #2a303c; border-radius: 5px; }
   #tree::-webkit-scrollbar-track { background: #0f1116; }
-  #errbar { position: sticky; top: 0; z-index: 30; margin-bottom: 12px; padding: 8px 12px;
+  :root { --z-region: 10; --z-effects: 30; --z-region-mask: 50; --z-modal: 90; --z-global-mask: 100; }
+  #errbar { position: sticky; top: 0; z-index: 95; margin-bottom: 12px; padding: 8px 12px;
             background: #3a1d22; color: #ff9aa2; border: 1px solid #5c2a32; border-radius: 6px;
             font-size: 12px; white-space: pre-wrap; }
   .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -603,8 +604,8 @@ export const GAME_PAGE = `<!doctype html>
   #tooltip { position: fixed; z-index: 30; pointer-events: none; max-width: 320px;
              padding: 6px 10px; background: rgba(10,12,16,0.92); border: 1px solid #2a303c;
              border-radius: 6px; color: #c7cdd6; font-size: 12px; white-space: pre-wrap; }
-  #quick { position: absolute; right: 10px; bottom: 10px; z-index: 3; }
-  #minimap { position: absolute; right: 10px; top: 54px; padding: 4px; z-index: 2;
+  #quick { position: absolute; right: 10px; bottom: 10px; z-index: var(--z-region); }
+  #minimap { position: absolute; right: 10px; top: 54px; padding: 4px; z-index: var(--z-region);
              background: rgba(16,19,26,0.8); border: 1px solid #2a303c; border-radius: 6px; }
   #devpanel { position: absolute; top: 10px; right: 10px; max-width: min(460px, 92vw); }
 
@@ -711,6 +712,9 @@ let tile = 32;
 
 // 按键：物理键 → 命令。用户设置覆盖默认。
 let config = loadConfig();
+
+/** 当前独占输入的窗口：null = 游戏本体。 */
+let uiFocus = null;
 const bindings = () => config.bindings;
 
 function formatDebug(debug) {
@@ -785,7 +789,10 @@ function allEntries() {
 }
 
 async function openInventory() {
+  if (uiFocus === 'settings') closeSettings();
+  if (lastState !== null) hotbarSkills = lastState.skills.filter((skill) => skill.tag !== 'core.move');
   const box = document.getElementById('inventory');
+  uiFocus = 'inventory';
   box.hidden = false;
   const data = await api('/api/inventory');
   inventoryItems = (data && data.items) || [];
@@ -905,6 +912,7 @@ async function dropSelected() {
 
 function closeInventory() {
   const box = document.getElementById('inventory');
+  uiFocus = null;
   box.hidden = true;
   box.textContent = '';
 }
@@ -963,8 +971,8 @@ function hotbarLabel(entry) {
 }
 
 function renderHotbar(state) {
+  // 每次都从最新快照里取，不缓存——规则被关掉后要立刻反映
   hotbarSkills = state.skills.filter((skill) => skill.tag !== 'core.move');
-  hotbarItems = state.hud && state.hud.items ? state.hud.items : hotbarItems;
 
   const cells = hotbarSlots.map((entry, index) => {
     const label = hotbarLabel(entry);
@@ -1245,7 +1253,7 @@ document.getElementById('map').addEventListener('mouseleave', () => {
 });
 
 document.getElementById('map').addEventListener('click', (event) => {
-  if (renderer === null || lastState === null) return;
+  if (renderer === null || lastState === null || uiFocus !== null) return;
   const cell = cellAt(event);
   const me = playerCell(lastState);
 
@@ -1275,7 +1283,9 @@ let settingsPage = 'root';
 
 async function openSettings(page = 'root') {
   settingsPage = page;
+  if (uiFocus === 'inventory') closeInventory();
   const box = document.getElementById('settings');
+  uiFocus = 'settings';
   box.hidden = false;
   box.textContent = '';
 
@@ -1353,6 +1363,7 @@ async function openSettings(page = 'root') {
 
 function closeSettings() {
   const box = document.getElementById('settings');
+  uiFocus = null;
   box.hidden = true;
   box.textContent = '';
 }
@@ -1405,6 +1416,17 @@ window.addEventListener('keydown', (event) => {
       const box = document.getElementById('settings');
       if (box.hidden) openSettings(); else closeSettings();
     }
+    return;
+  }
+
+  // 有焦点窗口：输入归它，游戏本体不响应
+  if (uiFocus !== null) {
+    if (event.code === 'Escape') {
+      if (uiFocus === 'inventory') closeInventory();
+      else if (uiFocus === 'settings') closeSettings();
+      return;
+    }
+    if (uiFocus === 'inventory' && event.code === 'KeyI') { closeInventory(); return; }
     return;
   }
 
