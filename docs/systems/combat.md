@@ -90,6 +90,28 @@ node tools/play.mjs game/worlds/official.base game/worlds/official.normal
 
 **落空会被记进日志**（`core.enemy_strike 落空`）——玩家要能分清「他打偏了」和「他没出手」。
 
+## 未来扩展：回合制战斗模块（RPG Maker 风格）
+
+**不实现，只记录方向。** 因为时间本来就是离散的，回合制战斗是这套架构的「原生模式」。
+
+映射关系：
+
+| RPG Maker | 我们已有的 |
+|---|---|
+| 战斗场景 | 一个 space（换空间 = 换场景） |
+| 站位 | 格子坐标（哪怕是假的 4×2） |
+| 行动顺序 | `Scheduler`（readyAt = 敏捷的倒数） |
+| 指令菜单 | UI 套件（按钮 / 浮层 / bar） |
+| 每回合结算 | 阶段表 + 规则 |
+
+需要新增的只有两样：
+
+1. **`core.scene` 组件**：告诉宿主「现在该画哪个界面」（地图 / 战斗 / 对话）。
+   没有它，界面是写死的。
+2. **战斗包**：`core.battle` 组件 + `battle_start/command/resolve` 规则 + 战斗界面。
+
+进场/退场就是 `core.place` 搬家：记录原空间与坐标 → 搬进 battle space → 打完搬回。
+
 ## 相关（先别读，用到再看）
 
 | 文档 | 什么时候需要 |
