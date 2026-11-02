@@ -72,6 +72,8 @@ export interface FrameSpec {
   /** 镜头左上角在格子坐标系里的浮点位置（用于插值）。 */
   readonly camera: { readonly x: number; readonly y: number };
   readonly style: RenderStyle;
+  /** 渲染时刻（毫秒）。动画帧按它取，和逻辑 tick 无关。 */
+  readonly now?: number;
   /** 可选图集；没有就全用字符。 */
   readonly atlas?: Atlas;
 }
@@ -170,9 +172,10 @@ export function buildFrame(snapshot: FrameSnapshot, spec: FrameSpec): readonly D
     const centerY = round(screenY + (style.corner === true ? spec.tile * 0.72 : spec.tile / 2));
 
     // 有图集、组件里也点了名 → 画贴图；否则退回字符。
-    const sprite = entity.sprite as { frame?: unknown } | undefined;
-    if (spec.atlas !== undefined && typeof sprite?.frame === "string") {
-      const frame = frameOf(spec.atlas, sprite.frame);
+    const sprite = entity.sprite as { frame?: unknown; frames?: unknown; fps?: unknown } | undefined;
+    const frameName = frameNameOf(sprite, spec.now ?? 0);
+    if (spec.atlas !== undefined && frameName !== undefined) {
+      const frame = frameOf(spec.atlas, frameName);
       if (frame !== undefined) {
         commands.push({
           kind: "sprite",
@@ -210,4 +213,21 @@ function visible(x: number, y: number, tile: number, viewport: { width: number; 
 
 function round(value: number): number {
   return Math.round(value);
+}
+
+/** 该画哪一帧：有 frames 就按时间取，否则用静态 frame。 */
+export function frameNameOf(
+  sprite: { frame?: unknown; frames?: unknown; fps?: unknown } | undefined,
+  nowMs: number,
+): string | undefined {
+  if (sprite === undefined) return undefined;
+
+  const frames = Array.isArray(sprite.frames) ? sprite.frames.filter((f): f is string => typeof f === "string") : [];
+  if (frames.length > 0) {
+    const fps = typeof sprite.fps === "number" && sprite.fps > 0 ? sprite.fps : 4;
+    const index = Math.floor((nowMs / 1000) * fps) % frames.length;
+    return frames[index];
+  }
+
+  return typeof sprite.frame === "string" ? sprite.frame : undefined;
 }

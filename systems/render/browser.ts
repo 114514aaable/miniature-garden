@@ -133,6 +133,7 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
           viewport: { width: canvas.width, height: canvas.height },
           camera,
           style: state.style ?? DEFAULT_STYLE,
+          now,
           ...(atlas === null ? {} : { atlas }),
         },
       );

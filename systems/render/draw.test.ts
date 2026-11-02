@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import { type FrameSnapshot } from "./project.ts";
 import { buildFrame, DEFAULT_STYLE, type FrameSpec } from "./draw.ts";
 import { parseAtlas } from "./atlas.ts";
+import { frameNameOf } from "./draw.ts";
 
 function snapshot(overrides: Partial<FrameSnapshot> = {}): FrameSnapshot {
   return {
@@ -127,4 +128,24 @@ test("图集里没有这一帧：退回字符", () => {
 
   assert.equal(commands.some((command) => command.kind === "sprite"), false);
   assert.ok(commands.some((command) => command.kind === "text" && command.text === "i"));
+});
+
+test("帧序列按时间取，不按 tick", () => {
+  const sprite = { frames: ["a.png", "b.png"], fps: 2 };
+  assert.equal(frameNameOf(sprite, 0), "a.png");
+  assert.equal(frameNameOf(sprite, 500), "b.png");
+  assert.equal(frameNameOf(sprite, 1000), "a.png");
+});
+
+test("没有帧序列就用静态 frame", () => {
+  assert.equal(frameNameOf({ frame: "x.png" }, 123), "x.png");
+});
+
+test("什么都没有返回 undefined（退回字符）", () => {
+  assert.equal(frameNameOf(undefined, 0), undefined);
+  assert.equal(frameNameOf({}, 0), undefined);
+});
+
+test("fps 缺省 4，非法值也被夹住", () => {
+  assert.equal(frameNameOf({ frames: ["a.png", "b.png"], fps: 0 }, 250), "b.png");
 });

@@ -12,7 +12,22 @@
     },
     "frame": {
       "t": "str"
+    },
+    "frames": {
+      "t": "array",
+      "of": {
+        "t": "str"
+      },
+      "max": 64
+    },
+    "fps": {
+      "t": "int"
     }
-  }
+  },
+  "optional": [
+    "frame",
+    "frames",
+    "fps"
+  ]
 }
 ```
