@@ -668,8 +668,8 @@ let lastState = null;
 const INVENTORY_COLUMNS = 8;
 const INVENTORY_ROWS = 5;
 const INVENTORY_PER_PAGE = INVENTORY_COLUMNS * INVENTORY_ROWS;
-const INVENTORY_CELL = 56;
-const HOTBAR_CELL = 44;
+const INVENTORY_CELL = 38;
+const HOTBAR_CELL = 30;
 
 /** 技能也当成「物品」：统一成 {kind, ref, name, desc}。 */
 function allEntries() {
@@ -727,7 +727,7 @@ function hotbarMiniCell(index) {
   const entry = hotbarSlots[index];
   const node = button(entry === null ? String(index + 1) : hotbarLabel(entry), () => {});
   cellStyle(node, HOTBAR_CELL, false);
-  node.style['font-size'] = '9px';
+  node.style['font-size'] = '8px';
   return withEvents(node, {
     dragover: (event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; },
     drop: (event) => {
@@ -778,7 +778,7 @@ function drawInventory() {
   );
 
   const body = row({ gap: 12, align: 'flex-start' },
-    col({ gap: 6, width: 160 }, detail),
+    col({ gap: 6, width: 110 }, detail),
     col({ gap: 8 },
       text('背包（拖到下面的快捷栏）', { policy: 'fixed' }),
       grid({ columns: INVENTORY_COLUMNS, cell: INVENTORY_CELL, gap: 0 }, ...cells),
@@ -864,10 +864,10 @@ function renderHotbar(state) {
   const cells = hotbarSlots.map((entry, index) => {
     const label = hotbarLabel(entry);
     const node = button(String(index + 1) + (label ? ' ' + label : ''), () => activateSlot(index));
-    node.style.width = '56px';
-    node.style.height = '56px';
+    node.style.width = '38px';
+    node.style.height = '38px';
     node.style.flex = '0 0 auto';
-    node.style['font-size'] = '10px';
+    node.style['font-size'] = '8px';
     node.style.padding = '0';
     node.style['border-radius'] = '0';
     node.style.border = '1px solid #2a303c';
@@ -900,12 +900,12 @@ function renderHotbar(state) {
     button('设置', () => openSettings()),
   ];
   for (const node of extras) {
-    node.style.width = '48px';
-    node.style.height = '56px';
+    node.style.width = '34px';
+    node.style.height = '38px';
     node.style.flex = '0 0 auto';
-    node.style['font-size'] = '11px';
+    node.style['font-size'] = '9px';
     node.style['border-radius'] = '0';
-    node.style['margin-left'] = '6px';
+    node.style['margin-left'] = '4px';
   }
 
   mount(document.getElementById('skills'), row({ gap: 0, align: 'center' }, ...cells, ...extras));

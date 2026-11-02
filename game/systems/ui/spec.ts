@@ -153,7 +153,10 @@ export function modal(content: UiNode, options: { readonly title?: string } = {}
     "z-index": "40",
   };
 
-  const card = panel({ padding: 20, gap: 12, width: 420 });
+  // 宽度交给内容：窄了会挤，宽了会撑开——不再写死 420
+  const card = panel({ padding: 16, gap: 10, policy: "fit" });
+  card.style["max-width"] = "92vw";
+  card.style["max-height"] = "86vh";
   const children: UiNode[] = [];
   if (options.title !== undefined) {
     children.push(text(options.title, { policy: "fixed" }));
