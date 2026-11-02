@@ -21,6 +21,10 @@
 | 改回合、先手、延迟动作 | [systems/turn.md](systems/turn.md) |
 | 改内核（时间/存储/实体） | [areas/engine-core.md](areas/engine-core.md) |
 | 查某个规则/组件的参数 | [modules/README.md](modules/README.md) |
+| 改存档 / 读档 / 槽位 | [systems/save.md](systems/save.md) |
+| 改界面与套件 | [areas/ui.md](areas/ui.md) |
+| 改渲染管线 / 贴图 | [areas/render.md](areas/render.md) |
+| 加接口 / 改启动流程 | [areas/host.md](areas/host.md) |
 
 ## 阅读约定
 
