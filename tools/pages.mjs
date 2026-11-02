@@ -99,6 +99,12 @@ export const LAUNCHER_PAGE = `<!doctype html>
   .tree label.group { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
   .menu { display: flex; flex-direction: column; gap: 10px; max-width: 320px; margin-top: 20px; }
   .menu button { padding: 12px 16px; text-align: left; font-size: 15px; }
+  .panel { position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center;
+           background: rgba(0,0,0,0.55); }
+  .panel[hidden] { display: none; }
+  .panel.plain { background: none; }
+  .card { background: #10131a; border: 1px solid #2a303c; border-radius: 10px;
+          padding: 20px; min-width: 380px; max-width: 560px; max-height: 80vh; overflow: auto; }
   .panel h2 { font-size: 15px; color: #8ab4f8; margin: 0 0 10px; }
   .world.picked { border-color: #4a6da8; background: #1d2432; }
 </style>
@@ -115,21 +121,21 @@ export const LAUNCHER_PAGE = `<!doctype html>
     <button id="m-quit">{{menu.quit}}</button>
   </div>
 
-  <div class="panel" id="packs" hidden>
+  <div class="panel" id="packs" hidden><div class="card">
     <h2>{{menu.packs}}</h2>
     <div id="worlds"></div>
     <div id="errors"></div>
     <div style="margin-top:10px"><button id="packs-back">{{menu.back}}</button></div>
-  </div>
+  </div></div>
 
-  <div class="panel" id="settings" hidden></div>
-  <div class="panel" id="load" hidden></div>
+  <div class="panel plain" id="settings" hidden></div>
+  <div class="panel plain" id="load" hidden></div>
 
-  <div class="panel" id="quit" hidden>
+  <div class="panel" id="quit" hidden><div class="card">
     <h2>{{menu.quit}}</h2>
     <div style="color:#9aa3b2">{{menu.quit_note}}</div>
     <div style="margin-top:10px"><button id="quit-back">{{menu.back}}</button></div>
-  </div>
+  </div></div>
 </main>
 
 <div id="graphpanel" hidden>
@@ -162,7 +168,8 @@ function show(id) {
   for (const panel of ['packs', 'settings', 'load', 'quit']) {
     document.getElementById(panel).hidden = panel !== id;
   }
-  document.getElementById('menu').hidden = id !== null;
+  // 菜单保持可见：面板是浮层，不是换页
+  document.getElementById('menu').style.opacity = id === null ? '1' : '0.35';
 }
 
 function renderWorlds() {
@@ -401,7 +408,7 @@ function renderSettings() {
     row({ gap: 8, justify: 'end' }, button('← 返回', () => show(null))),
   );
 
-  mount(document.getElementById('settings'), body);
+  mount(document.getElementById('settings'), modal(body, { title: '设置' }));
 }
 
 async function renderLoad() {
@@ -417,7 +424,7 @@ async function renderLoad() {
       button('读取最新存档', () => runLoad()),
       button('← 返回', () => show(null)),
     ));
-    mount(box, col({ gap: 10 }, ...parts));
+    mount(box, modal(col({ gap: 10 }, ...parts), { title: '读档' }));
   };
 
   const runLoad = async () => {
