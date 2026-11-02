@@ -38,15 +38,29 @@ export function cellsInView(viewport: Viewport, tile: number): { width: number; 
  * - 地图比视口小：居中（相机可以是负数）；
  * - 地图比视口大：把目标放在正中，再夹进边界。
  */
-export function cameraFor(target: Vec, viewport: Viewport, map: MapSize, tile: number): Vec {
+export type CameraMode = "player" | "map";
+
+export function cameraFor(
+  target: Vec,
+  viewport: Viewport,
+  map: MapSize,
+  tile: number,
+  mode: CameraMode = "player",
+): Vec {
   const view = cellsInView(viewport, tile);
 
   const axis = (targetAt: number, mapSize: number, viewSize: number): number => {
-    if (mapSize <= viewSize) {
-      // 居中：地图左边留白
+    // 「地图居中」模式：地图装得下就居中，玩家可以不在中心
+    if (mode === "map" && mapSize <= viewSize) {
       return (mapSize - viewSize) / 2;
     }
+
+    // 「跟随玩家」模式：永远把目标放正中；只有地图比视口大时才夹边界，
+    // 装得下的时候允许负数（地图周围露出一圈背景）。
     const desired = targetAt + 0.5 - viewSize / 2;
+    if (mapSize <= viewSize) {
+      return desired;
+    }
     return clamp(desired, 0, mapSize - viewSize);
   };
 

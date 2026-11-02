@@ -17,8 +17,14 @@ test("视口格子数：按窗口尺寸算", () => {
   assert.deepEqual(cellsInView(viewport, tile), { width: 20, height: 15 });
 });
 
-test("地图比视口小：居中（相机为负）", () => {
+test("默认跟玩家：地图再小也把玩家放正中", () => {
   const camera = cameraFor({ x: 3, y: 2 }, viewport, { width: 8, height: 6 }, tile);
+  assert.equal(camera.x, 3 + 0.5 - 10); // -6.5
+  assert.equal(camera.y, 2 + 0.5 - 7.5); // -5
+});
+
+test("map 模式：地图装得下时居中地图（老行为）", () => {
+  const camera = cameraFor({ x: 3, y: 2 }, viewport, { width: 8, height: 6 }, tile, "map");
   assert.equal(camera.x, (8 - 20) / 2); // -6
   assert.equal(camera.y, (6 - 15) / 2); // -4.5
 });
