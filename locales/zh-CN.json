@@ -80,5 +80,7 @@
   "menu.seed_title": "输入种子",
   "menu.no_world": "还没有选择世界，先去「世界包」里选一个。",
   "menu.loading": "正在读取…",
-  "menu.no_bindings": "还没有自定义按键（用的默认键位）"
+  "menu.no_bindings": "还没有自定义按键（用的默认键位）",
+  "rule.core.cast.name": "蓄力劈砍",
+  "rule.core.cast.desc": "先挂起，过几回合再结算；期间可以被打断。"
 }

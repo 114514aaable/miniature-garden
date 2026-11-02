@@ -28,19 +28,6 @@ import { Registry } from "../engine/core/src/event/registry.ts";
 import { createWorldView } from "../engine/core/src/event/view.ts";
 import { Store } from "../engine/core/src/store.ts";
 import { costOf, DEFAULT_CLOCK } from "../engine/core/src/rules/clock.ts";
-import { moveHandler, moveSignature } from "../engine/core/src/rules/move.ts";
-import { dropHandler, dropSignature, takeHandler, takeSignature } from "../engine/core/src/rules/inventory.ts";
-import { attackHandler, attackSignature } from "../engine/core/src/rules/attack.ts";
-import { enemyTurnHandler, enemyTurnSignature } from "../engine/core/src/rules/ai.ts";
-import { waitHandler, waitSignature } from "../engine/core/src/rules/wait.ts";
-import { aimHandler, aimSignature } from "../engine/core/src/rules/aim.ts";
-import { castHandler, castSignature, EMPTY_PENDING, isActive, PENDING } from "../engine/core/src/rules/pending.ts";
-import {
-  strikeHandler,
-  strikeSignature,
-  windupHandler,
-  windupSignature,
-} from "../engine/core/src/rules/enemy-actions.ts";
 import { Scheduler } from "../engine/core/src/rules/scheduler.ts";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
@@ -48,6 +35,8 @@ import { createProjector } from "../systems/render/project.ts";
 import { buildGraph } from "../engine/core/src/pack/graph.ts";
 import { DevLog, formatLine } from "../systems/log/devlog.ts";
 import { runPhases } from "../systems/tick/phases.ts";
+import { EMPTY_PENDING, isActive, PENDING } from "../engine/core/src/rules/pending.ts";
+import { RULE_TABLE } from "../systems/rules/index.ts";
 
 const LOCALE = "zh-CN";
 let MESSAGES = {};
@@ -160,18 +149,6 @@ function scanWorlds() {
 let session = null;
 
 /** 规则表：签名 + 处理器。关掉一条规则就是把它从这里跳过。 */
-const RULE_TABLE = [
-  { signature: moveSignature, handler: moveHandler },
-  { signature: takeSignature, handler: takeHandler },
-  { signature: dropSignature, handler: dropHandler },
-  { signature: attackSignature, handler: attackHandler },
-  { signature: enemyTurnSignature, handler: enemyTurnHandler },
-  { signature: windupSignature, handler: windupHandler },
-  { signature: strikeSignature, handler: strikeHandler },
-  { signature: waitSignature, handler: waitHandler },
-  { signature: aimSignature, handler: aimHandler },
-  { signature: castSignature, handler: castHandler },
-];
 
 function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true) {
   const merged = mergePacks(ordered);
