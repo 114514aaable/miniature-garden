@@ -13,7 +13,8 @@ tools/           宿主工具：读包、播放、调试台 / 启动器、CSV �
 worlds/          世界包：official.base（基础）、official.normal（示例世界）
 desktop/         Electron 壳（实验性，暂时不走这条线）
 spec/            世界包规范草案（CC-BY-4.0）
-docs/            架构与需求（CC-BY-4.0）
+对接池/          调研与拆解资料（不进构建，仅供人看）
+docs/            架构与需求（CC-BY-4.0）；docs/modules 是自动生成的模块契约
 ```
 
 ## 跑起来
