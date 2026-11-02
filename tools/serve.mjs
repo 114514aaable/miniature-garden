@@ -949,6 +949,19 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    if (request.url.startsWith("/client/")) {
+      const name = request.url.slice("/client/".length).split("?")[0];
+      if (!/^[a-z0-9_-]+\.js$/.test(name)) {
+        response.writeHead(404);
+        response.end("not found");
+        return;
+      }
+      const text = readFileSync("tools/client/" + name, "utf8");
+      response.writeHead(200, { "content-type": "application/javascript; charset=utf-8" });
+      response.end(text);
+      return;
+    }
+
     if (request.url.startsWith("/web/")) {
       const relative = request.url.slice("/web/".length).split("?")[0];
       const root = resolve("web");
