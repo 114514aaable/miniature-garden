@@ -97,14 +97,15 @@ export const LAUNCHER_PAGE = `<!doctype html>
   .tree .leaf .id { color: #5f6b7a; font-size: 11px; }
   .tree .leaf .desc { color: #6f7a89; font-size: 11px; }
   .tree label.group { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
-  .menu { display: flex; flex-direction: column; gap: 10px; max-width: 320px; margin-top: 20px; }
+  .menu { display: flex; flex-direction: column; gap: 10px; width: min(320px, 100%); margin-top: 20px; }
   .menu button { padding: 12px 16px; text-align: left; font-size: 15px; }
   .panel { position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center;
            background: rgba(0,0,0,0.55); }
   .panel[hidden] { display: none; }
   .panel.plain { background: none; }
   .card { background: #10131a; border: 1px solid #2a303c; border-radius: 10px;
-          padding: 20px; min-width: 380px; max-width: 560px; max-height: 80vh; overflow: auto; }
+          padding: 20px; min-width: min(380px, 90vw); max-width: min(560px, 92vw);
+          max-height: 80vh; overflow: auto; }
   .panel h2 { font-size: 15px; color: #8ab4f8; margin: 0 0 10px; }
   .world.picked { border-color: #4a6da8; background: #1d2432; }
 </style>
@@ -497,7 +498,20 @@ export const GAME_PAGE = `<!doctype html>
   #tooltip { position: fixed; z-index: 30; pointer-events: none; max-width: 320px;
              padding: 6px 10px; background: rgba(10,12,16,0.92); border: 1px solid #2a303c;
              border-radius: 6px; color: #c7cdd6; font-size: 12px; white-space: pre-wrap; }
-  #devpanel { position: absolute; top: 10px; right: 10px; max-width: 460px; }
+  #devpanel { position: absolute; top: 10px; right: 10px; max-width: min(460px, 92vw); }
+
+  /* 窄屏：HUD 收起来，别互相压 */
+  @media (max-width: 900px) {
+    #logbox { display: none; }
+    #message { bottom: 74px; max-width: 92vw; overflow: hidden; text-overflow: ellipsis; }
+  }
+  @media (max-width: 640px) {
+    #status { font-size: 12px; padding: 4px 6px; }
+    #topbar .meta { display: none; }
+    #skills { gap: 4px; bottom: 8px; }
+    #skills button { min-width: 52px; height: 46px; font-size: 12px; padding: 0 6px; }
+    #devpanel:not([open]) { display: none; }
+  }
   #devpanel[open] { background: rgba(16,19,26,0.92); padding: 8px 10px; border-radius: 8px; }
 </style>
 

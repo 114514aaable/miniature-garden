@@ -86,6 +86,9 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
     if (canvas.height !== height) canvas.height = height;
   }
 
+  // 容器尺寸变化（窗口缩放、侧栏展开、手机旋转）都要重算画布
+  const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => resize());
+  observer?.observe(canvas);
   window.addEventListener("resize", resize);
 
   function imageOf(src: string): HTMLImageElement {
@@ -168,6 +171,7 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
     },
     stop() {
       running = false;
+      observer?.disconnect();
       window.removeEventListener("resize", resize);
     },
   };
