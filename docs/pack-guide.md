@@ -150,7 +150,7 @@ myworld/
 
 ```bash
 # 加载并打印世界（最快）
-node tools/play.mjs worlds/official.base worlds/myworld
+node tools/play.mjs game/worlds/official.base worlds/myworld
 
 # 起调试台，浏览器里玩
 node tools/serve.mjs
@@ -185,7 +185,7 @@ node tools/serve.mjs
 
 ### 加一个技能
 
-技能 = 已注册的规则 + 在 `world.json` 的 `rules` 里启用。**写新技能要写代码**（见 `systems/rules/index.ts`），
+技能 = 已注册的规则 + 在 `world.json` 的 `rules` 里启用。**写新技能要写代码**（见 `game/systems/rules/index.ts`），
 但组合已有规则不需要。
 
 ## 4. 开局初始化 `init`
@@ -254,7 +254,7 @@ node tools/serve.mjs
 ## 7. 目录速查
 
 ```
-worlds/official.base/     基础：地形、组件、通用模板
-worlds/official.normal/   示例世界：港口 8×6、一个 NPC、一盏灯
+game/worlds/official.base/     基础：地形、组件、通用模板
+game/worlds/official.normal/   示例世界：港口 8×6、一个 NPC、一盏灯
 docs/modules/             模块契约（自动生成）
 ```

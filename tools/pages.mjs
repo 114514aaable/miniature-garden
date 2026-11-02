@@ -150,8 +150,8 @@ export const LAUNCHER_PAGE = `<!doctype html>
 </div>
 
 <script type="module">
-import { modal, col, row, text, button, input, field } from '/web/systems/ui/spec.js';
-import { mount } from '/web/systems/ui/dom.js';
+import { modal, col, row, text, button, input, field } from '/web/game/systems/ui/spec.js';
+import { mount } from '/web/game/systems/ui/dom.js';
 
 ${ERRORS}
 
@@ -542,10 +542,10 @@ window.addEventListener('error', function (event) {
 </script>
 
 <script type="module">
-import { attach } from '/web/systems/render/browser.js';
-import { row, col, text, button, toggle, modal } from '/web/systems/ui/spec.js';
-import { resolveBindings, commandFor, parseCommand } from '/web/systems/input/bindings.js';
-import { mount, render as renderNode } from '/web/systems/ui/dom.js';
+import { attach } from '/web/game/systems/render/browser.js';
+import { row, col, text, button, toggle, modal } from '/web/game/systems/ui/spec.js';
+import { resolveBindings, commandFor, parseCommand } from '/web/game/systems/input/bindings.js';
+import { mount, render as renderNode } from '/web/game/systems/ui/dom.js';
 
 ${ERRORS}
 

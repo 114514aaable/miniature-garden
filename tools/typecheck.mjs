@@ -60,9 +60,9 @@ const options = {
 };
 
 const files = [
-  ...collect("engine/core/src"),
-  ...collect("engine/core/types"),
-  ...collect("systems"),
+  ...collect("game/engine/core/src"),
+  ...collect("game/engine/core/types"),
+  ...collect("game/systems"),
 ];
 const program = ts.createProgram(files, options);
 const diagnostics = ts.getPreEmitDiagnostics(program);

@@ -14,9 +14,9 @@
 
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 
-import { RULE_TABLE } from "../systems/rules/index.ts";
+import { RULE_TABLE } from "../game/systems/rules/index.ts";
 
-const LOCALE = JSON.parse(readFileSync("locales/zh-CN.json", "utf8"));
+const LOCALE = JSON.parse(readFileSync("game/locales/zh-CN.json", "utf8"));
 const OUT = "docs/modules";
 
 const label = (kind, id) => LOCALE[`${kind}.${id}.name`] ?? id;
@@ -87,11 +87,11 @@ for (const rule of RULE_TABLE) {
 }
 
 // ── 组件 ──────────────────────────────────────────────
-for (const component of readJson("worlds/official.base")) {
+for (const component of readJson("game/worlds/official.base")) {
   void component;
 }
 
-const componentsJson = JSON.parse(readFileSync("worlds/official.base/components.json", "utf8"));
+const componentsJson = JSON.parse(readFileSync("game/worlds/official.base/components.json", "utf8"));
 for (const component of componentsJson) {
   const name = label("component", component.id);
   const desc = describe("component", component.id);
@@ -104,7 +104,7 @@ for (const component of componentsJson) {
 }
 
 // ── 预制件 ────────────────────────────────────────────
-for (const dir of ["worlds/official.normal/groups"]) {
+for (const dir of ["game/worlds/official.normal/groups"]) {
   let files = [];
   try {
     files = readdirSync(dir);
@@ -132,7 +132,7 @@ for (const dir of ["worlds/official.normal/groups"]) {
 }
 
 // ── 模板（base + normal）──────────────────────────────
-const templatesDirs = ["worlds/official.base/templates", "worlds/official.normal/templates"];
+const templatesDirs = ["game/worlds/official.base/templates", "game/worlds/official.normal/templates"];
 for (const dir of templatesDirs) {
   let files = [];
   try {

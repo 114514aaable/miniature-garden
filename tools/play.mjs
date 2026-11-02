@@ -5,7 +5,7 @@
  * 从文件夹加载一个世界并画出来（宿主侧）。
  *
  * 用法：
- *   node tools/play.mjs worlds/official.base worlds/official.normal
+ *   node tools/play.mjs game/worlds/official.base game/worlds/official.normal
  *
  * 它做的每一步都是真的：读包 → 依赖排序 → 合并 → 加载 → 造 store → 放实体。
  * 只是最后没有交互，只是把世界画出来，让你看见「文件变成了世界」。
@@ -13,11 +13,11 @@
 
 import { readPack } from "./pack-reader.mjs";
 
-import { loadWorld } from "../engine/core/src/pack/load.ts";
-import { applyInit } from "../engine/core/src/pack/init.ts";
-import { mergePacks } from "../engine/core/src/pack/merge.ts";
-import { orderPacks } from "../engine/core/src/pack/order.ts";
-import { Store } from "../engine/core/src/store.ts";
+import { loadWorld } from "../game/engine/core/src/pack/load.ts";
+import { applyInit } from "../game/engine/core/src/pack/init.ts";
+import { mergePacks } from "../game/engine/core/src/pack/merge.ts";
+import { orderPacks } from "../game/engine/core/src/pack/order.ts";
+import { Store } from "../game/engine/core/src/store.ts";
 
 const GLYPH = { pc: "@", npc_salt: "N", prop_crate: "o", item_lamp: "i" };
 const TERRAIN_GLYPH = { 0: " ", 1: "#", 2: "~", 3: "." };

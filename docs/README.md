@@ -13,7 +13,7 @@
 ## 自动生成，别手改
 
 - `docs/modules/` 全部由 `node tools/gen-docs.mjs` 生成；
-- 名字与介绍来自 `locales/zh-CN.json`；
+- 名字与介绍来自 `game/locales/zh-CN.json`；
 - 参数来自规则签名，schema 来自包定义。
 
 改文档 = 改语言包或改代码，然后重新生成。

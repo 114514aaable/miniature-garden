@@ -40,7 +40,7 @@ if (TS_PATH === undefined) {
 
 const ts = (await import(pathToFileURL(TS_PATH).href)).default;
 
-const ROOTS = ["systems", "engine/core/src"];
+const ROOTS = ["game/systems", "game/engine/core/src"];
 const OUT = "web";
 
 /** 收集 .ts，跳过测试。 */
@@ -83,4 +83,4 @@ for (const root of ROOTS) {
 }
 
 console.log(`构建完成：${count} 个文件 → ${OUT}/`);
-console.log(`入口：/${relative(".", join(OUT, "systems/render/browser.js"))}`);
+console.log(`入口：/${relative(".", join(OUT, "game/systems/render/browser.js"))}`);

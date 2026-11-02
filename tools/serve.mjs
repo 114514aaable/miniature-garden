@@ -19,30 +19,30 @@ import { join } from "node:path";
 
 import { readPack } from "./pack-reader.mjs";
 import { GAME_PAGE, LAUNCHER_PAGE } from "./pages.mjs";
-import { loadWorld } from "../engine/core/src/pack/load.ts";
-import { applyInit } from "../engine/core/src/pack/init.ts";
-import { mergePacks } from "../engine/core/src/pack/merge.ts";
-import { orderPacks } from "../engine/core/src/pack/order.ts";
-import { evaluate } from "../engine/core/src/event/evaluate.ts";
-import { collectEffects } from "../engine/core/src/event/effects.ts";
-import { Registry } from "../engine/core/src/event/registry.ts";
-import { createWorldView } from "../engine/core/src/event/view.ts";
-import { Store } from "../engine/core/src/store.ts";
-import { costOf, DEFAULT_CLOCK } from "../engine/core/src/rules/clock.ts";
-import { Scheduler } from "../engine/core/src/rules/scheduler.ts";
+import { loadWorld } from "../game/engine/core/src/pack/load.ts";
+import { applyInit } from "../game/engine/core/src/pack/init.ts";
+import { mergePacks } from "../game/engine/core/src/pack/merge.ts";
+import { orderPacks } from "../game/engine/core/src/pack/order.ts";
+import { evaluate } from "../game/engine/core/src/event/evaluate.ts";
+import { collectEffects } from "../game/engine/core/src/event/effects.ts";
+import { Registry } from "../game/engine/core/src/event/registry.ts";
+import { createWorldView } from "../game/engine/core/src/event/view.ts";
+import { Store } from "../game/engine/core/src/store.ts";
+import { costOf, DEFAULT_CLOCK } from "../game/engine/core/src/rules/clock.ts";
+import { Scheduler } from "../game/engine/core/src/rules/scheduler.ts";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
-import { createProjector } from "../systems/render/project.ts";
-import { buildGraph } from "../engine/core/src/pack/graph.ts";
-import { DevLog, formatLine } from "../systems/log/devlog.ts";
-import { runPhases } from "../systems/tick/phases.ts";
-import { EMPTY_PENDING, isActive, PENDING } from "../engine/core/src/rules/pending.ts";
-import { RULE_TABLE } from "../systems/rules/index.ts";
+import { createProjector } from "../game/systems/render/project.ts";
+import { buildGraph } from "../game/engine/core/src/pack/graph.ts";
+import { DevLog, formatLine } from "../game/systems/log/devlog.ts";
+import { runPhases } from "../game/systems/tick/phases.ts";
+import { EMPTY_PENDING, isActive, PENDING } from "../game/engine/core/src/rules/pending.ts";
+import { RULE_TABLE } from "../game/systems/rules/index.ts";
 
 const LOCALE = "zh-CN";
 let MESSAGES = {};
 try {
-  MESSAGES = JSON.parse(readFileSync(`locales/${LOCALE}.json`, "utf8"));
+  MESSAGES = JSON.parse(readFileSync(`game/locales/${LOCALE}.json`, "utf8"));
 } catch {
   console.warn("没有找到语言包，界面会显示 key");
 }
@@ -55,7 +55,7 @@ function renderPage(html) {
 }
 
 const PORT = Number(process.env.PORT ?? 8787);
-const WORLDS_DIR = "worlds";
+const WORLDS_DIR = "game/worlds";
 const TILE = 40;
 const VIEWPORT = { width: 320, height: 240 };
 

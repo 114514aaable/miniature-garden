@@ -17,14 +17,14 @@
  *   patches/*.json     补丁数组
  *
  * 用法：
- *   node tools/pack-reader.mjs worlds/official.normal
+ *   node tools/pack-reader.mjs game/worlds/official.normal
  */
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { parseManifest } from "../engine/core/src/pack/manifest.ts";
+import { parseManifest } from "../game/engine/core/src/pack/manifest.ts";
 
 const KIND_BY_FOLDER = {
   spaces: "space",
