@@ -478,8 +478,14 @@ export const GAME_PAGE = `<!doctype html>
 <style>${CSS}</style>
 <style>
   body { overflow: hidden; }
-  #map { position: fixed; inset: 0; width: 100vw; height: 100vh; border-radius: 0; }
-  #hud { position: fixed; inset: 0; pointer-events: none; }
+  #stage { display: flex; width: 100vw; height: 100vh; }
+  #leftrail { width: 200px; flex: 0 0 auto; padding: 8px; box-sizing: border-box;
+              background: #0d1015; border-right: 1px solid #1d222b;
+              overflow-y: auto; transition: width 120ms ease; }
+  #leftrail.collapsed { width: 32px; padding: 6px 2px; }
+  #stage-map { position: relative; flex: 1 1 auto; min-width: 0; }
+  #map { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; }
+  #hud { position: absolute; inset: 0; pointer-events: none; }
   #hud > * { pointer-events: auto; }
   #topbar { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; gap: 8px;
            align-items: center; pointer-events: none; }
@@ -487,7 +493,7 @@ export const GAME_PAGE = `<!doctype html>
   #topbar a { margin-right: auto; }
             padding: 4px 8px; background: rgba(16,19,26,0.75); border-radius: 8px; }
   /* 左侧立绘：现在只有占位，以后换成图 */
-  #portrait { position: absolute; left: 10px; top: 54px; width: 168px;
+  #portrait { position: relative; width: 100%; box-sizing: border-box;
               background: rgba(16,19,26,0.8); border: 1px solid #2a303c; border-radius: 10px;
               padding: 8px; text-align: center; }
   #portrait-toggle { position: absolute; right: -12px; top: 50%; transform: translateY(-50%);
@@ -499,13 +505,15 @@ export const GAME_PAGE = `<!doctype html>
   #portrait.collapsed #portrait-art,
   #portrait.collapsed #nameplate { display: none; }
   #portrait { transition: width 120ms ease; }
-  #portrait-art { height: 190px; display: flex; align-items: center; justify-content: center;
+  #portrait-art { height: 190px; max-height: 30vh; display: flex; align-items: center; justify-content: center;
                   background: #0f1116; border-radius: 6px; color: #8ab4f8; font-size: 48px; }
   #nameplate { margin-top: 6px; color: #d7dae0; font-weight: 600; }
 
-  #status { position: absolute; left: 10px; top: 320px; width: 168px; padding: 8px 10px;
-            background: rgba(16,19,26,0.8); border: 1px solid #2a303c; border-radius: 8px;
-            font-size: 13px; line-height: 1.6; }
+  #status { position: relative; margin-top: 8px; width: 100%; box-sizing: border-box;
+            padding: 8px 10px; background: rgba(16,19,26,0.8); border: 1px solid #2a303c;
+            border-radius: 8px; font-size: 13px; line-height: 1.6; }
+  #equip { margin-top: 8px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+  #equip .slot { height: 44px; border: 1px solid #2a303c; background: #12151c; }
   #skills { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 6px; margin: 0; }
   #skills button { min-width: 64px; height: 52px; }
@@ -540,6 +548,18 @@ export const GAME_PAGE = `<!doctype html>
   #devpanel[open] { background: rgba(16,19,26,0.92); padding: 8px 10px; border-radius: 8px; }
 </style>
 
+<div id="stage">
+  <aside id="leftrail">
+    <div id="portrait">
+      <button id="portrait-toggle" title="收起/展开">‹</button>
+      <div id="portrait-art"><span id="portrait-glyph">@</span></div>
+      <div id="nameplate">你</div>
+    </div>
+    <div id="status"></div>
+    <div id="equip" title="装备（以后接数据）"></div>
+  </aside>
+
+  <div id="stage-map">
 <canvas id="map"></canvas>
 
 <div id="hud">
@@ -549,14 +569,6 @@ export const GAME_PAGE = `<!doctype html>
     <a href="/">{{game.back}}</a>
     <button id="settingsbtn">{{menu.settings}}</button>
   </div>
-
-  <div id="portrait">
-    <button id="portrait-toggle" title="收起/展开">‹</button>
-    <div id="portrait-art"><span id="portrait-glyph">@</span></div>
-    <div id="nameplate">你</div>
-  </div>
-
-  <div id="status"></div>
 
   <div id="skills"></div>
   <div id="quick"></div>
@@ -573,6 +585,8 @@ export const GAME_PAGE = `<!doctype html>
     <pre id="debug"></pre>
     <pre id="devlog"></pre>
   </details>
+</div>
+  </div>
 </div>
 
 <script>
@@ -993,7 +1007,8 @@ function renderQuick() {
         const data = JSON.parse(event.dataTransfer.getData('text/plain'));
         quickSlots[index] = { kind: data.kind, ref: data.ref };
         localStorage.setItem('nw.quick', JSON.stringify(quickSlots));
-        renderQuick();
+        renderEquip();
+  renderQuick();
       },
       contextmenu: (event) => {
         event.preventDefault();
@@ -1008,6 +1023,17 @@ function renderQuick() {
 }
 
 renderQuick();
+
+function renderEquip() {
+  const box = document.getElementById('equip');
+  if (box === null) return;
+  box.textContent = '';
+  for (let i = 0; i < 6; i += 1) {
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    box.appendChild(slot);
+  }
+}
 
 function activateSlot(index) {
   const entry = hotbarSlots[index];
