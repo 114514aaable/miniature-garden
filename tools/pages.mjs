@@ -481,7 +481,10 @@ export const GAME_PAGE = `<!doctype html>
   #map { position: fixed; inset: 0; width: 100vw; height: 100vh; border-radius: 0; }
   #hud { position: fixed; inset: 0; pointer-events: none; }
   #hud > * { pointer-events: auto; }
-  #topbar { position: absolute; top: 10px; left: 10px; display: flex; gap: 8px; align-items: center;
+  #topbar { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; gap: 8px;
+           align-items: center; pointer-events: none; }
+  #topbar > * { pointer-events: auto; }
+  #topbar a { margin-right: auto; }
             padding: 4px 8px; background: rgba(16,19,26,0.75); border-radius: 8px; }
   /* 左侧立绘：现在只有占位，以后换成图 */
   #portrait { position: absolute; left: 10px; top: 54px; width: 168px;
@@ -542,8 +545,8 @@ export const GAME_PAGE = `<!doctype html>
   <div id="errbar" hidden></div>
 
   <div id="topbar">
-    <button id="settingsbtn">{{menu.settings}}</button>
     <a href="/">{{game.back}}</a>
+    <button id="settingsbtn">{{menu.settings}}</button>
     <button id="savebtn">{{game.save}}</button>
     <button id="loadbtn">{{game.load}}</button>
     <span class="meta" id="meta" style="margin:0"></span>
@@ -588,6 +591,7 @@ window.addEventListener('error', function (event) {
 import { attach } from '/web/game/systems/render/browser.js';
 import { row, col, text, button, toggle, modal, grid, withEvents } from '/web/game/systems/ui/spec.js';
 import { clampCell, loadConfig, saveConfig, withBinding, withConfig } from '/web/game/systems/config/config.js';
+import { commandFor, parseCommand } from '/web/game/systems/input/bindings.js';
 import { mount, render as renderNode } from '/web/game/systems/ui/dom.js';
 
 ${ERRORS}
