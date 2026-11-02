@@ -26,7 +26,10 @@ export const windupSignature: Signature = {
       dy: { t: "int" },
       damage: { t: "int" },
       ticks: { t: "int" },
+      /** fixed（默认，位置固定可躲）| track（转身追打）| require（不在就收手） */
+      mode: { t: "str" },
     },
+    optional: ["mode"],
   },
   result: { t: "any" },
   returnsEffects: true,
@@ -51,6 +54,7 @@ export function windupHandler(params: JsonValue, context: EvaluateContext): Json
           kind: "melee",
           tiles: [{ dx: p.dx, dy: p.dy }],
           damage: p.damage,
+          mode: p.mode === undefined ? "fixed" : String(p.mode),
           resolveAt: context.view.tick + p.ticks,
         },
       },
@@ -93,14 +97,26 @@ export function strikeHandler(params: JsonValue, context: EvaluateContext): Json
   const tiles = Array.isArray(data.tiles) ? data.tiles : [];
   const damage = typeof data.damage === "number" ? data.damage : 0;
 
-  const hit = tiles.some((tile) => {
+  const mode = typeof data.mode === "string" ? data.mode : "fixed";
+
+  // fixed：按起手时的格子判定——玩家走出去就落空（默认，也是我们推荐的）
+  const inTiles = tiles.some((tile) => {
     if (typeof tile !== "object" || tile === null) return false;
     const t = tile as Record<string, number>;
     return enemy.pos!.x + t.dx === target.pos!.x && enemy.pos!.y + t.dy === target.pos!.y;
   });
 
+  // track：转身追打，只要目标还在相邻格就算命中（想造难躲的怪就用它）
+  const adjacent = Math.max(
+    Math.abs(enemy.pos!.x - target.pos!.x),
+    Math.abs(enemy.pos!.y - target.pos!.y),
+  ) <= 1;
+
+  const hit = mode === "track" ? adjacent : inTiles;
+
   if (!hit || damage <= 0) {
-    return { ok: true, effects, missed: true };
+    // require：不在格子里就「收手」，连意图都不留（粪怪选项，默认不用）
+    return { ok: true, effects, missed: true, mode };
   }
 
   const health = target.components["core.health"];

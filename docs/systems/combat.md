@@ -74,6 +74,22 @@ node tools/play.mjs game/worlds/official.base game/worlds/official.normal
 ```
 实机：跑起来 → 走到敌人旁边 → 点它，看血量变化与日志。
 
+## 意图的三种模式（`core.intent.mode`）
+
+| mode | 行为 | 用来做什么 |
+|---|---|---|
+| `fixed`（默认） | 起手时把格子写死，玩家走出去就落空 | **推荐**：躲得掉，惩罚站桩 |
+| `track` | 到点时转身追打，只要还在相邻格就命中 | 想做「难躲」的怪 |
+| `require` | 不在格子里就收手（连动作都不发生） | 粪怪选项，默认别用 |
+
+起手时写一次 `mode`，其余不变：
+
+```json
+{ "kind": "melee", "tiles": [{"dx":1,"dy":0}], "damage": 3, "mode": "track", "resolveAt": 9 }
+```
+
+**落空会被记进日志**（`core.enemy_strike 落空`）——玩家要能分清「他打偏了」和「他没出手」。
+
 ## 相关（先别读，用到再看）
 
 | 文档 | 什么时候需要 |

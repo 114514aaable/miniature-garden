@@ -558,6 +558,11 @@ function run(tag, params, costKey) {
     return snapshot(value.reason ?? "不行");
   }
 
+  // 落空也要说话：否则玩家分不清「他打偏了」和「他没出手」
+  if (result.value.missed === true) {
+    session.devlog.action(session.store.now(), tag + ' 落空', { mode: result.value.mode ?? 'fixed' });
+  }
+
   const effects = collectEffects(result.value);
   for (const effect of effects) {
     session.store.submit(effect);
