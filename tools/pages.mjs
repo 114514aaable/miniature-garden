@@ -818,7 +818,8 @@ function toggleInventory() {
 
 function applyPortraitCollapsed() {
   const box = document.getElementById('portrait');
-  const collapsed = localStorage.getItem('nw.portrait') === '0';
+  const stored = localStorage.getItem('nw.portrait');
+  const collapsed = stored === '0';
   box.classList.toggle('collapsed', collapsed);
   document.getElementById('portrait-toggle').textContent = collapsed ? '›' : '‹';
 }
@@ -996,6 +997,8 @@ function renderQuick() {
 
   mount(document.getElementById('quick'), grid({ columns: QUICK_COLUMNS, cell: config.hotbarCell, gap: 0 }, ...cells));
 }
+
+renderQuick();
 
 function activateSlot(index) {
   const entry = hotbarSlots[index];
