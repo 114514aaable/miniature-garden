@@ -652,6 +652,7 @@ function render(state) {
 }
 
 let inventoryItems = [];
+let stateSkills = [];
 let selectedItem = null;
 
 async function openInventory() {
@@ -686,6 +687,10 @@ function drawInventory() {
     node.style.flex = '0 0 auto';
     node.style.background = picked ? '#2d3a52' : '#161a22';
     node.style.border = picked ? '1px solid #4a6da8' : '1px solid #2a303c';
+    node.draggable = true;
+    node.addEventListener('dragstart', (event) => {
+      event.dataTransfer.setData('text/plain', JSON.stringify({ kind: 'item', ref: item.handle }));
+    });
     return node;
   });
 
@@ -696,9 +701,24 @@ function drawInventory() {
   grid.style['flex-wrap'] = 'wrap';
   grid.style.width = '6px';
 
+  const skillChips = (stateSkills || []).map((skill) => {
+    const node = button(skill.name, () => {});
+    node.style['font-size'] = '11px';
+    node.draggable = true;
+    node.addEventListener('dragstart', (event) => {
+      event.dataTransfer.setData('text/plain', JSON.stringify({ kind: 'skill', ref: skill.tag }));
+    });
+    return node;
+  });
+
   const body = row({ gap: 16, align: 'flex-start' },
     col({ gap: 8, width: 220 }, detail),
-    col({ gap: 8, width: 470 }, grid),
+    col({ gap: 8, width: 470 },
+      text('技能（拖到快捷栏）', { policy: 'fixed' }),
+      row({ gap: 6 }, ...skillChips),
+      text('道具（拖到快捷栏）', { policy: 'fixed' }),
+      grid,
+    ),
   );
 
   box.textContent = '';
@@ -740,19 +760,72 @@ document.getElementById('portrait-toggle').addEventListener('click', () => {
   applyPortraitCollapsed();
 });
 
-let hotbarEntries = [];
+const HOTBAR_SLOTS = 9;
+
+/** 槽位内容：[{ kind: "skill" | "item", ref }] 或 null。 */
+function loadHotbar() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('nw.hotbar') || '[]');
+    const slots = new Array(HOTBAR_SLOTS).fill(null);
+    for (let i = 0; i < HOTBAR_SLOTS; i += 1) slots[i] = raw[i] ?? null;
+    return slots;
+  } catch {
+    return new Array(HOTBAR_SLOTS).fill(null);
+  }
+}
+
+function saveHotbar(slots) {
+  localStorage.setItem('nw.hotbar', JSON.stringify(slots));
+}
+
+let hotbarSlots = loadHotbar();
+let hotbarSkills = [];
+let hotbarItems = [];
+
+function hotbarLabel(entry) {
+  if (entry === null) return '';
+  if (entry.kind === 'skill') {
+    const skill = hotbarSkills.find((item) => item.tag === entry.ref);
+    return skill ? skill.name : entry.ref;
+  }
+  const item = hotbarItems.find((row) => row.handle === entry.ref);
+  return item ? item.name : '道具 ' + entry.ref;
+}
 
 function renderHotbar(state) {
-  const skills = state.skills.filter((skill) => skill.tag !== 'core.move');
-  hotbarEntries = skills.slice(0, 9);
+  hotbarSkills = state.skills.filter((skill) => skill.tag !== 'core.move');
+  hotbarItems = state.hud && state.hud.items ? state.hud.items : hotbarItems;
 
-  const cells = hotbarEntries.map((skill, index) => {
-    const node = button(String(index + 1) + ' ' + skill.name, () => useSkill(skill.tag));
+  const cells = hotbarSlots.map((entry, index) => {
+    const label = hotbarLabel(entry);
+    const node = button(String(index + 1) + (label ? ' ' + label : ''), () => activateSlot(index));
     node.style.width = '72px';
     node.style.height = '72px';
     node.style.flex = '0 0 auto';
-    node.style['white-space'] = 'pre';
-    node.style['font-size'] = '12px';
+    node.style['font-size'] = '11px';
+    node.style.padding = '2px';
+    node.style.background = entry ? '#1d2432' : '#141821';
+
+    // 拖入绑定
+    node.addEventListener('dragover', (event) => event.preventDefault());
+    node.addEventListener('drop', (event) => {
+      event.preventDefault();
+      try {
+        const data = JSON.parse(event.dataTransfer.getData('text/plain'));
+        hotbarSlots[index] = { kind: data.kind, ref: data.ref };
+        saveHotbar(hotbarSlots);
+        renderHotbar(state);
+      } catch {
+        // 拖进来不是 JSON，忽略
+      }
+    });
+    // 右键清空
+    node.addEventListener('contextmenu', (event) => {
+      event.preventDefault();
+      hotbarSlots[index] = null;
+      saveHotbar(hotbarSlots);
+      renderHotbar(state);
+    });
     return node;
   });
 
@@ -769,6 +842,16 @@ function renderHotbar(state) {
   }
 
   mount(document.getElementById('skills'), row({ gap: 6, align: 'center' }, ...cells, ...extras));
+}
+
+function activateSlot(index) {
+  const entry = hotbarSlots[index];
+  if (entry === null) {
+    document.getElementById('message').textContent = '这个槽是空的：从背包拖一个技能或道具上来。';
+    return;
+  }
+  if (entry.kind === 'skill') useSkill(entry.ref);
+  else document.getElementById('message').textContent = '物品还不能直接用（等 core.use）。';
 }
 
 function showDeath() {
@@ -920,8 +1003,7 @@ window.addEventListener('keydown', (event) => {
 
   const digit = event.code.match(/^Digit([1-9])$/);
   if (digit !== null) {
-    const entry = hotbarEntries[Number(digit[1]) - 1];
-    if (entry !== undefined) useSkill(entry.tag);
+    activateSlot(Number(digit[1]) - 1);
     return;
   }
 
@@ -946,6 +1028,8 @@ window.addEventListener('keydown', (event) => {
     document.getElementById('errbar').textContent = '世界载入失败：' + (state && state.errors && state.errors[0] ? state.errors[0].error : '未知');
     return;
   }
+  stateSkills = state.skills;
+  hotbarItems = (await api('/api/inventory')).items || [];
   render(state);
   applySettings();
   applyPortraitCollapsed();
