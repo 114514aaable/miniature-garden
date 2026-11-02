@@ -563,6 +563,7 @@ export const GAME_PAGE = `<!doctype html>
   <div id="settings" hidden></div>
   <div id="tooltip" hidden></div>
   <div id="death" hidden></div>
+  <div id="inventory" hidden></div>
 
   <details id="devpanel">
     <summary>{{game.devlog}}</summary>
@@ -648,9 +649,51 @@ function render(state) {
   document.getElementById('debug').textContent = formatDebug(state.debug);
 
   const skillButtons = state.skills
-    .filter((skill) => skill.tag !== 'core.move')
+    .filter((skill) => skill.tag !== 'core.move' && skill.tag !== 'core.wait')
     .map((skill) => button(skill.name + ' ' + skill.cost, () => useSkill(skill.tag)));
-  mount(document.getElementById('skills'), row({ gap: 6, align: 'center' }, ...skillButtons));
+
+  const shortcuts = [
+    button('等待', () => useSkill('core.wait')),
+    button('背包 I', () => openInventory()),
+    button('设置 Esc', () => openSettings()),
+  ];
+
+  mount(document.getElementById('skills'), row({ gap: 6, align: 'center' }, ...skillButtons, ...shortcuts));
+}
+
+async function openInventory() {
+  const box = document.getElementById('inventory');
+  box.hidden = false;
+  box.textContent = '';
+
+  const data = await api('/api/inventory');
+  const items = (data && data.items) || [];
+
+  const rows = items.map((item) =>
+    row({ gap: 8, align: 'center' },
+      text(item.name, { policy: 'fixed', width: 96 }),
+      text(item.description, { policy: 'fill' }),
+    ),
+  );
+
+  const body = col({ gap: 8 },
+    text(items.length === 0 ? '背包是空的。' : '共 ' + items.length + ' 件物品。', { policy: 'fixed' }),
+    ...rows,
+    row({ gap: 8, justify: 'end' }, button('关闭 I', () => closeInventory())),
+  );
+
+  box.appendChild(renderNode(modal(body, { title: '背包' })));
+}
+
+function closeInventory() {
+  const box = document.getElementById('inventory');
+  box.hidden = true;
+  box.textContent = '';
+}
+
+function toggleInventory() {
+  const box = document.getElementById('inventory');
+  if (box.hidden) openInventory(); else closeInventory();
 }
 
 function applyPortraitCollapsed() {
@@ -802,6 +845,10 @@ window.addEventListener('keydown', (event) => {
   const parsed = parseCommand(command);
 
   if (parsed.kind === 'ui') {
+    if (parsed.value === 'inventory') {
+      toggleInventory();
+      return;
+    }
     if (parsed.value === 'settings') {
       const box = document.getElementById('settings');
       if (box.hidden) openSettings(); else closeSettings();

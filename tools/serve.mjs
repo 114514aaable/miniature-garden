@@ -403,6 +403,31 @@ function act(command) {
 
   return snapshot("不懂这个指令（w/a/s/d 走，e 捡，r 放）");
 }
+/** 玩家背包里有什么（名字、描述都带上，界面不用再查）。 */
+function inventoryList() {
+  if (session === null || session.playerHandle === null) {
+    return { ok: true, items: [] };
+  }
+
+  const view = currentView();
+  const bag = view.entity(session.playerHandle).components["core.container"];
+  const handles = bag && Array.isArray(bag.items) ? bag.items.filter((h) => typeof h === "number") : [];
+
+  const items = [];
+  for (const handle of handles) {
+    if (!session.store.hasEntity(handle)) continue;
+    const entity = view.entity(handle);
+    items.push({
+      handle,
+      template: entity.template,
+      name: MESSAGES["template." + entity.template + ".name"] ?? entity.template,
+      description: MESSAGES["template." + entity.template + ".desc"] ?? "",
+    });
+  }
+
+  return { ok: true, items };
+}
+
 /** 看：这一格有什么。地形 + 站在上面的东西。 */
 function inspectCell(x, y) {
   if (session === null) return { ok: false, error: "没有进行中的世界" };
@@ -961,6 +986,11 @@ const server = createServer(async (request, response) => {
       } catch (error) {
         sendJson(response, { ok: false, error: messageOf(error) });
       }
+      return;
+    }
+
+    if (request.url === "/api/inventory") {
+      sendJson(response, inventoryList());
       return;
     }
 
