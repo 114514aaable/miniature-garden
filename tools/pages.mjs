@@ -44,12 +44,14 @@ const CSS = `
   #devlog, #debug { margin: 8px 0 0; padding: 8px; max-height: 200px; overflow: auto; color: #8b929e;
                     background: #0f1116; border: 1px solid #232733; border-radius: 6px; white-space: pre; }
   #graphpanel[hidden] { display: none; }
-  #graphpanel { position: fixed; inset: 40px 60px; z-index: 60; display: flex; flex-direction: column;
+  #graphpanel { position: fixed; inset: 40px 60px; z-index: 100; display: flex; flex-direction: column;
+                pointer-events: auto;
                 background: #10131a; border: 1px solid #2a303c; border-radius: 10px;
                 box-shadow: 0 20px 60px rgba(0,0,0,0.6); padding: 12px 16px; }
   .graphbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
   .graphbar span { color: #8ab4f8; font-weight: 600; }
   #tree { margin: 0; flex: 1 1 auto; min-height: 0; overflow: auto; color: #9aa3b2; font-size: 12px;
+          overflow-x: auto;
           padding-right: 6px; }
   #tree::-webkit-scrollbar { width: 10px; }
   #tree::-webkit-scrollbar-thumb { background: #2a303c; border-radius: 5px; }
@@ -97,7 +99,8 @@ export const LAUNCHER_PAGE = `<!doctype html>
   .tree details { margin-left: 14px; }
   .tree summary { cursor: pointer; color: #9aa3b2; padding: 2px 0; }
   .tree summary b { color: #d7dae0; }
-  .tree .leaf { margin-left: 22px; padding: 2px 0; color: #8b929e; display: flex; gap: 6px; align-items: baseline; }
+  .tree .leaf { margin-left: 22px; padding: 2px 0; color: #8b929e; display: flex; gap: 6px;
+                align-items: baseline; white-space: nowrap; }
   .tree .leaf .id { color: #5f6b7a; font-size: 11px; }
   .tree .leaf .desc { color: #6f7a89; font-size: 11px; }
   .tree label.group { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
@@ -289,7 +292,14 @@ function buildTree(root, nodes) {
     packs.get(node.origin).push(node);
   }
 
-  for (const [origin, list] of packs) {
+  // 有规则的包排前面：选择块第一眼就能看到
+  const ordered = [...packs.entries()].sort((a, b) => {
+    const aRules = a[1].some((node) => node.kind === "rule") ? 0 : 1;
+    const bRules = b[1].some((node) => node.kind === "rule") ? 0 : 1;
+    return aRules - bRules;
+  });
+
+  for (const [origin, list] of ordered) {
     const packBox = document.createElement('details');
     packBox.open = true;
     const summary = document.createElement('summary');
