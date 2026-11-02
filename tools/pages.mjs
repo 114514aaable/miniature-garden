@@ -648,41 +648,72 @@ function render(state) {
   document.getElementById('devlog').textContent = (state.devlog || []).join('\\n');
   document.getElementById('debug').textContent = formatDebug(state.debug);
 
-  const skillButtons = state.skills
-    .filter((skill) => skill.tag !== 'core.move' && skill.tag !== 'core.wait')
-    .map((skill) => button(skill.name + ' ' + skill.cost, () => useSkill(skill.tag)));
-
-  const shortcuts = [
-    button('等待', () => useSkill('core.wait')),
-    button('背包 I', () => openInventory()),
-    button('设置 Esc', () => openSettings()),
-  ];
-
-  mount(document.getElementById('skills'), row({ gap: 6, align: 'center' }, ...skillButtons, ...shortcuts));
+  renderHotbar(state);
 }
+
+let inventoryItems = [];
+let selectedItem = null;
 
 async function openInventory() {
   const box = document.getElementById('inventory');
   box.hidden = false;
-  box.textContent = '';
 
   const data = await api('/api/inventory');
-  const items = (data && data.items) || [];
+  inventoryItems = (data && data.items) || [];
+  selectedItem = inventoryItems[0] ?? null;
+  drawInventory();
+}
 
-  const rows = items.map((item) =>
-    row({ gap: 8, align: 'center' },
-      text(item.name, { policy: 'fixed', width: 96 }),
-      text(item.description, { policy: 'fill' }),
+/** 左详情 + 右 6 列格子；点格子只选中，不放动作。 */
+function drawInventory() {
+  const box = document.getElementById('inventory');
+
+  const detail = selectedItem === null
+    ? col({ gap: 6 }, text('没有选中物品', { policy: 'fixed' }))
+    : col({ gap: 6 },
+        text(selectedItem.name, { policy: 'fixed' }),
+        text(selectedItem.description, { policy: 'fixed' }),
+        row({ gap: 6 },
+          button('放下', () => dropSelected()),
+        ),
+      );
+
+  const cells = inventoryItems.map((item) => {
+    const picked = selectedItem !== null && item.handle === selectedItem.handle;
+    const node = button(item.name, () => { selectedItem = item; drawInventory(); });
+    node.style.width = '72px';
+    node.style.height = '72px';
+    node.style.flex = '0 0 auto';
+    node.style.background = picked ? '#2d3a52' : '#161a22';
+    node.style.border = picked ? '1px solid #4a6da8' : '1px solid #2a303c';
+    return node;
+  });
+
+  const grid = row({ gap: 6 },
+    ...cells,
+    ...(cells.length === 0 ? [text('空', { policy: 'fixed' })] : []),
+  );
+  grid.style['flex-wrap'] = 'wrap';
+  grid.style.width = '6px';
+
+  const body = row({ gap: 16, align: 'flex-start' },
+    col({ gap: 8, width: 220 }, detail),
+    col({ gap: 8, width: 470 }, grid),
+  );
+
+  box.textContent = '';
+  box.appendChild(renderNode(modal(col({ gap: 12 },
+    body,
+    row({ gap: 8, justify: 'end' },
+      button('关闭 I', () => closeInventory()),
     ),
-  );
+  ), { title: '背包' })));
+}
 
-  const body = col({ gap: 8 },
-    text(items.length === 0 ? '背包是空的。' : '共 ' + items.length + ' 件物品。', { policy: 'fixed' }),
-    ...rows,
-    row({ gap: 8, justify: 'end' }, button('关闭 I', () => closeInventory())),
-  );
-
-  box.appendChild(renderNode(modal(body, { title: '背包' })));
+async function dropSelected() {
+  if (selectedItem === null) return;
+  await api('/api/skill', { tag: 'core.drop' });
+  await openInventory();
 }
 
 function closeInventory() {
@@ -708,6 +739,37 @@ document.getElementById('portrait-toggle').addEventListener('click', () => {
   localStorage.setItem('nw.portrait', collapsed ? '1' : '0');
   applyPortraitCollapsed();
 });
+
+let hotbarEntries = [];
+
+function renderHotbar(state) {
+  const skills = state.skills.filter((skill) => skill.tag !== 'core.move');
+  hotbarEntries = skills.slice(0, 9);
+
+  const cells = hotbarEntries.map((skill, index) => {
+    const node = button(String(index + 1) + ' ' + skill.name, () => useSkill(skill.tag));
+    node.style.width = '72px';
+    node.style.height = '72px';
+    node.style.flex = '0 0 auto';
+    node.style['white-space'] = 'pre';
+    node.style['font-size'] = '12px';
+    return node;
+  });
+
+  const extras = [
+    button('等待', () => useSkill('core.wait')),
+    button('背包', () => toggleInventory()),
+    button('设置', () => openSettings()),
+  ];
+  for (const node of extras) {
+    node.style.width = '56px';
+    node.style.height = '72px';
+    node.style.flex = '0 0 auto';
+    node.style['font-size'] = '12px';
+  }
+
+  mount(document.getElementById('skills'), row({ gap: 6, align: 'center' }, ...cells, ...extras));
+}
 
 function showDeath() {
   const box = document.getElementById('death');
@@ -853,6 +915,13 @@ window.addEventListener('keydown', (event) => {
       const box = document.getElementById('settings');
       if (box.hidden) openSettings(); else closeSettings();
     }
+    return;
+  }
+
+  const digit = event.code.match(/^Digit([1-9])$/);
+  if (digit !== null) {
+    const entry = hotbarEntries[Number(digit[1]) - 1];
+    if (entry !== undefined) useSkill(entry.tag);
     return;
   }
 
