@@ -1,186 +1,201 @@
 [
-    {
-        "id":  "core.health",
-        "schema":  {
-                       "t":  "object",
-                       "fields":  {
-                                      "max":  {
-                                                  "t":  "int"
-                                              },
-                                      "hp":  {
-                                                 "t":  "int"
-                                             }
-                                  },
-                       "optional":  [
-                                        "hp"
-                                    ]
-                   }
-    },
-    {
-        "id":  "core.stats",
-        "schema":  {
-                       "t":  "object",
-                       "fields":  {
-                                      "speed":  {
-                                                    "t":  "int"
-                                                },
-                                      "attack":  {
-                                                     "t":  "int"
-                                                 },
-                                      "defense":  {
-                                                      "t":  "int"
-                                                  }
-                                  }
-                   }
-    },
-    {
-        "id":  "core.body",
-        "schema":  {
-                       "t":  "object",
-                       "fields":  {
-                                      "parts":  {
-                                                    "t":  "array",
-                                                    "of":  {
-                                                               "t":  "object",
-                                                               "fields":  {
-                                                                              "id":  {
-                                                                                         "t":  "str"
-                                                                                     },
-                                                                              "name":  {
-                                                                                           "t":  "str"
-                                                                                       },
-                                                                              "hp":  {
-                                                                                         "t":  "int"
-                                                                                     },
-                                                                              "max":  {
-                                                                                          "t":  "int"
-                                                                                      },
-                                                                              "armor":  {
-                                                                                            "t":  "int"
-                                                                                        },
-                                                                              "state":  {
-                                                                                            "t":  "enum",
-                                                                                            "values":  [
-                                                                                                           "ok",
-                                                                                                           "hurt",
-                                                                                                           "disabled"
-                                                                                                       ]
-                                                                                        }
-                                                                          },
-                                                               "optional":  [
-                                                                                "hp",
-                                                                                "armor",
-                                                                                "state"
-                                                                            ]
-                                                           }
-                                                }
-                                  }
-                   }
-    },
-    {
-        "id":  "core.item",
-        "schema":  {
-                       "t":  "object",
-                       "fields":  {
-                                      "stack":  {
-                                                    "t":  "int"
-                                                },
-                                      "weight":  {
-                                                     "t":  "int"
-                                                 },
-                                      "use":  {
-                                                  "t":  "str"
-                                              }
-                                  },
-                       "optional":  [
-                                        "use"
-                                    ]
-                   }
-    },
-    {
-        "id":  "core.container",
-        "schema":  {
-                       "t":  "object",
-                       "fields":  {
-                                      "slots":  {
-                                                    "t":  "int"
-                                                },
-                                      "items":  {
-                                                    "t":  "array",
-                                                    "of":  {
-                                                               "t":  "int"
-                                                           }
-                                                }
-                                  }
-                   }
-    },
-    {
-        "id":  "core.ai",
-        "schema":  {
-                       "t":  "object",
-                       "fields":  {
-                                      "mode":  {
-                                                   "t":  "enum",
-                                                   "values":  [
-                                                                  "idle",
-                                                                  "chase"
-                                                              ]
-                                               }
-                                  }
-                   }
-    },
-    {
-        "id":  "core.solid",
-        "schema":  {
-                       "t":  "object",
-                       "fields":  {
-
-                                  }
-                   }
-    },
-    {
-        "id":  "core.sprite",
-        "schema":  {
-                       "t":  "object",
-                       "fields":  {
-                                      "sheet":  {
-                                                    "t":  "str"
-                                                },
-                                      "frame":  {
-                                                    "t":  "str"
-                                                }
-                                  }
-                   }
-    },
-    {
-        "id":  "core.intent",
-        "schema":  {
-                       "t":  "object",
-                       "fields":  {
-                                      "kind":  {
-                                                   "t":  "str"
-                                               },
-                                      "tiles":  {
-                                                    "t":  "array",
-                                                    "of":  {
-                                                               "t":  "object",
-                                                               "fields":  {
-                                                                              "dx":  {
-                                                                                         "t":  "int"
-                                                                                     },
-                                                                              "dy":  {
-                                                                                         "t":  "int"
-                                                                                     }
-                                                                          }
-                                                           }
-                                                },
-                                      "damage":  {
-                                                     "t":  "int"
-                                                 },
-                                      "resolveAt":  {
-                                                        "t":  "int"
-                                                    }
-                                  }
-                   }
+  {
+    "id": "core.health",
+    "schema": {
+      "t": "object",
+      "fields": {
+        "max": {
+          "t": "int"
+        },
+        "hp": {
+          "t": "int"
+        }
+      },
+      "optional": [
+        "hp"
+      ]
     }
+  },
+  {
+    "id": "core.stats",
+    "schema": {
+      "t": "object",
+      "fields": {
+        "speed": {
+          "t": "int"
+        },
+        "attack": {
+          "t": "int"
+        },
+        "defense": {
+          "t": "int"
+        }
+      }
+    }
+  },
+  {
+    "id": "core.body",
+    "schema": {
+      "t": "object",
+      "fields": {
+        "parts": {
+          "t": "array",
+          "of": {
+            "t": "object",
+            "fields": {
+              "id": {
+                "t": "str"
+              },
+              "name": {
+                "t": "str"
+              },
+              "hp": {
+                "t": "int"
+              },
+              "max": {
+                "t": "int"
+              },
+              "armor": {
+                "t": "int"
+              },
+              "state": {
+                "t": "enum",
+                "values": [
+                  "ok",
+                  "hurt",
+                  "disabled"
+                ]
+              }
+            },
+            "optional": [
+              "hp",
+              "armor",
+              "state"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "core.item",
+    "schema": {
+      "t": "object",
+      "fields": {
+        "stack": {
+          "t": "int"
+        },
+        "weight": {
+          "t": "int"
+        },
+        "use": {
+          "t": "str"
+        }
+      },
+      "optional": [
+        "use"
+      ]
+    }
+  },
+  {
+    "id": "core.container",
+    "schema": {
+      "t": "object",
+      "fields": {
+        "slots": {
+          "t": "int"
+        },
+        "items": {
+          "t": "array",
+          "of": {
+            "t": "int"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "core.ai",
+    "schema": {
+      "t": "object",
+      "fields": {
+        "mode": {
+          "t": "enum",
+          "values": [
+            "idle",
+            "chase"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "core.solid",
+    "schema": {
+      "t": "object",
+      "fields": {}
+    }
+  },
+  {
+    "id": "core.sprite",
+    "schema": {
+      "t": "object",
+      "fields": {
+        "sheet": {
+          "t": "str"
+        },
+        "frame": {
+          "t": "str"
+        }
+      }
+    }
+  },
+  {
+    "id": "core.intent",
+    "schema": {
+      "t": "object",
+      "fields": {
+        "kind": {
+          "t": "str"
+        },
+        "tiles": {
+          "t": "array",
+          "of": {
+            "t": "object",
+            "fields": {
+              "dx": {
+                "t": "int"
+              },
+              "dy": {
+                "t": "int"
+              }
+            }
+          }
+        },
+        "damage": {
+          "t": "int"
+        },
+        "resolveAt": {
+          "t": "int"
+        }
+      }
+    }
+  },
+  {
+    "id": "core.pending",
+    "schema": {
+      "t": "object",
+      "fields": {
+        "tag": {
+          "t": "str"
+        },
+        "params": {
+          "t": "any"
+        },
+        "resolveAt": {
+          "t": "int"
+        }
+      }
+    }
+  }
 ]

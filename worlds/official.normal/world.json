@@ -13,7 +13,8 @@
     "core.aim",
     "core.enemy_turn",
     "core.enemy_windup",
-    "core.enemy_strike"
+    "core.enemy_strike",
+    "core.cast"
   ],
   "onConflict": "error",
   "init": []

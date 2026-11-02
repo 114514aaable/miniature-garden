@@ -34,6 +34,7 @@ import { attackHandler, attackSignature } from "../engine/core/src/rules/attack.
 import { enemyTurnHandler, enemyTurnSignature } from "../engine/core/src/rules/ai.ts";
 import { waitHandler, waitSignature } from "../engine/core/src/rules/wait.ts";
 import { aimHandler, aimSignature } from "../engine/core/src/rules/aim.ts";
+import { castHandler, castSignature, EMPTY_PENDING, isActive, PENDING } from "../engine/core/src/rules/pending.ts";
 import {
   strikeHandler,
   strikeSignature,
@@ -168,6 +169,7 @@ const RULE_TABLE = [
   { signature: strikeSignature, handler: strikeHandler },
   { signature: waitSignature, handler: waitHandler },
   { signature: aimSignature, handler: aimHandler },
+  { signature: castSignature, handler: castHandler },
 ];
 
 function buildSession(ordered, disabled = new Set(), seed = 0) {
@@ -596,9 +598,39 @@ function advanceTo(target) {
     }
     // 被打死的敌人要从调度器里清掉，否则会和它的句柄一起留在队列里
     session.scheduler.prune((handle) => session.store.hasEntity(handle));
+    resolvePending();
     drainEnemies();
   }
   applyPending();
+}
+
+/** 到点的挂起动作：求值它记下的信封，然后清空。 */
+function resolvePending() {
+  const now = session.store.now();
+  const view = currentView();
+
+  for (const entity of session.store.allEntities()) {
+    const pending = view.entity(entity.handle).components[PENDING];
+    if (!isActive(pending)) continue;
+    if (pending.resolveAt > now) continue;
+
+    const result = evaluate(
+      { id: now + 1000, tag: String(pending.tag), params: pending.params },
+      session.link,
+      session.handlers,
+      view,
+    );
+
+    const done = result.ok && result.value && result.value.ok === true;
+    if (done) {
+      for (const effect of collectEffects(result.value)) {
+        session.store.submit(effect);
+      }
+    }
+
+    session.store.submit({ kind: "patch", handle: entity.handle, component: PENDING, data: EMPTY_PENDING });
+    session.devlog.action(now, "挂起结算", { handle: entity.handle, tag: pending.tag, ok: done });
+  }
 }
 
 /** 让当前 tick 该行动的敌人行动（可能连续多个）。 */
