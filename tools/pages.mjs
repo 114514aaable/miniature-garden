@@ -1030,15 +1030,12 @@ async function openSettings(page = 'root') {
   let body;
 
   if (page === 'root') {
-    body = col({ gap: 8 },
-      text('设置', { policy: 'fixed' }),
-      row({ gap: 8 },
-        button('配置', () => openSettings('config')),
-        button('按键', () => openSettings('keys')),
-        button('世界', () => openSettings('world')),
-        button('存档 / 读档', () => openSettings('saves')),
-      ),
-      row({ gap: 8, justify: 'end' }, button('关闭 Esc', () => closeSettings())),
+    body = col({ gap: 8, width: 220 },
+      button('配置', () => openSettings('config')),
+      button('按键', () => openSettings('keys')),
+      button('世界', () => openSettings('world')),
+      button('存档 / 读档', () => openSettings('saves')),
+      button('关闭 Esc', () => closeSettings()),
     );
   } else if (page === 'config') {
     const cellRow = (label, key) => {
@@ -1052,7 +1049,6 @@ async function openSettings(page = 'root') {
     };
 
     body = col({ gap: 8 },
-      text('配置', { policy: 'fixed' }),
       cellRow('快捷栏格子', 'hotbarCell'),
       cellRow('背包格子', 'inventoryCell'),
       row({ gap: 6, align: 'center' },
@@ -1076,7 +1072,6 @@ async function openSettings(page = 'root') {
     );
 
     body = col({ gap: 6 },
-      text('按键', { policy: 'fixed' }),
       text(capturingBinding ? '按下新的键…（Esc 取消）' : '点「改」再按一个键', { policy: 'fixed' }),
       ...rows,
       back,
@@ -1085,13 +1080,11 @@ async function openSettings(page = 'root') {
     const info = lastState === null ? '（未开局）'
       : '世界 ' + (lastState.world || '?') + ' · 种子 ' + lastState.seed + ' · tick ' + lastState.tick;
     body = col({ gap: 8 },
-      text('世界', { policy: 'fixed' }),
       text(info, { policy: 'fixed' }),
       back,
     );
   } else {
     body = col({ gap: 8 },
-      text('存档 / 读档', { policy: 'fixed' }),
       row({ gap: 8 },
         button('存档', async () => { render(await api('/api/save', {})); openSettings('saves'); }),
         button('读档', async () => { render(await api('/api/load', {})); openSettings('saves'); }),
@@ -1100,7 +1093,8 @@ async function openSettings(page = 'root') {
     );
   }
 
-  box.appendChild(renderNode(modal(body, { title: '设置' })));
+  const titles = { root: '设置', config: '配置', keys: '按键', world: '世界', saves: '存档 / 读档' };
+  box.appendChild(renderNode(modal(body, { title: titles[page] ?? '设置' })));
 }
 
 function closeSettings() {
