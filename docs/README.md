@@ -25,6 +25,8 @@
 | 改界面与套件 | [areas/ui.md](areas/ui.md) |
 | 改渲染管线 / 贴图 | [areas/render.md](areas/render.md) |
 | 加接口 / 改启动流程 | [areas/host.md](areas/host.md) |
+| 做视野 / 迷雾 / 潜行 | [systems/perception.md](systems/perception.md) |
+| 让 AI 读写世界 | [systems/agent.md](systems/agent.md) |
 
 ## 阅读约定
 
