@@ -80,12 +80,25 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
     resize();
   }
 
+  // 逻辑坐标一律用 CSS 像素；物理画布乘 devicePixelRatio，
+  // 这样浏览器缩放 / 高分屏下不会糊，指针换算也不用改。
+  let dpr = 1;
+  let viewport = { width: 1, height: 1 };
+
   function resize(): void {
     const rect = canvas.getBoundingClientRect();
-    const width = Math.max(1, Math.round(rect.width));
-    const height = Math.max(1, Math.round(rect.height));
+    const cssWidth = Math.max(1, Math.round(rect.width));
+    const cssHeight = Math.max(1, Math.round(rect.height));
+
+    dpr = Math.max(1, window.devicePixelRatio || 1);
+    viewport = { width: cssWidth, height: cssHeight };
+
+    const width = Math.round(cssWidth * dpr);
+    const height = Math.round(cssHeight * dpr);
     if (canvas.width !== width) canvas.width = width;
     if (canvas.height !== height) canvas.height = height;
+    canvas.style.width = cssWidth + "px";
+    canvas.style.height = cssHeight + "px";
   }
 
   // 容器尺寸变化（窗口缩放、侧栏展开、手机旋转）都要重算画布
@@ -128,15 +141,23 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
             ? null
             : entities.find((entity) => entity.handle === playerHandle) ?? null;
         const focus = player === null ? { x: space.width / 2, y: space.height / 2 } : { x: player.x, y: player.y };
-        camera = cameraFor(focus, { width: canvas.width, height: canvas.height }, space, options.tile);
+        camera = cameraFor(focus, viewport, space, options.tile);
       }
+
+      // 缩放变了（浏览器 Ctrl+滚轮 / 系统 DPI 变化）就重建画布
+      if (Math.abs((window.devicePixelRatio || 1) - dpr) > 0.01) {
+        resize();
+      }
+
+      const ctx2d = context as CanvasRenderingContext2D;
+      ctx2d.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       const snapshot = state.snapshot;
       const commands = buildFrame(
         { ...snapshot, entities },
         {
           tile: options.tile,
-          viewport: { width: canvas.width, height: canvas.height },
+          viewport,
           camera,
           style: state.style ?? DEFAULT_STYLE,
           now,
