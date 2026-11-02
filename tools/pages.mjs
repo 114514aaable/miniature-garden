@@ -122,19 +122,8 @@ export const LAUNCHER_PAGE = `<!doctype html>
     <div style="margin-top:10px"><button id="packs-back">{{menu.back}}</button></div>
   </div>
 
-  <div class="panel" id="settings" hidden>
-    <h2>{{menu.settings}}</h2>
-    <div style="margin-bottom:10px">动画速度：<span id="speed-buttons"></span></div>
-    <div style="color:#8b929e; font-size:12px" id="bindings"></div>
-    <div style="margin-top:10px"><button id="settings-back">{{menu.back}}</button></div>
-  </div>
-
-  <div class="panel" id="load" hidden>
-    <h2>{{menu.load}}</h2>
-    <div id="load-msg" style="color:#9aa3b2; margin-bottom:10px"></div>
-    <button id="load-go">{{menu.load_confirm}}</button>
-    <button id="load-back">{{menu.back}}</button>
-  </div>
+  <div class="panel" id="settings" hidden></div>
+  <div class="panel" id="load" hidden></div>
 
   <div class="panel" id="quit" hidden>
     <h2>{{menu.quit}}</h2>
@@ -379,21 +368,13 @@ document.getElementById('m-start').addEventListener('click', () => {
 
 document.getElementById('m-load').addEventListener('click', async () => {
   show('load');
-  const msg = document.getElementById('load-msg');
-  msg.textContent = '{{menu.loading}}';
-  const result = await api('/api/load', {});
-  if (result && result.ok === false) {
-    msg.textContent = result.error + (result.missing && result.missing.length ? '  缺：' + result.missing.join(', ') : '') +
-      (result.extra && result.extra.length ? '  多：' + result.extra.join(', ') : '');
-    return;
-  }
-  location.href = '/game?world=' + encodeURIComponent(result.world || activeWorld || '') + '&loaded=1';
+  await renderLoad();
 });
 
-document.getElementById('load-go').addEventListener('click', () => { show('load'); });
-document.getElementById('load-back').addEventListener('click', () => show(null));
+
+
 document.getElementById('m-settings').addEventListener('click', () => { show('settings'); renderSettings(); });
-document.getElementById('settings-back').addEventListener('click', () => show(null));
+
 document.getElementById('m-packs').addEventListener('click', () => { show('packs'); renderWorlds(); });
 document.getElementById('packs-back').addEventListener('click', () => show(null));
 document.getElementById('m-quit').addEventListener('click', () => show('quit'));
@@ -403,22 +384,55 @@ document.getElementById('graphclose').addEventListener('click', () => { document
 function renderSettings() {
   const speeds = [5, 10, 20];
   const current = Number(localStorage.getItem('nw.speed') || '10');
-  const box = document.getElementById('speed-buttons');
-  box.textContent = '';
-  for (const speed of speeds) {
-    const button = document.createElement('button');
-    button.textContent = (speed === current ? '● ' : '') + speed + ' 格/秒';
-    button.style.marginRight = '6px';
-    button.addEventListener('click', () => {
-      localStorage.setItem('nw.speed', String(speed));
-      renderSettings();
-    });
-    box.appendChild(button);
-  }
-
   const bindings = JSON.parse(localStorage.getItem('nw.bindings') || '{}');
   const lines = Object.entries(bindings).map(([code, command]) => code + ' → ' + command);
-  document.getElementById('bindings').textContent = lines.length > 0 ? lines.join('   ') : '{{menu.no_bindings}}';
+
+  const speedButtons = speeds.map((speed) =>
+    button((speed === current ? '● ' : '') + speed + ' 格/秒', () => {
+      localStorage.setItem('nw.speed', String(speed));
+      renderSettings();
+    }),
+  );
+
+  const body = col({ gap: 12 },
+    text('动画速度', { policy: 'fixed' }),
+    row({ gap: 6 }, ...speedButtons),
+    text(lines.length > 0 ? '按键：' + lines.join('   ') : '按键：默认', { policy: 'fixed' }),
+    row({ gap: 8, justify: 'end' }, button('← 返回', () => show(null))),
+  );
+
+  mount(document.getElementById('settings'), body);
+}
+
+async function renderLoad() {
+  const box = document.getElementById('load');
+
+  const draw = (message, detail) => {
+    const parts = [
+      text('读档', { policy: 'fixed' }),
+      text(message, { policy: 'fixed' }),
+    ];
+    if (detail) parts.push(text(detail, { policy: 'fixed' }));
+    parts.push(row({ gap: 8, justify: 'end' },
+      button('读取最新存档', () => runLoad()),
+      button('← 返回', () => show(null)),
+    ));
+    mount(box, col({ gap: 10 }, ...parts));
+  };
+
+  const runLoad = async () => {
+    draw('正在读取…', '');
+    const result = await api('/api/load', {});
+    if (result && result.ok === false) {
+      const missing = result.missing && result.missing.length ? '缺：' + result.missing.join(', ') : '';
+      const extra = result.extra && result.extra.length ? '多：' + result.extra.join(', ') : '';
+      draw(result.error, [missing, extra].filter(Boolean).join('   '));
+      return;
+    }
+    location.href = '/game?world=' + encodeURIComponent(result.world || activeWorld || '') + '&loaded=1';
+  };
+
+  draw('点下面读取最新存档。', '');
 }
 
 document.getElementById('quit-back').textContent = '{{menu.back}}';
