@@ -1,3 +1,4 @@
+import { api } from '/client/shared.js';
 import { attach } from '/web/game/systems/render/browser.js';
 import { row, col, text, button, toggle, modal, grid, bar, canvasNode, withEvents } from '/web/game/systems/ui/spec.js';
 import { drawMinimap, minimapSize } from '/web/game/systems/ui/minimap.js';
@@ -5,7 +6,6 @@ import { clampCell, loadConfig, saveConfig, withBinding, withConfig } from '/web
 import { commandFor, parseCommand } from '/web/game/systems/input/bindings.js';
 import { mount, render as renderNode } from '/web/game/systems/ui/dom.js';
 
-${ERRORS}
 
 // 游戏页面不该有浏览器的默认权力：拖拽不要导航、右键不要菜单、文字不要选中
 document.addEventListener('dragover', (event) => event.preventDefault());

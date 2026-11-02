@@ -1,7 +1,7 @@
 import { modal, col, row, text, button, input, field } from '/web/game/systems/ui/spec.js';
 import { mount } from '/web/game/systems/ui/dom.js';
+import { api } from '/client/shared.js';
 
-${ERRORS}
 
 const KIND_ORDER = [
   ['rule', '规则'], ['component', '组件'], ['template', '模板'],
@@ -57,7 +57,7 @@ function renderWorlds() {
     actions.appendChild(pick);
 
     const graph = document.createElement('button');
-    graph.textContent = '{{launcher.structure}}';
+    graph.textContent = '结构';
     graph.style.marginLeft = '8px';
     graph.addEventListener('click', () => showGraph(world.id));
     actions.appendChild(graph);
@@ -103,9 +103,9 @@ async function showGraph(id) {
   inspecting = id;
   const panel = document.getElementById('graphpanel');
   const tree = document.getElementById('tree');
-  document.getElementById('graphtitle').textContent = '{{launcher.structure_title}} · ' + id;
+  document.getElementById('graphtitle').textContent = '结构 · ' + id;
   panel.hidden = false;
-  tree.textContent = '{{launcher.reading}}';
+  tree.textContent = '读取中…';
 
   let result;
   try { result = await api('/api/graph', { id }); }
@@ -272,7 +272,7 @@ document.getElementById('m-start').addEventListener('click', async () => {
     }
   }
   if (!activeWorld) {
-    document.getElementById('meta').textContent = '{{menu.no_world}}';
+    document.getElementById('meta').textContent = '还没有选择世界，先去「世界包」里选一个。';
     show('packs');
     return;
   }
@@ -361,7 +361,7 @@ async function renderLoad() {
   draw(result.saves || [], (result.saves || []).length === 0 ? '还没有存档。游戏里点「存档」会写一份。' : '选择一个存档读取：');
 }
 
-document.getElementById('quit-back').textContent = '{{menu.back}}';
+document.getElementById('quit-back').textContent = '← 返回';
 
 api('/api/worlds').then((state) => {
   worlds = state.worlds || [];
@@ -370,5 +370,5 @@ api('/api/worlds').then((state) => {
     if (usable) activeWorld = usable.id;
   }
   renderWorlds();
-  document.getElementById('meta').textContent = '{{launcher.pick}}';
+  document.getElementById('meta').textContent = '选择一个世界开始';
 });
