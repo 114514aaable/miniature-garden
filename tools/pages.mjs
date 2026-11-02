@@ -508,6 +508,7 @@ export const GAME_PAGE = `<!doctype html>
 
   <div id="settings" hidden></div>
   <div id="tooltip" hidden></div>
+  <div id="death" hidden></div>
 
   <details id="devpanel">
     <summary>{{game.devlog}}</summary>
@@ -581,6 +582,7 @@ function render(state) {
       : '<span style="color:#98c379">可以行动</span>');
 
   document.getElementById('meta').textContent = state.packs.join(' + ');
+  if (state.dead) showDeath();
   document.getElementById('message').textContent = state.message;
   document.getElementById('logbox').textContent = (state.events || []).slice(-5).join('\\n');
   document.getElementById('devlog').textContent = (state.devlog || []).join('\\n');
@@ -590,6 +592,22 @@ function render(state) {
     .filter((skill) => skill.tag !== 'core.move')
     .map((skill) => button(skill.name + ' ' + skill.cost, () => useSkill(skill.tag)));
   mount(document.getElementById('skills'), row({ gap: 6, align: 'center' }, ...skillButtons));
+}
+
+function showDeath() {
+  const box = document.getElementById('death');
+  if (!box.hidden) return;
+
+  const body = col({ gap: 12 },
+    text('你倒下了。', { policy: 'fixed' }),
+    row({ gap: 8, justify: 'end' },
+      button('读档', async () => { await api('/api/load', {}); location.reload(); }),
+      button('重开', () => { location.href = '/game?world=' + encodeURIComponent(worldId) + '&seed=' + seed; }),
+    ),
+  );
+
+  mount(box, modal(body, { title: '结束' }));
+  box.hidden = false;
 }
 
 async function act(dir) {

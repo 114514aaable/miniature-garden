@@ -323,6 +323,7 @@ function snapshot(message) {
     tile: TILE,
     playerHandle: session.playerHandle,
     seed: session.seed,
+    dead: session.dead === true,
     snapshot: {
       tick: frame.tick,
       // 地形转成普通数组：JSON 里 Int32Array 会变成奇怪的对象
@@ -564,6 +565,12 @@ function run(tag, params, costKey) {
   session.playerReadyAt = session.store.now() + cost;
   session.lastEvents = [];
   advanceTo(session.playerReadyAt);
+
+  // 死亡入口：玩家实体不在了，就停下来（以后可以发 core.death 让世界包接管）
+  if (session.playerHandle !== null && !session.store.hasEntity(session.playerHandle)) {
+    session.dead = true;
+  }
+
 
   const rounds = cost === 0 ? "（零帧）" : `（${cost} 回合）`;
   return snapshot(`${skillName(tag)}${rounds}`);
@@ -833,6 +840,7 @@ const server = createServer(async (request, response) => {
         const { byId } = collectPacks();
         session = buildSession(closureOf(String(id), byId), disabled, Number(seed) || 0);
         session.world = String(id);
+        session.dead = false;
         session.disabled = [...disabled];
         sendJson(response, snapshot("世界已载入"));
       } catch (error) {
