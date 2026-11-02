@@ -55,6 +55,8 @@ export function windupHandler(params: JsonValue, context: EvaluateContext): Json
           tiles: [{ dx: p.dx, dy: p.dy }],
           damage: p.damage,
           mode: p.mode === undefined ? "fixed" : String(p.mode),
+          startedAt: context.view.tick,
+          totalTicks: p.ticks,
           resolveAt: context.view.tick + p.ticks,
         },
       },

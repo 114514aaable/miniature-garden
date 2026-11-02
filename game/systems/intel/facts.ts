@@ -115,7 +115,7 @@ export function intentFacts(raw: JsonValue | undefined, now: number): IntentFact
     tiles,
     damage: asNumber(value.damage) ?? 0,
     inTicks: resolveAt - now,
-    totalTicks: asNumber(value.totalTicks) ?? Math.max(1, resolveAt - now),
+    totalTicks: Math.max(1, asNumber(value.totalTicks) ?? resolveAt - now),
   };
 }
 

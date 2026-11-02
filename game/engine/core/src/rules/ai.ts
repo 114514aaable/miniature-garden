@@ -60,7 +60,7 @@ export function enemyTurnHandler(params: JsonValue, context: EvaluateContext): J
       ok: true,
       next: {
         tag: "core.enemy_windup",
-        params: { enemy: p.enemy, dx, dy, damage: 2, ticks: 2 },
+        params: { enemy: p.enemy, dx, dy, damage: 2, ticks: 3 },
       },
     };
   }

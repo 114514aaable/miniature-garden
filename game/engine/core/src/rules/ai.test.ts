@@ -80,7 +80,7 @@ test("相邻：先起手（不是立刻打）", () => {
   const result = run({ enemy, target: player }, view);
 
   assert.equal(result.next?.tag, "core.enemy_windup");
-  assert.deepEqual(result.next?.params, { enemy, dx: -1, dy: 0, damage: 2, ticks: 2 });
+  assert.deepEqual(result.next?.params, { enemy, dx: -1, dy: 0, damage: 2, ticks: 3 });
 });
 
 test("起手中：还没到点就等", () => {

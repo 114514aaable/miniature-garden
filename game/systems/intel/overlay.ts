@@ -59,6 +59,13 @@ export function drawOverlay(context: CanvasRenderingContext2D, options: OverlayO
       context.strokeStyle = "rgba(230,90,70,0.55)";
       context.lineWidth = 1;
       context.strokeRect(sx + 0.5, sy + 0.5, tile - 1, tile - 1);
+
+      // 倒计时：还剩几回合就写几
+      context.fillStyle = "rgba(255,235,230,0.9)";
+      context.font = `${Math.max(10, Math.round(tile * 0.4))}px sans-serif`;
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.fillText(String(entity.intent.inTicks), sx + tile / 2, sy + tile / 2);
     }
   }
 
