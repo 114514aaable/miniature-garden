@@ -542,6 +542,7 @@ export const GAME_PAGE = `<!doctype html>
   <div id="errbar" hidden></div>
 
   <div id="topbar">
+    <button id="settingsbtn">{{menu.settings}}</button>
     <a href="/">{{game.back}}</a>
     <button id="savebtn">{{game.save}}</button>
     <button id="loadbtn">{{game.load}}</button>
@@ -586,7 +587,7 @@ window.addEventListener('error', function (event) {
 <script type="module">
 import { attach } from '/web/game/systems/render/browser.js';
 import { row, col, text, button, toggle, modal, grid, withEvents } from '/web/game/systems/ui/spec.js';
-import { resolveBindings, commandFor, parseCommand } from '/web/game/systems/input/bindings.js';
+import { clampCell, loadConfig, saveConfig, withBinding, withConfig } from '/web/game/systems/config/config.js';
 import { mount, render as renderNode } from '/web/game/systems/ui/dom.js';
 
 ${ERRORS}
@@ -612,7 +613,8 @@ let aimTimer = 0;
 let tile = 32;
 
 // 按键：物理键 → 命令。用户设置覆盖默认。
-const bindings = resolveBindings(JSON.parse(localStorage.getItem('nw.bindings') || '{}'));
+let config = loadConfig();
+const bindings = () => config.bindings;
 
 function formatDebug(debug) {
   if (!debug) return '';
@@ -665,11 +667,11 @@ let stateSkills = [];
 let selectedCell = null;
 let inventoryPage = 0;
 let lastState = null;
-const INVENTORY_COLUMNS = 8;
-const INVENTORY_ROWS = 5;
-const INVENTORY_PER_PAGE = INVENTORY_COLUMNS * INVENTORY_ROWS;
-const INVENTORY_CELL = 38;
-const HOTBAR_CELL = 30;
+let INVENTORY_COLUMNS = config.inventoryColumns;
+const INVENTORY_ROWS = config.inventoryRows;
+const INVENTORY_PER_PAGE = 40;
+let INVENTORY_CELL = config.inventoryCell;
+let HOTBAR_CELL = config.hotbarCell;
 
 /** 技能也当成「物品」：统一成 {kind, ref, name, desc}。 */
 function allEntries() {
@@ -897,7 +899,6 @@ function renderHotbar(state) {
   const extras = [
     button('等待', () => useSkill('core.wait')),
     button('背包', () => toggleInventory()),
-    button('设置', () => openSettings()),
   ];
   for (const node of extras) {
     node.style.width = '34px';
@@ -1022,23 +1023,49 @@ function closeSettings() {
   box.textContent = '';
 }
 
+let capturingBinding = false;
+
 function openSettings() {
-  const speeds = [5, 10, 20].map((value) =>
-    button((settings.speed === value ? '● ' : '') + value + ' 格/秒', () => {
-      settings.speed = value;
-      applySettings();
-      openSettings();
-    }),
+  const info = lastState === null ? '（未开局）'
+    : '世界 ' + (lastState.world || '?') + ' · 种子 ' + lastState.seed + ' · tick ' + lastState.tick;
+
+  const cellRow = (label, key) => {
+    const value = config[key];
+    return row({ gap: 6, align: 'center' },
+      text(label, { policy: 'fixed', width: 96 }),
+      button('−', () => { config = withConfig(config, { [key]: clampCell(value - 4) }); saveConfig(config); refreshSizes(); openSettings(); }),
+      text(String(value), { policy: 'fixed', width: 40 }),
+      button('+', () => { config = withConfig(config, { [key]: clampCell(value + 4) }); saveConfig(config); refreshSizes(); openSettings(); }),
+    );
+  };
+
+  const bindingRows = Object.entries(config.bindings).map(([code, command]) =>
+    row({ gap: 6, align: 'center' },
+      text(code, { policy: 'fixed', width: 96 }),
+      text(command, { policy: 'fixed' }),
+      button('改', () => { capturingBinding = code; openSettings(); }),
+    ),
   );
 
-  const body = col({ gap: 10 },
-    row({ gap: 8, align: 'center' }, text('动画速度'), ...speeds),
-    toggle('显示开发日志', settings.devlog, (next) => {
-      settings.devlog = next;
-      applySettings();
-      openSettings();
-    }),
-    row({ gap: 8, justify: 'end' }, button('关闭', closeSettings)),
+  const body = col({ gap: 8 },
+    text('世界', { policy: 'fixed' }),
+    text(info, { policy: 'fixed' }),
+    text('按键', { policy: 'fixed' }),
+    ...bindingRows,
+    text(capturingBinding ? '按下新的键…（Esc 取消）' : '点「改」再按一个键', { policy: 'fixed' }),
+    text('界面', { policy: 'fixed' }),
+    cellRow('快捷栏格子', 'hotbarCell'),
+    cellRow('背包格子', 'inventoryCell'),
+    row({ gap: 6, align: 'center' },
+      text('开发者模式', { policy: 'fixed', width: 96 }),
+      button(config.devMode ? '开' : '关', () => {
+        config = withConfig(config, { devMode: !config.devMode });
+        saveConfig(config);
+        applyDevMode();
+        openSettings();
+      }),
+    ),
+    row({ gap: 8, justify: 'end' }, button('关闭 Esc', () => closeSettings())),
   );
 
   const box = document.getElementById('settings');
@@ -1047,11 +1074,44 @@ function openSettings() {
   box.appendChild(renderNode(modal(body, { title: '设置' })));
 }
 
+function refreshSizes() {
+  INVENTORY_CELL = config.inventoryCell;
+  HOTBAR_CELL = config.hotbarCell;
+  INVENTORY_COLUMNS = config.inventoryColumns;
+  if (lastState !== null) renderHotbar(lastState);
+}
+
+function applyDevMode() {
+  const panel = document.getElementById('devpanel');
+  if (panel !== null) panel.hidden = !config.devMode;
+}
+
+document.getElementById('settingsbtn').addEventListener('click', () => { const box = document.getElementById('settings'); if (box.hidden) openSettings(); else closeSettings(); });
+document.getElementById('settingsbtn').addEventListener('click', () => {
+  const box = document.getElementById('settings');
+  if (box.hidden) openSettings(); else closeSettings();
+});
 document.getElementById('savebtn').addEventListener('click', async () => { render(await api('/api/save', {})); });
 document.getElementById('loadbtn').addEventListener('click', async () => { render(await api('/api/load', {})); });
 
 window.addEventListener('keydown', (event) => {
-  const command = commandFor(bindings, event.code);
+  if (capturingBinding !== false) {
+    const oldCode = capturingBinding;
+    capturingBinding = false;
+    if (event.code !== 'Escape') {
+      const command = config.bindings[oldCode];
+      if (command !== undefined) {
+        // 把旧键的命令搬到新键上（旧键解绑）
+        const without = withBinding(config, oldCode, null);
+        config = withConfig(without, { bindings: { ...without.bindings, [event.code]: command } });
+        saveConfig(config);
+      }
+    }
+    openSettings();
+    return;
+  }
+
+  const command = commandFor(bindings(), event.code);
   if (command === undefined) return;
 
   const parsed = parseCommand(command);
@@ -1100,6 +1160,7 @@ window.addEventListener('keydown', (event) => {
   render(state);
   applySettings();
   applyPortraitCollapsed();
+  applyDevMode();
 })();
 </script>
 </html>`;
