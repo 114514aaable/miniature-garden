@@ -88,3 +88,4 @@ Node 24 能直接运行 `.ts`，不需要编译，引擎零依赖。
 | 规范与文档 | `spec/`, `docs/` | CC-BY-4.0 |
 
 详见 [LICENSING.md](LICENSING.md)。
+是作者通过丰富的许愿许出来的,请不要骂我
