@@ -10,7 +10,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { bar, boxStyle, button, col, modal, panel, row, text, toggle } from "./spec.ts";
+import { bar, boxStyle, button, col, field, input, modal, panel, row, text, toggle } from "./spec.ts";
 
 test("row / col 的区别只有方向", () => {
   assert.equal(boxStyle({}, "row")["flex-direction"], "row");
@@ -106,4 +106,27 @@ test("toggle 显示勾选状态并能切换", () => {
 
   const off = toggle("开发日志", false, () => {});
   assert.equal(off.text, "☐ 开发日志");
+});
+
+test("input 带值与回调", () => {
+  let typed = null;
+  const node = input("42", (value) => { typed = value; }, { type: "number" });
+  assert.equal(node.tag, "input");
+  assert.equal(node.value, "42");
+  assert.equal(node.attrs?.type, "number");
+  node.onInput?.("7");
+  assert.equal(typed, "7");
+});
+
+test("input 默认填充剩余宽度", () => {
+  assert.equal(input("x", () => {}).style.flex, "flex: 1 1 auto");
+});
+
+test("field 是「标签 + 控件」一行", () => {
+  const node = field("种子", input("1", () => {}));
+  assert.equal(node.style["flex-direction"], "row");
+  assert.equal(node.children.length, 2);
+  assert.equal(node.children[0].text, "种子");
+  assert.equal(node.children[0].style.width, "96px");
+  assert.equal(node.children[1].tag, "input");
 });

@@ -154,7 +154,10 @@ export const LAUNCHER_PAGE = `<!doctype html>
   </div>
 </div>
 
-<script>
+<script type="module">
+import { modal, col, row, text, button, input, field } from '/web/systems/ui/spec.js';
+import { mount } from '/web/systems/ui/dom.js';
+
 ${ERRORS}
 
 const KIND_ORDER = [
@@ -228,50 +231,27 @@ function openSeedDialog(worldId) {
   const existing = document.getElementById('seedbox');
   if (existing) existing.remove();
 
+  let seed = localStorage.getItem('nw.seed') || String(Math.floor(Math.random() * 1000000000));
+
   const box = document.createElement('div');
   box.id = 'seedbox';
-  box.style.position = 'fixed'; box.style.inset = '0'; box.style.display = 'flex';
-  box.style.alignItems = 'center'; box.style.justifyContent = 'center';
-  box.style.background = 'rgba(0,0,0,0.6)'; box.style.zIndex = '50';
+  box.style.position = 'fixed';
+  box.style.inset = '0';
+  box.style.zIndex = '50';
 
-  const card = document.createElement('div');
-  card.style.padding = '20px'; card.style.background = '#10131a';
-  card.style.border = '1px solid #2a303c'; card.style.borderRadius = '10px';
-  card.style.minWidth = '320px';
+  const body = col({ gap: 12 },
+    field('种子', input(seed, (next) => { seed = next; }, { type: 'number' })),
+    row({ gap: 8, justify: 'end' },
+      button('取消', () => box.remove()),
+      button('开始', () => {
+        const value = String(Number(seed) || 0);
+        localStorage.setItem('nw.seed', value);
+        location.href = '/game?world=' + encodeURIComponent(worldId) + '&seed=' + encodeURIComponent(value);
+      }),
+    ),
+  );
 
-  const title = document.createElement('div');
-  title.textContent = worldId + ' · {{menu.seed_title}}';
-  title.style.color = '#8ab4f8'; title.style.marginBottom = '10px';
-  card.appendChild(title);
-
-  const input = document.createElement('input');
-  input.type = 'number';
-  input.value = localStorage.getItem('nw.seed') || String(Math.floor(Math.random() * 1000000000));
-  input.style.width = '100%'; input.style.padding = '8px';
-  input.style.background = '#0f1116'; input.style.color = '#d7dae0';
-  input.style.border = '1px solid #333a4a'; input.style.borderRadius = '6px';
-  card.appendChild(input);
-
-  const actions = document.createElement('div');
-  actions.style.display = 'flex'; actions.style.gap = '8px';
-  actions.style.justifyContent = 'flex-end'; actions.style.marginTop = '12px';
-
-  const cancel = document.createElement('button');
-  cancel.textContent = '{{menu.cancel}}';
-  cancel.addEventListener('click', () => box.remove());
-
-  const go = document.createElement('button');
-  go.textContent = '{{launcher.start}}';
-  go.addEventListener('click', () => {
-    const seed = String(Number(input.value) || 0);
-    localStorage.setItem('nw.seed', seed);
-    location.href = '/game?world=' + encodeURIComponent(worldId) + '&seed=' + encodeURIComponent(seed);
-  });
-
-  actions.appendChild(cancel);
-  actions.appendChild(go);
-  card.appendChild(actions);
-  box.appendChild(card);
+  mount(box, modal(body, { title: worldId + ' · 输入种子' }));
   document.body.appendChild(box);
 }
 

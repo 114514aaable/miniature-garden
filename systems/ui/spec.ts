@@ -19,6 +19,10 @@ export interface UiNode {
   readonly text?: string;
   readonly children: readonly UiNode[];
   readonly onClick?: () => void;
+  /** input 的当前值。 */
+  readonly value?: string;
+  /** input 变化时回调。 */
+  readonly onInput?: (value: string) => void;
   readonly className?: string;
   readonly attrs?: Readonly<Record<string, string>>;
 }
@@ -178,4 +182,36 @@ export function bar(value: number, max: number, options: BoxOptions = {}): UiNod
 /** 开关：显示勾选状态，点击切换。 */
 export function toggle(label: string, checked: boolean, onChange: (next: boolean) => void): UiNode {
   return button((checked ? "☑ " : "☐ ") + label, () => onChange(!checked));
+}
+
+/** 输入框。只支持 text / number 两种，够用且不会被滥用。 */
+export function input(
+  value: string,
+  onInput: (next: string) => void,
+  options: BoxOptions & { readonly type?: "text" | "number" } = {},
+): UiNode {
+  const style = boxStyle({ policy: "fill", ...options }, "row");
+  style.padding = "6px 8px";
+  style.background = "#0f1116";
+  style.color = "#d7dae0";
+  style.border = "1px solid #333a4a";
+  style["border-radius"] = "6px";
+
+  return {
+    tag: "input",
+    style,
+    value,
+    onInput,
+    children: [],
+    attrs: { type: options.type ?? "text" },
+  };
+}
+
+/** 一行表单：左边标签，右边控件。 */
+export function field(label: string, control: UiNode, options: BoxOptions = {}): UiNode {
+  return row(
+    { gap: 8, align: "center", ...options },
+    text(label, { policy: "fixed", width: 96 }),
+    control,
+  );
 }

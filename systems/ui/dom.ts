@@ -28,6 +28,12 @@ export function render(node: UiNode): HTMLElement {
   if (node.text !== undefined) {
     element.textContent = node.text;
   }
+  if (node.value !== undefined && element instanceof HTMLInputElement) {
+    element.value = node.value;
+  }
+  if (node.onInput !== undefined && element instanceof HTMLInputElement) {
+    element.addEventListener("input", () => node.onInput?.(element.value));
+  }
   if (node.onClick !== undefined) {
     element.addEventListener("click", node.onClick);
   }
