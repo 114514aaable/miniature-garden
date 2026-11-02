@@ -88,7 +88,10 @@ export function createProjector(contract: RenderContract, templates: TemplateReg
           height: space.height,
           terrain: copyTerrain(space),
         })),
-        entities: source.entities.map((entity) => projectEntity(entity, fields, components, templates)),
+        // 没有位置的实体（进了背包、被收起来）不该被画出来
+        entities: source.entities
+          .filter((entity) => entity.pos !== null)
+          .map((entity) => projectEntity(entity, fields, components, templates)),
       };
     },
   };

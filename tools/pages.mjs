@@ -775,7 +775,7 @@ function drawInventory() {
     button('›', () => { inventoryPage = Math.min(pages - 1, inventoryPage + 1); drawInventory(); }),
   );
 
-  const miniHotbar = grid({ columns: 9, cell: HOTBAR_CELL, gap: 0 },
+  const miniHotbar = grid({ columns: HOTBAR_COLUMNS, cell: HOTBAR_CELL, gap: 0 },
     ...hotbarSlots.map((_, index) => hotbarMiniCell(index)),
   );
 
@@ -827,7 +827,8 @@ document.getElementById('portrait-toggle').addEventListener('click', () => {
   applyPortraitCollapsed();
 });
 
-const HOTBAR_SLOTS = 9;
+const HOTBAR_SLOTS = 24;
+const HOTBAR_COLUMNS = 12;
 
 /** 槽位内容：[{ kind: "skill" | "item", ref }] 或 null。 */
 function loadHotbar() {
@@ -909,7 +910,8 @@ function renderHotbar(state) {
     node.style['margin-left'] = '4px';
   }
 
-  mount(document.getElementById('skills'), row({ gap: 0, align: 'center' }, ...cells, ...extras));
+  const bar = grid({ columns: HOTBAR_COLUMNS, cell: config.hotbarCell, gap: 0 }, ...cells);
+  mount(document.getElementById('skills'), row({ gap: 8, align: 'center' }, bar, ...extras));
 }
 
 function activateSlot(index) {
