@@ -10,6 +10,18 @@
 | 看要做什么、不做什么 | [requirements.md](requirements.md) |
 | 事件与效果的契约细节 | [packet-contract.md](packet-contract.md) |
 
+## 按任务找文档
+
+| 我要… | 读 |
+|---|---|
+| 给世界加个物品 / 敌人 | [areas/worlds.md](areas/worlds.md) |
+| 加一条新规则 | [areas/rules.md](areas/rules.md) |
+| 动伤害 / 敌人行为 | [systems/combat.md](systems/combat.md) |
+| 让道具能用 / 改背包 | [systems/items.md](systems/items.md) |
+| 改回合、先手、延迟动作 | [systems/turn.md](systems/turn.md) |
+| 改内核（时间/存储/实体） | [areas/engine-core.md](areas/engine-core.md) |
+| 查某个规则/组件的参数 | [modules/README.md](modules/README.md) |
+
 ## 自动生成，别手改
 
 - `docs/modules/` 全部由 `node tools/gen-docs.mjs` 生成；
