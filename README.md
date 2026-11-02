@@ -13,14 +13,17 @@
 ## 目录
 
 ```
-game/engine/core/     内核（MIT）：空间、时间、事件契约、句柄、唯一写入口、包加载
-game/systems/render/  渲染系统（宿主侧）：契约、投影、绘制指令
-tools/           宿主工具：读包、播放、调试台 / 启动器、CSV 导入
-worlds/          世界包：official.base（基础）、official.normal（示例世界）
-desktop/         Electron 壳（实验性，暂时不走这条线）
-spec/            世界包规范草案（CC-BY-4.0）
-对接池/          调研与拆解资料（不进构建，仅供人看）
-docs/            架构与需求（CC-BY-4.0）；docs/modules 是自动生成的模块契约
+game/                    游戏本体（引擎 + 系统 + 世界包 + 语言包）
+├─ engine/core/          内核（MIT）：空间、时间、事件契约、句柄、唯一写入口、包加载
+├─ systems/              宿主侧系统：渲染、UI 套件、相机、日志、i18n、输入、调度、规则清单
+├─ worlds/               世界包：official.base（基础）、official.normal（示例世界）
+└─ locales/              界面文案
+
+tools/                   脚手架：读包、播放、调试台 / 启动器、构建、文档生成
+docs/                    架构与需求（CC-BY-4.0）；docs/modules 是自动生成的模块契约
+spec/                    世界包规范草案（CC-BY-4.0）
+desktop/                 Electron 壳（实验性，暂时不走这条线）
+对接池/                  调研与拆解资料（不发布，已排除出版本库）
 ```
 
 ## 跑起来
