@@ -204,6 +204,8 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true) {
         components: [
           { name: "core.health", required: false },
           { name: "core.container", required: false },
+          { name: "core.intent", required: false },
+          { name: "core.pending", required: false },
         ],
         ui: ["inventory", "skills", "messages"],
       },

@@ -10,6 +10,8 @@
  *   ——所以这里没有任何「镜像实现」。
  */
 
+import { healthFacts, intentFacts, pendingFacts } from "../intel/facts.ts";
+import { drawOverlay } from "../intel/overlay.ts";
 import { type Atlas, parseAtlas } from "./atlas.ts";
 import {
   buildFrame,
@@ -129,8 +131,9 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
         camera = cameraFor(focus, { width: canvas.width, height: canvas.height }, space, options.tile);
       }
 
+      const snapshot = state.snapshot;
       const commands = buildFrame(
-        { ...state.snapshot, entities },
+        { ...snapshot, entities },
         {
           tile: options.tile,
           viewport: { width: canvas.width, height: canvas.height },
@@ -142,6 +145,17 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
       );
 
       draw(context as CanvasRenderingContext2D, commands, imageOf);
+      drawOverlay(context as CanvasRenderingContext2D, {
+        tile: options.tile,
+        camera,
+        entities: entities.map((entity) => ({
+          x: entity.x,
+          y: entity.y,
+          health: healthFacts(entity.components?.["core.health"]),
+          intent: intentFacts(entity.components?.["core.intent"], snapshot.tick),
+          pending: pendingFacts(entity.components?.["core.pending"], snapshot.tick),
+        })),
+      });
       drawCursor(context as CanvasRenderingContext2D, cursor, options.tile, camera);
       drawAim(context as CanvasRenderingContext2D, aimCells, options.tile, camera);
     }
