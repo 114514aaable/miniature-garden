@@ -55,6 +55,13 @@ export interface WorldDef {
   readonly start: { readonly space: string; readonly x: number; readonly y: number };
   /** 这个世界启用哪些规则（标签）。包负责选，引擎负责实现。 */
   readonly rules?: readonly string[];
+  /**
+   * 开局一次性执行的效果（同 store 的 Effect 形状）。
+   *
+   * 这是「开局初始化」的空壳：以后放开局物品、初始状态、一次性事件。
+   * 语义就是「在世界创建后，立刻按顺序调一遍」。
+   */
+  readonly init?: readonly JsonValue[];
   /** 冲突策略，默认 error。 */
   readonly onConflict?: ConflictPolicy;
 }
@@ -95,9 +102,10 @@ const WORLD_SCHEMA: Schema = {
   fields: {
     start: { t: "object", fields: { space: STR, x: INT, y: INT } },
     rules: { t: "array", of: STR, max: 64 },
+    init: { t: "array", of: { t: "any" }, max: 64 },
     onConflict: { t: "enum", values: ["error", "warn", "override"] },
   },
-  optional: ["rules", "onConflict"],
+  optional: ["rules", "init", "onConflict"],
 };
 
 export function parseSpaceDef(raw: unknown, path = "$space"): SpaceDef {

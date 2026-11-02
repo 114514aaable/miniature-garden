@@ -186,6 +186,15 @@ function buildSession(ordered, disabled = new Set(), seed = 0) {
   }
   const spawnEvents = store.step();
 
+  // 开局初始化：世界包写什么，就按顺序做什么（现在多数世界是空的）。
+  for (const effect of loaded.init) {
+    store.submit(effect);
+  }
+  if (loaded.init.length > 0) {
+    store.step(0);
+  }
+
+
   let playerHandle = null;
   for (const entry of spawnEvents) {
     const handle = entry.data.handle;

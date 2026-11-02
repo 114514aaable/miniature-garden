@@ -1,5 +1,9 @@
 {
-  "start": { "space": "harbor", "x": 1, "y": 1 },
+  "start": {
+    "space": "harbor",
+    "x": 1,
+    "y": 1
+  },
   "rules": [
     "core.move",
     "core.take",
@@ -11,5 +15,6 @@
     "core.enemy_windup",
     "core.enemy_strike"
   ],
-  "onConflict": "error"
+  "onConflict": "error",
+  "init": []
 }

@@ -57,6 +57,8 @@ export interface LoadedWorld {
   readonly spaceIds: ReadonlyMap<string, SpaceId>;
   /** 这个世界启用哪些规则（标签），由宿主对到实现。 */
   readonly rules: readonly string[];
+  /** 开局一次性效果（世界包声明，宿主按顺序应用）。 */
+  readonly init: readonly JsonValue[];
   readonly onConflict: ConflictPolicy;
   readonly world: WorldDef;
   readonly hash: string;
@@ -149,6 +151,7 @@ export function loadWorld(
     start,
     spaceIds,
     rules: world.rules ?? [],
+    init: world.init ?? [],
     onConflict: world.onConflict ?? "error",
     world,
     hash: hashOf(merged.hash, sortedSpaces, templateDefs, [...terrains.values()], entities, start),
