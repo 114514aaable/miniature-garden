@@ -22,6 +22,12 @@
 | 改内核（时间/存储/实体） | [areas/engine-core.md](areas/engine-core.md) |
 | 查某个规则/组件的参数 | [modules/README.md](modules/README.md) |
 
+## 阅读约定
+
+- 每篇**只在开头告诉你「什么时候该读它」**，读到一半不会跳走；
+- 每篇**末尾有「相关（先别读，用到再看）」**——知道边界在哪，但不用现在点；
+- 篇幅跟复杂度走：能一句话说清的给[卡片](modules/README.md)，跨层的给[体系](systems/combat.md)。
+
 ## 自动生成，别手改
 
 - `docs/modules/` 全部由 `node tools/gen-docs.mjs` 生成；

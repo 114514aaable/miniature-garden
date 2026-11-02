@@ -39,7 +39,11 @@ node --test --test-isolation=none
 ```
 内核测试在 `game/engine/core/src/**/*.test.ts`，任何改动都应有测试。
 
-## 下一步读
+## 相关（先别读，用到再看）
 
-- 规则怎么写 → [`rules.md`](rules.md)
-- 包格式 → [`worlds.md`](worlds.md)
+| 文档 | 什么时候需要 |
+|---|---|
+| [rules.md](rules.md) | 你要加/改一条规则时 |
+| [worlds.md](worlds.md) | 你要改数据格式、或查组件从哪来 |
+| [../packet-contract.md](../packet-contract.md) | 你要改效果/信封的契约本身 |
+| [../architecture.md](../architecture.md) | 你想知道为什么这么分层（平时不用看） |

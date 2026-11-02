@@ -73,3 +73,12 @@ node --test --test-isolation=none
 node tools/play.mjs game/worlds/official.base game/worlds/official.normal
 ```
 实机：跑起来 → 走到敌人旁边 → 点它，看血量变化与日志。
+
+## 相关（先别读，用到再看）
+
+| 文档 | 什么时候需要 |
+|---|---|
+| [turn.md](turn.md) | 你要改动作成本、蓄力、先手 |
+| [items.md](items.md) | 你要做掉落、或让道具参与战斗 |
+| [../areas/rules.md](../areas/rules.md) | 你要新写一条战斗规则 |
+| [../modules/rule-core.attack.md](../modules/rule-core.attack.md) | 你要看劈砍的确切参数 |

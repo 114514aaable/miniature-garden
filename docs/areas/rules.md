@@ -66,3 +66,12 @@ terrain / place / remove / spawn / despawn / patch
 - 技能的成本键必须在 `clock.costs` 里存在，否则会报「未知成本」。
 - 返回的 `next` 信封由宿主派发（一次），别自己递归。
 - 打空目标要返回 `ok: true` + 空效果（落空也是一种结果），不要 `ok: false`。
+
+## 相关（先别读，用到再看）
+
+| 文档 | 什么时候需要 |
+|---|---|
+| [engine-core.md](engine-core.md) | 你要确认效果怎么被应用、组件怎么写 |
+| [worlds.md](worlds.md) | 你要在包里启用新规则 |
+| [../systems/combat.md](../systems/combat.md) | 你加的是战斗类规则 |
+| [../modules/README.md](../modules/README.md) | 你要看现有规则的签名 |

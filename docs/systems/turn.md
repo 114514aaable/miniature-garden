@@ -83,3 +83,11 @@ node --test --test-isolation=none         # 调度器有独立测试
 - 敌人动作成本最少 1 tick，否则一回合内会连续行动。
 - 死亡的角色必须 `prune`，否则句柄留在队列里会抛错。
 - 零成本动作（`look`）不推进时间，**别在循环里对它 `while` 等待**。
+
+## 相关（先别读，用到再看）
+
+| 文档 | 什么时候需要 |
+|---|---|
+| [../areas/engine-core.md](../areas/engine-core.md) | 你要动 store 的推进或事件链 |
+| [combat.md](combat.md) | 你要改敌人意图的时机 |
+| [../areas/rules.md](../areas/rules.md) | 你要个新动作，但还没定成本 |

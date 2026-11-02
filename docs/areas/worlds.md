@@ -52,7 +52,11 @@ node tools/play.mjs game/worlds/official.base game/worlds/official.normal
 node tools/serve.mjs     # 启动器里选世界，开一局
 ```
 
-## 下一步读
+## 相关（先别读，用到再看）
 
-- 包格式细节 → [`../pack-guide.md`](../pack-guide.md)
-- 加载与合并的实现 → [`engine-core.md`](engine-core.md)
+| 文档 | 什么时候需要 |
+|---|---|
+| [../pack-guide.md](../pack-guide.md) | 你第一次写包，要看完整例子 |
+| [rules.md](rules.md) | 「加东西」里有一项需要写代码 |
+| [engine-core.md](engine-core.md) | 加载报错看不懂，要看合并/校验逻辑 |
+| [../modules/README.md](../modules/README.md) | 你要查某个组件有哪些字段 |

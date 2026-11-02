@@ -84,3 +84,12 @@
 node tools/serve.mjs
 # 浏览器：点脚下捡起 → I 打开背包 → 拖到快捷栏 → 点它
 ```
+
+## 相关（先别读，用到再看）
+
+| 文档 | 什么时候需要 |
+|---|---|
+| [../areas/worlds.md](../areas/worlds.md) | 你要加新道具的数据 |
+| [combat.md](combat.md) | 道具要造成伤害 / 施加状态 |
+| [../modules/rule-core.use.md](../modules/rule-core.use.md) | 你要看 core.use 的确切参数 |
+| [../modules/component-core.container.md](../modules/component-core.container.md) | 你要改背包结构 |
