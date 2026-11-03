@@ -9,6 +9,7 @@
 | 理解整体设计 | [architecture.md](architecture.md) |
 | 看要做什么、不做什么 | [requirements.md](requirements.md) |
 | 事件与效果的契约细节 | [packet-contract.md](packet-contract.md) |
+| 文件之间谁引用谁 | [dependency-tree.md](dependency-tree.md)（自动生成） |
 
 ## 按任务找文档
 
