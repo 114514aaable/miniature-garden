@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { clampCell, DEFAULT_CONFIG, loadConfig, saveConfig, withBinding, withConfig } from "./config.ts";
+import { clampCell, DEFAULT_CONFIG, loadConfig, normalizeAction, saveConfig, withBinding, withConfig } from "./config.ts";
 
 function fakeStorage(initial: Record<string, string> = {}) {
   const data = { ...initial };
@@ -67,9 +67,26 @@ test("格子大小被夹在 24..96", () => {
 test("默认点击策略：敌对攻击、中立/友好交谈、物品拾取", () => {
   const config = loadConfig(fakeStorage());
   assert.deepEqual(config.clickPolicy, {
-    hostile: "attack",
-    neutral: "talk",
-    friendly: "talk",
-    item: "take",
+    hostile: { kind: "skill", ref: "base.attack" },
+    neutral: { kind: "skill", ref: "base.talk" },
+    friendly: { kind: "skill", ref: "base.talk" },
+    item: { kind: "builtin", ref: "take" },
   });
+});
+
+test("动作：老字符串迁移成新结构", () => {
+  assert.deepEqual(normalizeAction("attack", DEFAULT_CONFIG.clickPolicy.hostile), {
+    kind: "skill",
+    ref: "base.attack",
+  });
+  assert.deepEqual(normalizeAction("take", DEFAULT_CONFIG.clickPolicy.item), { kind: "builtin", ref: "take" });
+});
+
+test("动作：不认识的字符串回默认", () => {
+  assert.deepEqual(normalizeAction("nope", DEFAULT_CONFIG.clickPolicy.neutral), DEFAULT_CONFIG.clickPolicy.neutral);
+});
+
+test("动作：结构正确就原样保留", () => {
+  const value = { kind: "skill", ref: "base.cast" } as const;
+  assert.deepEqual(normalizeAction(value, DEFAULT_CONFIG.clickPolicy.hostile), value);
 });

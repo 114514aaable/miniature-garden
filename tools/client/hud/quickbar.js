@@ -11,15 +11,39 @@
 import { button, col, grid, panel, row, text } from '/web/game/systems/ui/spec.js';
 import { mount, render as renderNode } from '/web/game/systems/ui/dom.js';
 
-/** 四行：阵营 → 可用动作。 */
+/** 四行：阵营 → 候选来源。 */
 export const CLICK_ROWS = [
-  { key: 'hostile', label: '敌对', actions: ['attack', 'talk', 'inspect'] },
-  { key: 'neutral', label: '中立', actions: ['attack', 'talk', 'inspect'] },
-  { key: 'friendly', label: '友好', actions: ['attack', 'talk', 'inspect'] },
-  { key: 'item', label: '物品', actions: ['take', 'inspect'] },
+  { key: 'hostile', label: '敌对' },
+  { key: 'neutral', label: '中立' },
+  { key: 'friendly', label: '友好' },
+  { key: 'item', label: '物品' },
 ];
 
-export const ACTION_LABEL = { attack: '攻', talk: '谈', inspect: '看', take: '拾' };
+/** 最多 8 个候选：再多就点不过来了。 */
+const MAX_ACTIONS = 8;
+
+/**
+ * 某一行的候选动作。
+ *
+ * 物品行只放内置动作；其余行 = 内置「观察」+ 当前可用技能。
+ */
+export function actionsFor(ctx, key) {
+  const builtin = key === 'item'
+    ? [{ kind: 'builtin', ref: 'take' }, { kind: 'builtin', ref: 'inspect' }]
+    : [{ kind: 'builtin', ref: 'inspect' }, ...ctx.skills.map((skill) => ({ kind: 'skill', ref: skill.tag }))];
+
+  return builtin.slice(0, MAX_ACTIONS);
+}
+
+export const BUILTIN_LABEL = { inspect: '看', take: '拾' };
+
+/** 一个动作的显示名。 */
+export function actionLabel(ctx, action) {
+  if (action === null) return '—';
+  if (action.kind === 'builtin') return BUILTIN_LABEL[action.ref] ?? action.ref;
+  const skill = ctx.skills.find((row) => row.tag === action.ref);
+  return skill ? skill.name.slice(0, 2) : '—';
+}
 
 const CELL = 34;
 
@@ -73,12 +97,12 @@ export function closePolicy() {
 
 /** 点一下换下一个动作。 */
 export function cycleAction(ctx, key) {
-  const entry = CLICK_ROWS.find((row) => row.key === key);
-  if (entry === undefined) return;
+  const actions = actionsFor(ctx, key);
+  if (actions.length === 0) return;
 
   const current = ctx.clickPolicy[key];
-  const index = entry.actions.indexOf(current);
-  const next = entry.actions[(index + 1) % entry.actions.length];
+  const index = actions.findIndex((action) => action.kind === current.kind && action.ref === current.ref);
+  const next = actions[(index + 1) % actions.length];
   ctx.setClickPolicy(key, next);
 }
 
@@ -91,7 +115,7 @@ function renderPolicy(ctx) {
 
   const rows = CLICK_ROWS.map((entry) => {
     const current = ctx.clickPolicy[entry.key];
-    const slot = button(ACTION_LABEL[current] ?? '—', () => {
+    const slot = button(actionLabel(ctx, current), () => {
       cycleAction(ctx, entry.key);
       renderPolicy(ctx);
     });
@@ -135,16 +159,17 @@ function renderCylinder(ctx, key) {
   const entry = CLICK_ROWS.find((row) => row.key === key);
   if (entry === undefined) return;
 
+  const actions = actionsFor(ctx, key);
   const current = ctx.clickPolicy[key];
   const size = 150;
   const radius = 52;
 
-  const items = entry.actions.map((action, index) => {
-    const angle = (Math.PI * 2 * index) / entry.actions.length - Math.PI / 2;
+  const items = actions.map((action, index) => {
+    const angle = (Math.PI * 2 * index) / actions.length - Math.PI / 2;
     const x = size / 2 + Math.cos(angle) * radius;
     const y = size / 2 + Math.sin(angle) * radius;
 
-    const node = button(ACTION_LABEL[action], () => {
+    const node = button(actionLabel(ctx, action), () => {
       ctx.setClickPolicy(key, action);
       renderPolicy(ctx);
     });
@@ -155,8 +180,9 @@ function renderCylinder(ctx, key) {
     node.style.height = '32px';
     node.style['border-radius'] = '50%';
     node.style['font-size'] = '11px';
-    node.style.border = current === action ? '2px solid #8ab4f8' : '1px solid #2a303c';
-    node.style.background = current === action ? '#26303f' : '#141821';
+    const picked = current.kind === action.kind && current.ref === action.ref;
+    node.style.border = picked ? '2px solid #8ab4f8' : '1px solid #2a303c';
+    node.style.background = picked ? '#26303f' : '#141821';
     return node;
   });
 

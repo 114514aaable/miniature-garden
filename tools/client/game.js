@@ -496,6 +496,9 @@ function hudContext() {
     get clickPolicy() {
       return config.clickPolicy;
     },
+    get skills() {
+      return lastState === null ? [] : lastState.skills.filter((skill) => skill.tag !== 'core.move');
+    },
     setClickPolicy(key, action) {
       config = withConfig(config, { clickPolicy: { ...config.clickPolicy, [key]: action } });
       saveConfig(config);
@@ -623,34 +626,37 @@ document.getElementById('map').addEventListener('click', (event) => {
   // 点别人：按「操作组」的默认行为决定
   const target = entityAtCell(cell);
   if (target !== null && isItem(target)) {
-    if (config.clickPolicy.item === 'take') {
+    const itemAction = config.clickPolicy.item;
+    if (itemAction.kind === 'builtin' && itemAction.ref === 'take') {
       const me = playerCell(lastState);
       if (me !== null && me.x === cell.x && me.y === cell.y) {
         useSkill('core.take');
       } else {
         document.getElementById('message').textContent = '走过去才能捡起来。';
       }
+    } else if (itemAction.kind === 'skill') {
+      useSkill(itemAction.ref, cell.x, cell.y);
     }
     return;
   }
 
   if (target !== null) {
     const disposition = dispositionOf(target);
-    const action = config.clickPolicy[disposition] ?? 'inspect';
+    const action = config.clickPolicy[disposition] ?? { kind: 'builtin', ref: 'inspect' };
 
     // 没有血的不是战斗目标（箱子、掉在地上的东西）——只观察
     const living = Boolean(target.components && target.components['core.health']);
 
-    if (action === 'attack' && !living) {
-      return;
-    }
-    if (action === 'talk' && !hasDialog(target)) {
+    if (action.kind === 'builtin') return; // inspect：只看，不动手
+
+    // 技能：谈不了话就退回劈砍（只有一个技能时它才叫 base.talk）
+    if (action.ref === 'base.talk' && !hasDialog(target)) {
       if (living) useSkill('base.attack', cell.x, cell.y);
       return;
     }
-    if (action === 'talk') { useSkill('base.talk', cell.x, cell.y); return; }
-    if (action === 'attack') { useSkill('base.attack', cell.x, cell.y); return; }
-    return; // inspect：只看，不动手
+    if (!living && action.ref !== 'base.talk') return;
+
+    useSkill(action.ref, cell.x, cell.y);
   }
 
   // 点自己脚下：捡东西（这就是「拾取键」）

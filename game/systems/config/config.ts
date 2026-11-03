@@ -12,15 +12,18 @@
  * 这里只放**表现层**的东西。玩法参数（时钟成本、伤害公式）在世界包里，不放这。
  */
 
-/** 点击一个单位时默认做什么。 */
-export type ClickAction = "attack" | "talk" | "inspect";
+/** 一个点击动作：要么是技能，要么是内置动作。 */
+export interface ClickAction {
+  readonly kind: "skill" | "builtin";
+  /** 技能 tag，或内置动作名（inspect / take）。 */
+  readonly ref: string;
+}
 
 export interface ClickPolicy {
   readonly hostile: ClickAction;
   readonly neutral: ClickAction;
   readonly friendly: ClickAction;
-  /** 点物品：直接拿走，还是先看看。 */
-  readonly item: "take" | "inspect";
+  readonly item: ClickAction;
 }
 
 export interface Config {
@@ -43,7 +46,12 @@ export interface Config {
 }
 
 export const DEFAULT_CONFIG: Config = {
-  clickPolicy: { hostile: "attack", neutral: "talk", friendly: "talk", item: "take" },
+  clickPolicy: {
+    hostile: { kind: "skill", ref: "base.attack" },
+    neutral: { kind: "skill", ref: "base.talk" },
+    friendly: { kind: "skill", ref: "base.talk" },
+    item: { kind: "builtin", ref: "take" },
+  },
   hotbarCell: 38,
   inventoryCell: 38,
   inventoryColumns: 8,
@@ -76,7 +84,12 @@ export function loadConfig(storage: Pick<Storage, "getItem"> = localStorage): Co
       ...DEFAULT_CONFIG,
       ...saved,
       bindings: { ...DEFAULT_CONFIG.bindings, ...(saved.bindings ?? {}) },
-      clickPolicy: { ...DEFAULT_CONFIG.clickPolicy, ...(saved.clickPolicy ?? {}) },
+      clickPolicy: {
+        hostile: normalizeAction(saved.clickPolicy?.hostile, DEFAULT_CONFIG.clickPolicy.hostile),
+        neutral: normalizeAction(saved.clickPolicy?.neutral, DEFAULT_CONFIG.clickPolicy.neutral),
+        friendly: normalizeAction(saved.clickPolicy?.friendly, DEFAULT_CONFIG.clickPolicy.friendly),
+        item: normalizeAction(saved.clickPolicy?.item, DEFAULT_CONFIG.clickPolicy.item),
+      },
     };
   } catch {
     return DEFAULT_CONFIG;
@@ -105,4 +118,25 @@ export function withBinding(config: Config, code: string, command: string | null
 export function clampCell(value: number): number {
   if (!Number.isFinite(value)) return 38;
   return Math.min(96, Math.max(24, Math.round(value)));
+}
+
+/** 老配置里存的是字符串（"attack"），换成新结构。 */
+export function normalizeAction(value: unknown, fallback: ClickAction): ClickAction {
+  if (typeof value === "object" && value !== null) {
+    const data = value as { kind?: unknown; ref?: unknown };
+    if ((data.kind === "skill" || data.kind === "builtin") && typeof data.ref === "string") {
+      return { kind: data.kind, ref: data.ref };
+    }
+    return fallback;
+  }
+  if (typeof value === "string") {
+    const legacy: Record<string, ClickAction> = {
+      attack: { kind: "skill", ref: "base.attack" },
+      talk: { kind: "skill", ref: "base.talk" },
+      inspect: { kind: "builtin", ref: "inspect" },
+      take: { kind: "builtin", ref: "take" },
+    };
+    return legacy[value] ?? fallback;
+  }
+  return fallback;
 }
