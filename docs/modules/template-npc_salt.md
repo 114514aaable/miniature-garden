@@ -11,3 +11,5 @@
 - `core.solid` — 实心
 - `core.intent` — 意图
 - `core.dialog` — 对话
+- `core.disposition` — 阵营
+- `core.persistence` — 存在感

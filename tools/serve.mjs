@@ -216,6 +216,7 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
           { name: "core.pending", required: false },
           { name: "core.disposition", required: false },
           { name: "core.dialog", required: false },
+          { name: "core.persistence", required: false },
           { name: "core.item", required: false },
         ],
         ui: ["inventory", "skills", "messages"],

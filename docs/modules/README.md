@@ -2,7 +2,7 @@
 
 > 由 `node tools/gen-docs.mjs` 生成。**不要手改**——改语言包或代码。
 
-规则 12 条 · 组件 12 个 · 模板 5 个
+规则 12 条 · 组件 14 个 · 模板 5 个
 
 | 类型 | 名字 | id | 说明 |
 |---|---|---|---|
@@ -30,6 +30,8 @@
 | 组件 | [core.pending](component-core.pending.md) | `core.pending` |  |
 | 组件 | [用法](component-core.use.md) | `core.use` | 这东西怎么用：效果列表 + 是否消耗。 |
 | 组件 | [对话](component-core.dialog.md) | `core.dialog` | 这个角色能说什么（脚本 id）。 |
+| 组件 | [阵营](component-core.disposition.md) | `core.disposition` | 敌对 / 中立 / 友好，决定点击默认行为。 |
+| 组件 | [存在感](component-core.persistence.md) | `core.persistence` | 锚定 / 普通 / 短暂：决定离得远时要不要继续留在世界里。 |
 | 预制件 | camp | `camp` | 3 个实体 |
 | 模板 | [你](template-pc.md) | `pc` | 玩家角色。 |
 | 模板 | [木箱](template-prop_crate.md) | `prop_crate` | 实心障碍，挡路。 |
