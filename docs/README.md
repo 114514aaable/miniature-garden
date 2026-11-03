@@ -27,6 +27,7 @@
 | 加接口 / 改启动流程 | [areas/host.md](areas/host.md) |
 | 做视野 / 迷雾 / 潜行 | [systems/perception.md](systems/perception.md) |
 | 让 AI 读写世界 | [systems/agent.md](systems/agent.md) |
+| 做战斗/对话/商店等玩法状态 | [systems/scenes.md](systems/scenes.md) |
 
 ## 阅读约定
 
