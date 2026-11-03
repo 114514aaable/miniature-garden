@@ -33,6 +33,7 @@ const KIND_BY_FOLDER = {
   terrains: "terrain",
   components: "component",
   groups: "group",
+  traversal: "traversal",
   world: "world",
 };
 

@@ -1,0 +1,14 @@
+{
+  "id": "base.traversal",
+  "shapes": {
+    "touch": { "base": "cross", "range": 1 },
+    "around1": { "base": "circle", "range": 1 },
+    "line2": { "base": "cross", "range": 2 },
+    "room3": { "base": "rect", "range": 1, "height": 2 }
+  },
+  "filters": {
+    "living": { "all": [{ "component": "core.health" }] },
+    "talkable": { "all": [{ "component": "core.dialog" }] },
+    "item": { "all": [{ "component": "core.item" }] }
+  }
+}
