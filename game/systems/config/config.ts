@@ -12,17 +12,6 @@
  * 这里只放**表现层**的东西。玩法参数（时钟成本、伤害公式）在世界包里，不放这。
  */
 
-/** 点击一个单位时默认做什么。 */
-export type ClickAction = "attack" | "talk" | "inspect";
-
-export interface ClickPolicy {
-  readonly hostile: ClickAction;
-  readonly neutral: ClickAction;
-  readonly friendly: ClickAction;
-  /** 点物品：直接拿走，还是先看看。 */
-  readonly item: "take" | "inspect";
-}
-
 /** 配置格式版本：老版本读进来时按新默认迁移。 */
 export const CONFIG_VERSION = 2;
 
@@ -41,8 +30,6 @@ export interface Config {
   readonly devMode: boolean;
   /** 配置版本（用于迁移）。 */
   readonly version: number;
-  /** 点击默认行为：按阵营决定。 */
-  readonly clickPolicy: ClickPolicy;
   /** 按键映射：物理键 → 命令。 */
   readonly bindings: Readonly<Record<string, string>>;
 }
@@ -55,7 +42,6 @@ export const DEFAULT_CONFIG: Config = {
   inventoryRows: 5,
   speed: 10,
   devMode: false,
-  clickPolicy: { hostile: "attack", neutral: "talk", friendly: "talk", item: "take" },
   bindings: {
     KeyW: "move:w",
     KeyA: "move:a",
@@ -87,7 +73,7 @@ export function loadConfig(storage: Pick<Storage, "getItem"> = localStorage): Co
       ...saved,
       version: CONFIG_VERSION,
       bindings: { ...DEFAULT_CONFIG.bindings, ...(saved.bindings ?? {}) },
-      ...(migrated ? { clickPolicy: DEFAULT_CONFIG.clickPolicy } : {}),
+      ...(migrated ? {} : {}),
     };
     return merged;
   } catch {

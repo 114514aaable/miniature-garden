@@ -289,7 +289,6 @@ export const GAME_PAGE = `<!doctype html>
   <div id="tooltip" hidden></div>
   <div id="death" hidden></div>
   <div id="dialog" hidden></div>
-  <div id="operation" hidden></div>
   <div id="inventory" hidden></div>
 
   <details id="devpanel">

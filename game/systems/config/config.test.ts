@@ -64,29 +64,22 @@ test("格子大小被夹在 24..96", () => {
   assert.equal(clampCell(Number.NaN), 38);
 });
 
-test("老版本配置：行为项回默认，按键保留", () => {
+test("老版本配置：没有 version 就当老配置，仍然能读", () => {
   const storage = fakeStorage({
-    "nw.config": JSON.stringify({
-      clickPolicy: { hostile: "attack", neutral: "attack", friendly: "attack" },
-      bindings: { KeyQ: "skill:core.cast" },
-    }),
+    "nw.config": JSON.stringify({ bindings: { KeyQ: "skill:core.cast" } }),
   });
 
   const config = loadConfig(storage);
-  assert.deepEqual(config.clickPolicy, DEFAULT_CONFIG.clickPolicy);
   assert.equal(config.bindings.KeyQ, "skill:core.cast");
   assert.equal(config.version, CONFIG_VERSION);
 });
 
-test("新版本配置：行为项按存的来", () => {
+test("新版本配置：版本号保留", () => {
   const storage = fakeStorage({
-    "nw.config": JSON.stringify({
-      version: CONFIG_VERSION,
-      clickPolicy: { hostile: "attack", neutral: "attack", friendly: "inspect" },
-    }),
+    "nw.config": JSON.stringify({ version: CONFIG_VERSION, hotbarCell: 48 }),
   });
 
   const config = loadConfig(storage);
-  assert.equal(config.clickPolicy.neutral, "attack");
-  assert.equal(config.clickPolicy.friendly, "inspect");
+  assert.equal(config.hotbarCell, 48);
+  assert.equal(config.version, CONFIG_VERSION);
 });

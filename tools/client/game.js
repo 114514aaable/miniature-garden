@@ -64,6 +64,9 @@ migrateLocalState();
 /** 当前独占输入的窗口：null = 游戏本体。 */
 let uiFocus = null;
 
+/** 点击默认行为：先写死，等要做配置界面时再挪回 config。 */
+const CLICK_ACTIONS = { hostile: 'attack', neutral: 'talk', friendly: 'talk', item: 'take' };
+
 /**
  * 统一的「选目标」：所有需要目标的技能都走这里。
  *   selection = { tag, label }
@@ -383,7 +386,6 @@ function renderHotbar(state) {
   });
 
   const extras = [
-    button('操作', () => openOperationGroup()),
     button('等待', () => useSkill('core.wait')),
     button('背包', () => toggleInventory()),
   ];
@@ -609,67 +611,6 @@ function hasDialog(entity) {
   return Boolean(entity.components && entity.components['core.dialog']);
 }
 
-/** 操作组：决定点不同阵营的单位时默认做什么。 */
-function openOperationGroup() {
-  const rows = ['hostile', 'neutral', 'friendly'].map((disposition) => {
-    const label = { hostile: '敌对', neutral: '中立', friendly: '友好' }[disposition];
-    const current = config.clickPolicy[disposition];
-    const pick = (action, text) =>
-      button((current === action ? '● ' : '') + text, () => {
-        config = withConfig(config, { clickPolicy: { ...config.clickPolicy, [disposition]: action } });
-        saveConfig(config);
-        closeOperationGroup();
-        openOperationGroup();
-      });
-    return row({ gap: 6, align: 'center' },
-      text(label, { policy: 'fixed', width: 48 }),
-      pick('attack', '攻击'),
-      pick('talk', '交谈'),
-      pick('inspect', '观察'),
-    );
-  });
-
-  const itemRow = row({ gap: 6, align: 'center' },
-    text('物品', { policy: 'fixed', width: 48 }),
-    button((config.clickPolicy.item === 'take' ? '● ' : '') + '拾取', () => {
-      config = withConfig(config, { clickPolicy: { ...config.clickPolicy, item: 'take' } });
-      saveConfig(config);
-      closeOperationGroup();
-      openOperationGroup();
-    }),
-    button((config.clickPolicy.item === 'inspect' ? '● ' : '') + '观察', () => {
-      config = withConfig(config, { clickPolicy: { ...config.clickPolicy, item: 'inspect' } });
-      saveConfig(config);
-      closeOperationGroup();
-      openOperationGroup();
-    }),
-  );
-
-  const box = document.getElementById('operation');
-  box.hidden = false;
-  box.textContent = '';
-  box.appendChild(renderNode(modal(col({ gap: 8 },
-    ...rows,
-    itemRow,
-    text('没有对话的角色，选择「交谈」时会自动改成攻击。', { policy: 'fixed' }),
-    row({ gap: 8, justify: 'end' },
-      button('恢复默认', () => {
-        config = withConfig(config, { clickPolicy: { hostile: 'attack', neutral: 'talk', friendly: 'talk', item: 'take' } });
-        saveConfig(config);
-        closeOperationGroup();
-        openOperationGroup();
-      }),
-      button('关闭', () => closeOperationGroup()),
-    ),
-  ), { title: '操作组' })));
-}
-
-function closeOperationGroup() {
-  const box = document.getElementById('operation');
-  box.hidden = true;
-  box.textContent = '';
-}
-
 function showDeath() {
   const box = document.getElementById('death');
   if (!box.hidden) return;
@@ -770,7 +711,7 @@ document.getElementById('map').addEventListener('click', (event) => {
   // 点别人：按「操作组」的默认行为决定
   const target = entityAtCell(cell);
   if (target !== null && isItem(target)) {
-    if (config.clickPolicy.item === 'take') {
+    if (CLICK_ACTIONS.item === 'take') {
       const me = playerCell(lastState);
       if (me !== null && me.x === cell.x && me.y === cell.y) {
         useSkill('core.take');
@@ -783,7 +724,7 @@ document.getElementById('map').addEventListener('click', (event) => {
 
   if (target !== null) {
     const disposition = dispositionOf(target);
-    const action = config.clickPolicy[disposition] ?? 'inspect';
+    const action = CLICK_ACTIONS[disposition] ?? 'inspect';
 
     // 没有血的不是战斗目标（箱子、掉在地上的东西）——只观察
     const living = Boolean(target.components && target.components['core.health']);
