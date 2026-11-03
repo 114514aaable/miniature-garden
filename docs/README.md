@@ -12,6 +12,7 @@
 | 事件与效果的契约细节 | [packet-contract.md](packet-contract.md) |
 | 文件之间谁引用谁 | [dependency-tree.md](dependency-tree.md)（自动生成） |
 | 世界包之间谁引用谁 | [pack-graph.md](pack-graph.md)（自动生成，Mermaid） |
+| 某个文件是干什么的 | [files/README.md](files/README.md)（每文件一篇，自动生成） |
 
 ## 按任务找文档
 
