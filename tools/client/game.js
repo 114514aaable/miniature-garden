@@ -30,6 +30,37 @@ let tile = 32;
 // 按键：物理键 → 命令。用户设置覆盖默认。
 let config = loadConfig();
 
+// 旧 tag → 新 tag（改过一次命名：core.attack/cast → base.*）
+const LEGACY_TAGS = { 'core.attack': 'base.attack', 'core.cast': 'base.cast' };
+function migrateTag(tag) {
+  return LEGACY_TAGS[tag] ?? tag;
+}
+
+/** 把浏览器的旧引用一次性迁移掉——启动时做，别等到用户点。 */
+function migrateLocalState() {
+  for (const key of ['nw.hotbar', 'nw.quick']) {
+    try {
+      const raw = JSON.parse(localStorage.getItem(key) || 'null');
+      if (!Array.isArray(raw)) continue;
+      const next = raw.map((entry) =>
+        entry !== null && entry.kind === 'skill' ? { ...entry, ref: migrateTag(entry.ref) } : entry,
+      );
+      localStorage.setItem(key, JSON.stringify(next));
+    } catch {
+      // 坏的直接留着，读的时候会当空槽处理
+    }
+  }
+
+  try {
+    const off = JSON.parse(localStorage.getItem('nw.off') || '[]');
+    if (Array.isArray(off)) localStorage.setItem('nw.off', JSON.stringify(off.map(migrateTag)));
+  } catch {
+    // 同上
+  }
+}
+
+migrateLocalState();
+
 /** 当前独占输入的窗口：null = 游戏本体。 */
 let uiFocus = null;
 const bindings = () => config.bindings;

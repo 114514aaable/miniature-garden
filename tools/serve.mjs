@@ -38,6 +38,7 @@ import { DevLog, formatLine } from "../game/systems/log/devlog.ts";
 import { runPhases } from "../game/systems/tick/phases.ts";
 import { EMPTY_PENDING, isActive, PENDING } from "../game/engine/core/src/rules/pending.ts";
 import { RULE_TABLE } from "../game/systems/rules/index.ts";
+import { resolveTag, resolveTags } from "../game/systems/rules/aliases.ts";
 
 const LOCALE = "zh-CN";
 let MESSAGES = {};
@@ -837,7 +838,7 @@ function loadGame(slot = "quick") {
   }
 
   // 存档自带规则集：按它的 disabled 重建，再导入状态。
-  session = buildSession(ordered, new Set(data.disabled ?? []), data.seed ?? 0, false);
+  session = buildSession(ordered, new Set(resolveTags(data.disabled ?? [])), data.seed ?? 0, false);
   session.world = data.world;
   session.dead = false;
   session.store.importState(data.engine);
@@ -996,7 +997,7 @@ const server = createServer(async (request, response) => {
         const { byId } = collectPacks();
         const entry = readSelection()[String(id)];
         const offTemplates = new Set(Array.isArray(entry) ? [] : (entry?.offTemplates ?? []));
-        session = buildSession(closureOf(String(id), byId), disabled, Number(seed) || 0, true, offTemplates);
+        session = buildSession(closureOf(String(id), byId), new Set([...disabled].map(resolveTag)), Number(seed) || 0, true, offTemplates);
         session.world = String(id);
         session.dead = false;
         session.disabled = [...disabled];
@@ -1035,7 +1036,7 @@ const server = createServer(async (request, response) => {
         const worldDef = [...merged.definitions.values()].find((def) => def.kind === "world");
         const rules = [];
         if (worldDef && typeof worldDef.data.rules === "object" && Array.isArray(worldDef.data.rules)) {
-          rules.push(...worldDef.data.rules.filter((rule) => typeof rule === "string"));
+          rules.push(...resolveTags(worldDef.data.rules.filter((rule) => typeof rule === "string")));
         }
         const graph = buildGraph(merged, rules);
         // 外显名与介绍：查语言包，查不到就退回 id。
