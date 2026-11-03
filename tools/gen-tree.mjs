@@ -33,7 +33,7 @@ function listFiles(dir, out = []) {
     if (statSync(full).isDirectory()) {
       if (name === "node_modules") continue;
       listFiles(full, out);
-    } else if (/\.(ts|mjs|js)$/.test(name) && !/\.test\.(ts|js)$/.test(name)) {
+    } else if (/\.(ts|mjs|js)$/.test(name)) {
       out.push(full);
     }
   }
@@ -107,6 +107,7 @@ function main() {
       lines.push(`${pad}└─ ${file}  ⟲ 环`);
       return;
     }
+    if (file.endsWith(".test.ts") || file.endsWith(".test.js")) return;
     if (visited.has(file)) {
       lines.push(`${pad}└─ ${file}  (已展开)`);
       return;
@@ -167,12 +168,15 @@ function main() {
   }
 
   // 没有任何人引用的文件（入口除外）
-  const orphans = files.filter((file) => !reverse.has(file) && !ENTRIES.includes(file));
+  const orphans = files.filter(
+    (file) => !reverse.has(file) && !ENTRIES.includes(file) && !/\.test\.(ts|js)$/.test(file),
+  );
   lines.push("", "## 没有被引用的文件", "");
   if (orphans.length === 0) lines.push("（无）");
   else for (const file of orphans) lines.push(`- \`${file}\``);
 
-  lines.push("", `> 共 ${files.length} 个源文件，${[...graph.values()].reduce((n, deps) => n + deps.length, 0)} 条引用。`);
+  const sources = files.filter((file) => !/\.test\.(ts|js)$/.test(file));
+  lines.push("", `> 共 ${sources.length} 个源文件（另有 ${files.length - sources.length} 个测试），${[...graph.values()].reduce((n, deps) => n + deps.length, 0)} 条引用。`);
 
   const outIndex = process.argv.indexOf("--out");
   const out = outIndex >= 0 ? process.argv[outIndex + 1] : "docs/dependency-tree.md";
