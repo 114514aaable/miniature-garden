@@ -9,14 +9,14 @@
 | 规则 | [走一步](rule-core.move.md) | `core.move` | 朝一个方向移动一格，成本由速度决定。 |
 | 规则 | [捡起](rule-core.take.md) | `core.take` | 把脚下的物品放进背包。 |
 | 规则 | [放下](rule-core.drop.md) | `core.drop` | 把背包里的第一件物品放到脚下。 |
-| 规则 | [劈砍](rule-core.attack.md) | `core.attack` | 攻击相邻格里的一个目标，伤害 = 攻击 − 防御。 |
 | 规则 | [等待](rule-core.wait.md) | `core.wait` | 什么都不做，只让时间前进一回合。 |
 | 规则 | [指向](rule-core.aim.md) | `core.aim` | 判断某个技能能不能落在指定的格子上，供鼠标与 AI 共用。 |
-| 规则 | [蓄力劈砍](rule-core.cast.md) | `core.cast` | 先挂起，过几回合再结算；期间可以被打断。 |
 | 规则 | [使用](rule-core.use.md) | `core.use` | 把背包里的东西用出去，效果由物品自己声明。 |
 | 规则 | [敌人思考](rule-core.enemy_turn.md) | `core.enemy_turn` | 敌人每回合选一个动作：靠近、起手、或原地不动。 |
 | 规则 | [敌人起手](rule-core.enemy_windup.md) | `core.enemy_windup` | 敌人写下攻击意图，两回合后才结算，期间可以被躲开。 |
 | 规则 | [敌人出手](rule-core.enemy_strike.md) | `core.enemy_strike` | 按意图里的格子结算伤害；玩家不在格子里就落空。 |
+| 规则 | [劈砍](rule-base.attack.md) | `base.attack` | 攻击相邻格里的一个目标，伤害 = 攻击 − 防御。 |
+| 规则 | [蓄力劈砍](rule-base.cast.md) | `base.cast` | 先挂起，过几回合再结算；期间可以被打断。 |
 | 组件 | [生命](component-core.health.md) | `core.health` | 血量：最大生命与当前生命。 |
 | 组件 | [属性](component-core.stats.md) | `core.stats` | 速度、攻击、防御。速度决定动作成本。 |
 | 组件 | [部位](component-core.body.md) | `core.body` | 分部位的血量与状态，供以后的部位战斗使用。 |

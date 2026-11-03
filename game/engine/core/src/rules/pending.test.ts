@@ -46,30 +46,30 @@ function cast(view: ReturnType<typeof setup>["view"], params: Record<string, unk
 
 test("写入挂起：记下信封与到期时刻", () => {
   const { view, actor } = setup();
-  const result = cast(view, { actor, tag: "core.attack", x: 2, y: 1, ticks: 2 });
+  const result = cast(view, { actor, tag: "base.attack", x: 2, y: 1, ticks: 2 });
 
   assert.equal(result.ok, true);
   const effect = result.effects?.[0];
   assert.equal(effect?.kind, "patch");
   assert.equal(effect?.component, PENDING);
   assert.equal(effect?.data?.resolveAt, 12);
-  assert.equal(effect?.data?.tag, "core.attack");
+  assert.equal(effect?.data?.tag, "base.attack");
 });
 
 test("已经在蓄力：拒绝", () => {
   const { view, actor, entities } = setup();
   entities.setOverrides(actor, {
-    [PENDING]: { tag: "core.attack", params: {}, resolveAt: 20 },
+    [PENDING]: { tag: "base.attack", params: {}, resolveAt: 20 },
   });
 
-  const result = cast(view, { actor, tag: "core.attack", x: 2, y: 1, ticks: 2 });
+  const result = cast(view, { actor, tag: "base.attack", x: 2, y: 1, ticks: 2 });
   assert.equal(result.ok, false);
   assert.match(result.reason ?? "", /已经在蓄力/);
 });
 
 test("至少一回合", () => {
   const { view, actor } = setup();
-  assert.equal(cast(view, { actor, tag: "core.attack", x: 2, y: 1, ticks: 0 }).ok, false);
+  assert.equal(cast(view, { actor, tag: "base.attack", x: 2, y: 1, ticks: 0 }).ok, false);
 });
 
 test("空 pending 视为没有挂起", () => {

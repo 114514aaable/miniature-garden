@@ -7,7 +7,7 @@
 
 ```
 规则层
-  core.attack          玩家劈砍：找目标 → 算伤害 → 扣血
+  base.attack          玩家劈砍：找目标 → 算伤害 → 扣血
   core.aim             能不能落在这一格（鼠标高亮 + AI 共用）
   core.enemy_turn      敌人决策：靠近 / 起手 / 不动
   core.enemy_windup    写下 core.intent（几回合后、打哪几格、多少伤害）
@@ -20,7 +20,7 @@
 
 表现层
   systems/render        把 intent.tiles 画成警告格（以后）
-  快捷栏 / 点格子        发 core.attack 或 core.aim
+  快捷栏 / 点格子        发 base.attack 或 core.aim
 ```
 
 ## 一条完整路径
@@ -29,7 +29,7 @@
 
 ```
 点击格子
-  → POST /api/skill { tag: "core.attack", x, y }
+  → POST /api/skill { tag: "base.attack", x, y }
   → serve.useSkill() 组参数 { actor, x, y }
   → attackHandler()
       扫描目标格的占用者，找第一个带 core.health 的
@@ -119,4 +119,4 @@ node tools/play.mjs game/worlds/official.base game/worlds/official.normal
 | [turn.md](turn.md) | 你要改动作成本、蓄力、先手 |
 | [items.md](items.md) | 你要做掉落、或让道具参与战斗 |
 | [../areas/rules.md](../areas/rules.md) | 你要新写一条战斗规则 |
-| [../modules/rule-core.attack.md](../modules/rule-core.attack.md) | 你要看劈砍的确切参数 |
+| [../modules/rule-base.attack.md](../modules/rule-base.attack.md) | 你要看劈砍的确切参数 |

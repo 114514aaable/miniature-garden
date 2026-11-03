@@ -66,28 +66,6 @@
     },
     {
       "kind": "rule",
-      "id": "core.attack",
-      "name": "劈砍",
-      "desc": "攻击相邻格里的一个目标，伤害 = 攻击 − 防御。",
-      "file": "rule-core.attack.md",
-      "params": {
-        "t": "object",
-        "fields": {
-          "actor": {
-            "t": "int"
-          },
-          "x": {
-            "t": "int"
-          },
-          "y": {
-            "t": "int"
-          }
-        }
-      },
-      "returnsEffects": true
-    },
-    {
-      "kind": "rule",
       "id": "core.wait",
       "name": "等待",
       "desc": "什么都不做，只让时间前进一回合。",
@@ -133,38 +111,6 @@
         }
       },
       "returnsEffects": false
-    },
-    {
-      "kind": "rule",
-      "id": "core.cast",
-      "name": "蓄力劈砍",
-      "desc": "先挂起，过几回合再结算；期间可以被打断。",
-      "file": "rule-core.cast.md",
-      "params": {
-        "t": "object",
-        "fields": {
-          "actor": {
-            "t": "int"
-          },
-          "tag": {
-            "t": "str"
-          },
-          "x": {
-            "t": "int"
-          },
-          "y": {
-            "t": "int"
-          },
-          "ticks": {
-            "t": "int"
-          }
-        },
-        "optional": [
-          "tag",
-          "ticks"
-        ]
-      },
-      "returnsEffects": true
     },
     {
       "kind": "rule",
@@ -227,8 +173,14 @@
           },
           "ticks": {
             "t": "int"
+          },
+          "mode": {
+            "t": "str"
           }
-        }
+        },
+        "optional": [
+          "mode"
+        ]
       },
       "returnsEffects": true
     },
@@ -248,6 +200,60 @@
             "t": "int"
           }
         }
+      },
+      "returnsEffects": true
+    },
+    {
+      "kind": "rule",
+      "id": "base.attack",
+      "name": "劈砍",
+      "desc": "攻击相邻格里的一个目标，伤害 = 攻击 − 防御。",
+      "file": "rule-base.attack.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "actor": {
+            "t": "int"
+          },
+          "x": {
+            "t": "int"
+          },
+          "y": {
+            "t": "int"
+          }
+        }
+      },
+      "returnsEffects": true
+    },
+    {
+      "kind": "rule",
+      "id": "base.cast",
+      "name": "蓄力劈砍",
+      "desc": "先挂起，过几回合再结算；期间可以被打断。",
+      "file": "rule-base.cast.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "actor": {
+            "t": "int"
+          },
+          "tag": {
+            "t": "str"
+          },
+          "x": {
+            "t": "int"
+          },
+          "y": {
+            "t": "int"
+          },
+          "ticks": {
+            "t": "int"
+          }
+        },
+        "optional": [
+          "tag",
+          "ticks"
+        ]
       },
       "returnsEffects": true
     },

@@ -54,10 +54,10 @@ terrain / place / remove / spawn / despawn / patch
 | tag | 做什么 |
 |---|---|
 | `core.move` | 走一步，成本看速度 |
-| `core.attack` | 相邻格劈砍，伤害 = 攻击 − 防御 |
+| `base.attack` | 相邻格劈砍，伤害 = 攻击 − 防御 |
 | `core.take` / `core.drop` | 捡起 / 放下 |
 | `core.use` | 用物品，效果写在物品的 `core.use` 上 |
-| `core.cast` | 蓄力：写 `core.pending`，到期结算 |
+| `base.cast` | 蓄力：写 `core.pending`，到期结算 |
 | `core.aim` | 判断某技能能不能落在某格（鼠标与 AI 共用） |
 | `core.enemy_turn` / `_windup` / `_strike` | 敌人决策 / 起手 / 出手 |
 

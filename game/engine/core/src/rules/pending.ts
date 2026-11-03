@@ -21,7 +21,7 @@ export const PENDING = "core.pending";
 export const EMPTY_PENDING = { tag: "", params: {}, resolveAt: 0 };
 
 export const castSignature: Signature = {
-  tag: "core.cast",
+  tag: "base.cast",
   params: {
     t: "object",
     fields: {
@@ -46,7 +46,7 @@ export function castHandler(params: JsonValue, context: EvaluateContext): JsonVa
   const p = params as Record<string, number | string>;
   const actor = Number(p.actor);
   const ticks = p.ticks === undefined ? 2 : Number(p.ticks);
-  const payloadTag = p.tag === undefined ? "core.attack" : String(p.tag);
+  const payloadTag = p.tag === undefined ? "base.attack" : String(p.tag);
 
   if (!Number.isInteger(ticks) || ticks < 1) {
     return { ok: false, reason: "蓄力至少要一回合" };

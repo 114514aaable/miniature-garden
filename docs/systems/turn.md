@@ -47,7 +47,7 @@ prune(alive) 清掉已死角色
 ## 挂起动作（core.pending）
 
 ```
-core.cast → 写 { tag, params, resolveAt }
+base.cast → 写 { tag, params, resolveAt }
 每 tick 的 pending 阶段：到期就求值那个信封、应用效果、清空
 被打断 = 把 pending patch 成空
 ```

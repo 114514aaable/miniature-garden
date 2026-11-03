@@ -705,7 +705,7 @@ function enemyAct(handle) {
     });
   }
 
-  const key = next.tag === "core.attack" ? "attack" : "move";
+  const key = next.tag === "base.attack" ? "attack" : "move";
   session.scheduler.done(handle, costOf(DEFAULT_CLOCK, key, speedOf(handle)));
 }
 

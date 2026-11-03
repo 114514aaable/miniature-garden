@@ -16,7 +16,7 @@ import { type Signature } from "../event/registry.ts";
 import { type EvaluateContext } from "../event/evaluate.ts";
 
 export const attackSignature: Signature = {
-  tag: "core.attack",
+  tag: "base.attack",
   params: {
     t: "object",
     fields: { actor: { t: "int" }, x: { t: "int" }, y: { t: "int" } },

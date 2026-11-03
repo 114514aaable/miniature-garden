@@ -48,22 +48,22 @@ test("链接按字典序分配编号", () => {
   const r = new Registry();
   r.define(sig("world.weather"));
   r.define(sig("core.move"));
-  r.define(sig("core.attack"));
+  r.define(sig("base.attack"));
 
   const table = r.link();
-  assert.equal(table.tags.get("core.attack"), 0);
+  assert.equal(table.tags.get("base.attack"), 0);
   assert.equal(table.tags.get("core.move"), 1);
   assert.equal(table.tags.get("world.weather"), 2);
-  assert.equal(table.signatures[0].tag, "core.attack");
+  assert.equal(table.signatures[0].tag, "base.attack");
 });
 
 test("登记顺序不影响哈希（可复现）", () => {
   const a = new Registry();
   a.define(sig("core.move"));
-  a.define(sig("core.attack"));
+  a.define(sig("base.attack"));
 
   const b = new Registry();
-  b.define(sig("core.attack"));
+  b.define(sig("base.attack"));
   b.define(sig("core.move"));
 
   assert.equal(a.link().hash, b.link().hash);

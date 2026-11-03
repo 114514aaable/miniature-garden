@@ -10,7 +10,6 @@
 
 import { moveHandler, moveSignature } from "../../engine/core/src/rules/move.ts";
 import { dropHandler, dropSignature, takeHandler, takeSignature } from "../../engine/core/src/rules/inventory.ts";
-import { attackHandler, attackSignature } from "../../engine/core/src/rules/attack.ts";
 import { waitHandler, waitSignature } from "../../engine/core/src/rules/wait.ts";
 import { aimHandler, aimSignature } from "../../engine/core/src/rules/aim.ts";
 import { enemyTurnHandler, enemyTurnSignature } from "../../engine/core/src/rules/ai.ts";
@@ -20,27 +19,19 @@ import {
   windupHandler,
   windupSignature,
 } from "../../engine/core/src/rules/enemy-actions.ts";
-import { castHandler, castSignature } from "../../engine/core/src/rules/pending.ts";
 import { useHandler, useSignature } from "../../engine/core/src/rules/use.ts";
-import { type Signature } from "../../engine/core/src/event/registry.ts";
-import { type EvaluateContext } from "../../engine/core/src/event/evaluate.ts";
-import { type JsonValue } from "../../engine/core/src/time.ts";
-
-export interface RuleEntry {
-  readonly signature: Signature;
-  readonly handler: (params: JsonValue, context: EvaluateContext) => JsonValue;
-}
+import { BASE_RULES, type RuleEntry } from "./base.ts";
 
 export const RULE_TABLE: readonly RuleEntry[] = [
   { signature: moveSignature, handler: moveHandler },
   { signature: takeSignature, handler: takeHandler },
   { signature: dropSignature, handler: dropHandler },
-  { signature: attackSignature, handler: attackHandler },
   { signature: waitSignature, handler: waitHandler },
   { signature: aimSignature, handler: aimHandler },
-  { signature: castSignature, handler: castHandler },
   { signature: useSignature, handler: useHandler },
   { signature: enemyTurnSignature, handler: enemyTurnHandler },
   { signature: windupSignature, handler: windupHandler },
   { signature: strikeSignature, handler: strikeHandler },
+  // base 包提供的规则（劈砍、蓄力）——归属 base，不在这里逐条写
+  ...BASE_RULES,
 ];

@@ -11,16 +11,16 @@ import assert from "node:assert/strict";
 import { chance, hashTag, roll, rollInt } from "./rng.ts";
 
 test("同样的输入永远同样的结果", () => {
-  const a = roll(42, 7, "core.attack", 0);
-  const b = roll(42, 7, "core.attack", 0);
+  const a = roll(42, 7, "base.attack", 0);
+  const b = roll(42, 7, "base.attack", 0);
   assert.equal(a, b);
 });
 
 test("换 tick / tag / index 都会变", () => {
-  const base = roll(42, 7, "core.attack", 0);
-  assert.notEqual(base, roll(42, 8, "core.attack", 0));
+  const base = roll(42, 7, "base.attack", 0);
+  assert.notEqual(base, roll(42, 8, "base.attack", 0));
   assert.notEqual(base, roll(42, 7, "core.loot", 0));
-  assert.notEqual(base, roll(42, 7, "core.attack", 1));
+  assert.notEqual(base, roll(42, 7, "base.attack", 1));
 });
 
 test("换种子也会变", () => {
@@ -72,6 +72,6 @@ test("chance(0.5) 大约一半", () => {
 });
 
 test("tag 哈希稳定且区分", () => {
-  assert.equal(hashTag("core.attack"), hashTag("core.attack"));
-  assert.notEqual(hashTag("core.attack"), hashTag("core.loot"));
+  assert.equal(hashTag("base.attack"), hashTag("base.attack"));
+  assert.notEqual(hashTag("base.attack"), hashTag("core.loot"));
 });

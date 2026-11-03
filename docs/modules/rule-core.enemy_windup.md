@@ -21,8 +21,14 @@
     },
     "ticks": {
       "t": "int"
+    },
+    "mode": {
+      "t": "str"
     }
-  }
+  },
+  "optional": [
+    "mode"
+  ]
 }
 ```
 

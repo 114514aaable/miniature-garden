@@ -348,7 +348,7 @@ const DEFAULT_QUICK = [
   { kind: 'skill', ref: 'core.take' },
   { kind: 'skill', ref: 'core.drop' },
   { kind: 'skill', ref: 'core.wait' },
-  { kind: 'skill', ref: 'core.attack' },
+  { kind: 'skill', ref: 'base.attack' },
   { kind: 'ui', ref: 'inventory' },
   { kind: 'ui', ref: 'settings' },
   { kind: 'ui', ref: 'save' },
@@ -374,8 +374,8 @@ const SKILL_FALLBACK = {
   'core.take': '拾取',
   'core.drop': '放下',
   'core.wait': '等待',
-  'core.attack': '劈砍',
-  'core.cast': '蓄力',
+  'base.attack': '劈砍',
+  'base.cast': '蓄力',
   'core.use': '使用',
 };
 
@@ -530,7 +530,7 @@ document.getElementById('map').addEventListener('mousemove', (event) => {
 
   const cell = cellAt(event);
   renderer.setCursor(cell);
-  api('/api/aim', { tag: 'core.attack', x: cell.x, y: cell.y }).then((result) => {
+  api('/api/aim', { tag: 'base.attack', x: cell.x, y: cell.y }).then((result) => {
     renderer.setAim(result.ok ? result.cells : []);
   });
   api('/api/inspect', { x: cell.x, y: cell.y }).then((info) => {
@@ -580,7 +580,7 @@ document.getElementById('map').addEventListener('click', (event) => {
     return;
   }
 
-  useSkill('core.attack', cell.x, cell.y);
+  useSkill('base.attack', cell.x, cell.y);
 });
 
 const settings = {
