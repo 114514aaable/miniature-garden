@@ -45,6 +45,8 @@ export interface Scene {
   onEnter?(context: SceneContext): readonly Effect[];
   onExit?(context: SceneContext): readonly Effect[];
   handle(command: string, context: SceneContext): SceneResult;
+  /** 给客户端的渲染数据（形状由场景自己决定）。 */
+  describe?(): JsonValue;
 }
 
 /** 场景栈的一层。 */
