@@ -23,6 +23,9 @@ export interface ClickPolicy {
   readonly item: "take" | "inspect";
 }
 
+/** 配置格式版本：老版本读进来时按新默认迁移。 */
+export const CONFIG_VERSION = 2;
+
 export interface Config {
   /** 底部快捷栏格子边长（px）。 */
   readonly hotbarCell: number;
@@ -36,6 +39,8 @@ export interface Config {
   readonly speed: number;
   /** 开发者模式：显示 tick、调度、意图等调试信息。 */
   readonly devMode: boolean;
+  /** 配置版本（用于迁移）。 */
+  readonly version: number;
   /** 点击默认行为：按阵营决定。 */
   readonly clickPolicy: ClickPolicy;
   /** 按键映射：物理键 → 命令。 */
@@ -43,6 +48,7 @@ export interface Config {
 }
 
 export const DEFAULT_CONFIG: Config = {
+  version: CONFIG_VERSION,
   hotbarCell: 38,
   inventoryCell: 38,
   inventoryColumns: 8,
@@ -71,8 +77,19 @@ export function loadConfig(storage: Pick<Storage, "getItem"> = localStorage): Co
   try {
     const raw = storage.getItem(STORAGE_KEY);
     if (raw === null) return DEFAULT_CONFIG;
-    const saved = JSON.parse(raw) as Partial<Config>;
-    return { ...DEFAULT_CONFIG, ...saved, bindings: { ...DEFAULT_CONFIG.bindings, ...(saved.bindings ?? {}) } };
+    const saved = JSON.parse(raw) as Partial<Config> & { version?: number };
+
+    // 老版本配置：只保留稳定的东西（按键、界面尺寸），行为类一律回默认。
+    // 否则「以前存下的点击策略」会一直压着新默认值。
+    const migrated = (saved.version ?? 1) < CONFIG_VERSION;
+    const merged: Config = {
+      ...DEFAULT_CONFIG,
+      ...saved,
+      version: CONFIG_VERSION,
+      bindings: { ...DEFAULT_CONFIG.bindings, ...(saved.bindings ?? {}) },
+      ...(migrated ? { clickPolicy: DEFAULT_CONFIG.clickPolicy } : {}),
+    };
+    return merged;
   } catch {
     return DEFAULT_CONFIG;
   }

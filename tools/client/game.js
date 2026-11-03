@@ -652,7 +652,15 @@ function openOperationGroup() {
     ...rows,
     itemRow,
     text('没有对话的角色，选择「交谈」时会自动改成攻击。', { policy: 'fixed' }),
-    row({ gap: 8, justify: 'end' }, button('关闭', () => closeOperationGroup())),
+    row({ gap: 8, justify: 'end' },
+      button('恢复默认', () => {
+        config = withConfig(config, { clickPolicy: { hostile: 'attack', neutral: 'talk', friendly: 'talk', item: 'take' } });
+        saveConfig(config);
+        closeOperationGroup();
+        openOperationGroup();
+      }),
+      button('关闭', () => closeOperationGroup()),
+    ),
   ), { title: '操作组' })));
 }
 

@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { clampCell, DEFAULT_CONFIG, loadConfig, saveConfig, withBinding, withConfig } from "./config.ts";
+import { clampCell, CONFIG_VERSION, DEFAULT_CONFIG, loadConfig, saveConfig, withBinding, withConfig } from "./config.ts";
 
 function fakeStorage(initial: Record<string, string> = {}) {
   const data = { ...initial };
@@ -62,4 +62,31 @@ test("格子大小被夹在 24..96", () => {
   assert.equal(clampCell(200), 96);
   assert.equal(clampCell(48.4), 48);
   assert.equal(clampCell(Number.NaN), 38);
+});
+
+test("老版本配置：行为项回默认，按键保留", () => {
+  const storage = fakeStorage({
+    "nw.config": JSON.stringify({
+      clickPolicy: { hostile: "attack", neutral: "attack", friendly: "attack" },
+      bindings: { KeyQ: "skill:core.cast" },
+    }),
+  });
+
+  const config = loadConfig(storage);
+  assert.deepEqual(config.clickPolicy, DEFAULT_CONFIG.clickPolicy);
+  assert.equal(config.bindings.KeyQ, "skill:core.cast");
+  assert.equal(config.version, CONFIG_VERSION);
+});
+
+test("新版本配置：行为项按存的来", () => {
+  const storage = fakeStorage({
+    "nw.config": JSON.stringify({
+      version: CONFIG_VERSION,
+      clickPolicy: { hostile: "attack", neutral: "attack", friendly: "inspect" },
+    }),
+  });
+
+  const config = loadConfig(storage);
+  assert.equal(config.clickPolicy.neutral, "attack");
+  assert.equal(config.clickPolicy.friendly, "inspect");
 });
