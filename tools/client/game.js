@@ -1,6 +1,6 @@
 import { api } from '/client/shared.js';
 import { attach } from '/web/game/systems/render/browser.js';
-import { row, col, text, button, toggle, modal, grid, bar, canvasNode, withEvents } from '/web/game/systems/ui/spec.js';
+import { row, col, text, button, toggle, modal, panel, grid, bar, canvasNode, withEvents } from '/web/game/systems/ui/spec.js';
 import { drawMinimap, minimapSize } from '/web/game/systems/ui/minimap.js';
 import { clampCell, loadConfig, saveConfig, withBinding, withConfig } from '/web/game/systems/config/config.js';
 import { commandFor, parseCommand } from '/web/game/systems/input/bindings.js';
@@ -470,8 +470,14 @@ function togglePolicyWindow() {
         saveConfig(config);
         closePolicyWindow();
         openPolicyWindow();
-        renderClickPolicy();
-renderEquip();
+        try {
+  renderClickPolicy();
+  renderEquip();
+} catch (error) {
+  const box = document.getElementById('quick');
+  if (box !== null) box.textContent = '右下角渲染失败：' + (error && error.message ? error.message : error);
+  throw error;
+}
       });
       node.style.width = '34px';
       node.style.height = '26px';
