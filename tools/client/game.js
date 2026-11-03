@@ -492,7 +492,10 @@ function renderEquip() {
 /** 传给区域模块的上下文：它们不直接碰 config 与网络。 */
 function hudContext() {
   return {
-    config,
+    // 用 getter：调用方每次拿到的都是当前值，不会拿到过期快照
+    get clickPolicy() {
+      return config.clickPolicy;
+    },
     setClickPolicy(key, action) {
       config = withConfig(config, { clickPolicy: { ...config.clickPolicy, [key]: action } });
       saveConfig(config);

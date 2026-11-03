@@ -52,7 +52,10 @@ for (const file of FILES) {
       if (name !== undefined && name.length > 0) defined.add(name.replace(/\s+/g, ""));
     }
   }
-  // 对象方法简写：foo(a, b) { ... }
+  // 对象方法简写与 getter/setter：foo(a) { ... } / get foo() { ... }
+  for (const match of source.matchAll(/(?:^|\n)\s*(?:get|set)\s+([A-Za-z0-9_$]+)\s*\(/g)) {
+    defined.add(match[1]);
+  }
   for (const match of source.matchAll(/(?:^|\n)\s*([A-Za-z0-9_$]+)\s*\([^)]*\)\s*\{/g)) {
     defined.add(match[1]);
   }

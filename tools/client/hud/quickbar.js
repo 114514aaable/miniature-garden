@@ -76,13 +76,13 @@ function renderPolicy(ctx) {
   if (box === null) return;
 
   const rows = CLICK_ROWS.map((entry) => {
-    const current = ctx.config.clickPolicy[entry.key];
+    const current = ctx.clickPolicy[entry.key];
     const cells = entry.actions.map((action) => {
       const picked = current === action;
       const node = button(ACTION_LABEL[action], () => {
         ctx.setClickPolicy(entry.key, action);
-        closePolicy();
-        togglePolicy(ctx);
+        // setClickPolicy 会重画区域；这里再把窗口按最新值重画一次
+        renderPolicy(ctx);
       });
       styleCell(node, picked);
       return node;
