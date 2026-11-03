@@ -776,8 +776,15 @@ document.getElementById('map').addEventListener('click', (event) => {
   if (target !== null) {
     const disposition = dispositionOf(target);
     const action = config.clickPolicy[disposition] ?? 'inspect';
+
+    // 没有血的不是战斗目标（箱子、掉在地上的东西）——只观察
+    const living = Boolean(target.components && target.components['core.health']);
+
+    if (action === 'attack' && !living) {
+      return;
+    }
     if (action === 'talk' && !hasDialog(target)) {
-      useSkill('base.attack', cell.x, cell.y);
+      if (living) useSkill('base.attack', cell.x, cell.y);
       return;
     }
     if (action === 'talk') { useSkill('base.talk', cell.x, cell.y); return; }
