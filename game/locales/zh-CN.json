@@ -94,5 +94,7 @@
   "rule.base.talk.name": "交谈",
   "rule.base.talk.desc": "和旁边的角色说话；对话不花时间。",
   "component.core.disposition.name": "阵营",
-  "component.core.disposition.desc": "敌对 / 中立 / 友好，决定点击默认行为。"
+  "component.core.disposition.desc": "敌对 / 中立 / 友好，决定点击默认行为。",
+  "component.core.persistence.name": "存在感",
+  "component.core.persistence.desc": "锚定 / 普通 / 短暂：决定离得远时要不要继续留在世界里。"
 }

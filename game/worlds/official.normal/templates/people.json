@@ -26,6 +26,9 @@
       },
       "core.disposition": {
         "value": "neutral"
+      },
+      "core.persistence": {
+        "level": "anchored"
       }
     }
   },

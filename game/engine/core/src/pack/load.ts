@@ -61,6 +61,8 @@ export interface LoadedWorld {
   readonly rules: readonly string[];
   /** 开局一次性效果（世界包声明，宿主按顺序应用）。 */
   readonly init: readonly JsonValue[];
+  /** 存在感策略（世界声明，宿主使用）。 */
+  readonly persistence: { readonly activeRadius: number; readonly sweepEvery: number };
   /** 预制件：一组实体 + 相对偏移，供 stamp 使用。 */
   readonly groups: ReadonlyMap<string, GroupDef>;
   readonly onConflict: ConflictPolicy;
@@ -160,6 +162,10 @@ export function loadWorld(
     spaceIds,
     rules: world.rules ?? [],
     init: world.init ?? [],
+    persistence: {
+      activeRadius: world.persistence?.activeRadius ?? 25,
+      sweepEvery: world.persistence?.sweepEvery ?? 50,
+    },
     groups: new Map(groupDefs.map((def) => [def.id, def])),
     onConflict: world.onConflict ?? "error",
     world,

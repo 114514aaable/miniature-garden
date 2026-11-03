@@ -260,5 +260,27 @@
         }
       }
     }
+  },
+  {
+    "id": "core.persistence",
+    "schema": {
+      "t": "object",
+      "fields": {
+        "level": {
+          "t": "enum",
+          "values": [
+            "anchored",
+            "normal",
+            "ephemeral"
+          ]
+        },
+        "ttl": {
+          "t": "int"
+        }
+      },
+      "optional": [
+        "ttl"
+      ]
+    }
   }
 ]

@@ -786,6 +786,16 @@ function resolvePending() {
 }
 
 /** 让当前 tick 该行动的敌人行动（可能连续多个）。 */
+/** 玩家现在所在的空间（没有玩家就是第一个空间）。 */
+function activeSpaceId() {
+  if (session === null || session.playerHandle === null) return null;
+  try {
+    return session.store.entity(session.playerHandle).space;
+  } catch {
+    return null;
+  }
+}
+
 function drainEnemies() {
   const now = session.store.now();
   let guard = 0;
@@ -795,6 +805,14 @@ function drainEnemies() {
     if (guard++ > 64) break;
 
     session.scheduler.take();
+
+    // 不在当前空间的角色：先不跑，往后挪一批。否则别的图的敌人会自己打起来。
+    const entity = session.store.entity(due.handle);
+    if (entity.space !== null && entity.space !== activeSpaceId()) {
+      session.scheduler.done(due.handle, 50);
+      continue;
+    }
+
     enemyAct(due.handle);
   }
 }

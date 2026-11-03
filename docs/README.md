@@ -5,6 +5,7 @@
 | 想做什么 | 读这份 |
 |---|---|
 | 写一个世界包（第一次） | [pack-guide.md](pack-guide.md) |
+| 查 world.json 的字段 | [world-format.md](world-format.md) |
 | 查某个规则/组件/模板的契约 | [modules/README.md](modules/README.md)（机器可读：[modules/index.json](modules/index.json)） |
 | 理解整体设计 | [architecture.md](architecture.md) |
 | 看要做什么、不做什么 | [requirements.md](requirements.md) |

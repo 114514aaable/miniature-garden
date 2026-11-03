@@ -62,6 +62,14 @@ export interface WorldDef {
    * 语义就是「在世界创建后，立刻按顺序调一遍」。
    */
   readonly init?: readonly JsonValue[];
+  /**
+   * 存在感策略：离得远的实体怎么处理。
+   * 现在只用到「别的空间不模拟」；半径与扫描间隔是给下一版留的。
+   */
+  readonly persistence?: {
+    readonly activeRadius?: number;
+    readonly sweepEvery?: number;
+  };
   /** 冲突策略，默认 error。 */
   readonly onConflict?: ConflictPolicy;
 }
@@ -134,9 +142,14 @@ const WORLD_SCHEMA: Schema = {
     start: { t: "object", fields: { space: STR, x: INT, y: INT } },
     rules: { t: "array", of: STR, max: 64 },
     init: { t: "array", of: { t: "any" }, max: 64 },
+    persistence: {
+      t: "object",
+      fields: { activeRadius: INT, sweepEvery: INT },
+      optional: ["activeRadius", "sweepEvery"],
+    },
     onConflict: { t: "enum", values: ["error", "warn", "override"] },
   },
-  optional: ["rules", "init", "onConflict"],
+  optional: ["rules", "init", "persistence", "onConflict"],
 };
 
 export function parseSpaceDef(raw: unknown, path = "$space"): SpaceDef {

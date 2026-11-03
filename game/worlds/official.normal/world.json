@@ -27,5 +27,9 @@
       "x": 4,
       "y": 4
     }
-  ]
+  ],
+  "persistence": {
+    "activeRadius": 25,
+    "sweepEvery": 50
+  }
 }
