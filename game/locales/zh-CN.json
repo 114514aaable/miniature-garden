@@ -92,5 +92,7 @@
   "component.core.dialog.name": "对话",
   "component.core.dialog.desc": "这个角色能说什么（脚本 id）。",
   "rule.base.talk.name": "交谈",
-  "rule.base.talk.desc": "和旁边的角色说话；对话不花时间。"
+  "rule.base.talk.desc": "和旁边的角色说话；对话不花时间。",
+  "component.core.disposition.name": "阵营",
+  "component.core.disposition.desc": "敌对 / 中立 / 友好，决定点击默认行为。"
 }

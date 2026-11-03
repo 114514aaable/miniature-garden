@@ -244,5 +244,21 @@
         }
       }
     }
+  },
+  {
+    "id": "core.disposition",
+    "schema": {
+      "t": "object",
+      "fields": {
+        "value": {
+          "t": "enum",
+          "values": [
+            "hostile",
+            "neutral",
+            "friendly"
+          ]
+        }
+      }
+    }
   }
 ]

@@ -23,6 +23,9 @@
       },
       "core.dialog": {
         "script": "salt_01"
+      },
+      "core.disposition": {
+        "value": "neutral"
       }
     }
   },

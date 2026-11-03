@@ -383,6 +383,7 @@ function renderHotbar(state) {
   });
 
   const extras = [
+    button('操作', () => openOperationGroup()),
     button('等待', () => useSkill('core.wait')),
     button('背包', () => toggleInventory()),
   ];
@@ -585,6 +586,61 @@ async function sceneCommand(command) {
 }
 
 
+/** 快照里这一格站着的第一个非玩家单位。 */
+function entityAtCell(cell) {
+  if (lastState === null) return null;
+  const entity = (lastState.snapshot.entities || []).find(
+    (row) => row.handle !== lastState.playerHandle && row.x === cell.x && row.y === cell.y,
+  );
+  return entity ?? null;
+}
+
+function dispositionOf(entity) {
+  const component = entity.components && entity.components['core.disposition'];
+  const value = component && component.value;
+  return value === 'hostile' || value === 'friendly' ? value : 'neutral';
+}
+
+function hasDialog(entity) {
+  return Boolean(entity.components && entity.components['core.dialog']);
+}
+
+/** 操作组：决定点不同阵营的单位时默认做什么。 */
+function openOperationGroup() {
+  const rows = ['hostile', 'neutral', 'friendly'].map((disposition) => {
+    const label = { hostile: '敌对', neutral: '中立', friendly: '友好' }[disposition];
+    const current = config.clickPolicy[disposition];
+    const pick = (action, text) =>
+      button((current === action ? '● ' : '') + text, () => {
+        config = withConfig(config, { clickPolicy: { ...config.clickPolicy, [disposition]: action } });
+        saveConfig(config);
+        closeOperationGroup();
+        openOperationGroup();
+      });
+    return row({ gap: 6, align: 'center' },
+      text(label, { policy: 'fixed', width: 48 }),
+      pick('attack', '攻击'),
+      pick('talk', '交谈'),
+      pick('inspect', '观察'),
+    );
+  });
+
+  const box = document.getElementById('operation');
+  box.hidden = false;
+  box.textContent = '';
+  box.appendChild(renderNode(modal(col({ gap: 8 },
+    ...rows,
+    text('没有对话的角色，选择「交谈」时会自动改成攻击。', { policy: 'fixed' }),
+    row({ gap: 8, justify: 'end' }, button('关闭', () => closeOperationGroup())),
+  ), { title: '操作组' })));
+}
+
+function closeOperationGroup() {
+  const box = document.getElementById('operation');
+  box.hidden = true;
+  box.textContent = '';
+}
+
 function showDeath() {
   const box = document.getElementById('death');
   if (!box.hidden) return;
@@ -680,6 +736,20 @@ document.getElementById('map').addEventListener('click', (event) => {
     selection = null;
     useSkill(tag, cell.x, cell.y);
     return;
+  }
+
+  // 点别人：按「操作组」的默认行为决定
+  const target = entityAtCell(cell);
+  if (target !== null) {
+    const disposition = dispositionOf(target);
+    const action = config.clickPolicy[disposition] ?? 'inspect';
+    if (action === 'talk' && !hasDialog(target)) {
+      useSkill('base.attack', cell.x, cell.y);
+      return;
+    }
+    if (action === 'talk') { useSkill('base.talk', cell.x, cell.y); return; }
+    if (action === 'attack') { useSkill('base.attack', cell.x, cell.y); return; }
+    return; // inspect：只看，不动手
   }
 
   // 点自己脚下：捡东西（这就是「拾取键」）

@@ -12,6 +12,15 @@
  * 这里只放**表现层**的东西。玩法参数（时钟成本、伤害公式）在世界包里，不放这。
  */
 
+/** 点击一个单位时默认做什么。 */
+export type ClickAction = "attack" | "talk" | "inspect";
+
+export interface ClickPolicy {
+  readonly hostile: ClickAction;
+  readonly neutral: ClickAction;
+  readonly friendly: ClickAction;
+}
+
 export interface Config {
   /** 底部快捷栏格子边长（px）。 */
   readonly hotbarCell: number;
@@ -25,6 +34,8 @@ export interface Config {
   readonly speed: number;
   /** 开发者模式：显示 tick、调度、意图等调试信息。 */
   readonly devMode: boolean;
+  /** 点击默认行为：按阵营决定。 */
+  readonly clickPolicy: ClickPolicy;
   /** 按键映射：物理键 → 命令。 */
   readonly bindings: Readonly<Record<string, string>>;
 }
@@ -36,6 +47,7 @@ export const DEFAULT_CONFIG: Config = {
   inventoryRows: 5,
   speed: 10,
   devMode: false,
+  clickPolicy: { hostile: "attack", neutral: "talk", friendly: "talk" },
   bindings: {
     KeyW: "move:w",
     KeyA: "move:a",

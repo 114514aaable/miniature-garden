@@ -214,6 +214,9 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
           { name: "core.container", required: false },
           { name: "core.intent", required: false },
           { name: "core.pending", required: false },
+          { name: "core.disposition", required: false },
+          { name: "core.dialog", required: false },
+          { name: "core.item", required: false },
         ],
         ui: ["inventory", "skills", "messages"],
       },
@@ -266,6 +269,13 @@ function currentView() {
     terrains: session.loaded.terrains,
     templates: session.loaded.templates,
   });
+}
+
+/** 阵营：没声明就当中立。 */
+function dispositionOf(component) {
+  if (typeof component !== "object" || component === null || Array.isArray(component)) return "neutral";
+  const value = component.value;
+  return value === "hostile" || value === "friendly" ? value : "neutral";
 }
 
 function playerHud() {
