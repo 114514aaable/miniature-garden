@@ -88,5 +88,7 @@
   "component.core.use.name": "用法",
   "component.core.use.desc": "这东西怎么用：效果列表 + 是否消耗。",
   "template.item_potion.name": "药水",
-  "template.item_potion.desc": "喝一口，回满血。"
+  "template.item_potion.desc": "喝一口，回满血。",
+  "component.core.dialog.name": "对话",
+  "component.core.dialog.desc": "这个角色能说什么（脚本 id）。"
 }

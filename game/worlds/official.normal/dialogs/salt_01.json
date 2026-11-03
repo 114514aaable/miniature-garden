@@ -1,0 +1,29 @@
+{
+  "id": "salt_01",
+  "start": "hi",
+  "nodes": {
+    "hi": {
+      "text": "港口最近不太平。你要买盐，还是想问路？",
+      "choices": [
+        { "text": "买盐", "next": "buy" },
+        { "text": "问路", "next": "road" },
+        { "text": "没事", "end": true }
+      ]
+    },
+    "buy": {
+      "text": "一袋盐，三枚铜板。别嫌贵，水路断了好几条。",
+      "choices": [
+        { "text": "来一袋", "next": "bought" },
+        { "text": "算了", "end": true }
+      ]
+    },
+    "bought": {
+      "text": "拿好。省着点用。",
+      "choices": [{ "text": "多谢", "end": true }]
+    },
+    "road": {
+      "text": "往北走，过了旧码头就是。夜里别去，最近有人在那边点灯。",
+      "choices": [{ "text": "记住了", "end": true }]
+    }
+  }
+}

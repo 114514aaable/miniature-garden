@@ -41,7 +41,7 @@ export const DEFAULT_CONFIG: Config = {
     KeyA: "move:a",
     KeyS: "move:s",
     KeyD: "move:d",
-    KeyE: "skill:core.take",
+    KeyE: "ui:talk",
     KeyR: "skill:core.drop",
     KeyF: "skill:core.attack",
     Space: "skill:core.wait",

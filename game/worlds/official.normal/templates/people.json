@@ -20,6 +20,9 @@
         "tiles": [],
         "damage": 0,
         "resolveAt": 0
+      },
+      "core.dialog": {
+        "script": "salt_01"
       }
     }
   },

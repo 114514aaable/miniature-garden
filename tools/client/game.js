@@ -94,6 +94,7 @@ function render(state) {
   if (plate) plate.textContent = state.playerName || '你';
 
   renderMinimap(state);
+  renderDialog(state);
 
   const ready = state.hud.readyAt > state.tick
     ? '恢复中 还要 ' + (state.hud.readyAt - state.tick) + ' 回合'
@@ -515,6 +516,41 @@ function activateSlot(index) {
   else useSkill('core.use', undefined, undefined, { item: entry.ref });
 }
 
+/** 对话场景：和背包一样是面板，但输入归它。 */
+function renderDialog(state) {
+  const box = document.getElementById('dialog');
+  if (box === null) return;
+
+  const scene = state.scene;
+  if (!scene || scene.id !== 'dialog' || scene.view === null) {
+    box.hidden = true;
+    box.textContent = '';
+    return;
+  }
+
+  const choices = (scene.view.choices || []).map((label, index) =>
+    button((index + 1) + ' ' + label, () => sceneCommand('choice' + (index + 1))),
+  );
+
+  const body = col({ gap: 8 },
+    text(scene.view.text || '', { policy: 'fixed' }),
+    row({ gap: 6, 'flex-wrap': 'wrap' }, ...choices),
+    row({ gap: 6, justify: 'end' }, button('离开 Esc', () => sceneCommand('close'))),
+  );
+
+  box.textContent = '';
+  box.appendChild(renderNode(modal(body, { title: '对话' })));
+  box.hidden = false;
+}
+
+async function sceneCommand(command) {
+  render(await api('/api/scene/command', { command }));
+}
+
+async function talk() {
+  render(await api('/api/talk', {}));
+}
+
 function showDeath() {
   const box = document.getElementById('death');
   if (!box.hidden) return;
@@ -767,6 +803,14 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
+  // 场景在跑（对话）：数字键选选项、Esc 离开
+  if (lastState !== null && lastState.scene && lastState.scene.id !== 'explore') {
+    if (event.code === 'Escape') { sceneCommand('close'); return; }
+    const pick = event.code.match(/^Digit([1-9])$/);
+    if (pick !== null) { sceneCommand('choice' + pick[1]); return; }
+    return;
+  }
+
   // 有焦点窗口：输入归它，游戏本体不响应
   if (uiFocus !== null) {
     if (event.code === 'Escape') {
@@ -785,6 +829,7 @@ window.addEventListener('keydown', (event) => {
   }
 
   if (!document.getElementById('settings').hidden) return;
+  if (parsed.kind === 'ui' && parsed.value === 'talk') { talk(); return; }
   if (parsed.kind === 'move') act(parsed.value);
   else if (parsed.kind === 'skill') useSkill(parsed.value);
 });

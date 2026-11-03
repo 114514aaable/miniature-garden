@@ -39,6 +39,8 @@ import { runPhases } from "../game/systems/tick/phases.ts";
 import { EMPTY_PENDING, isActive, PENDING } from "../game/engine/core/src/rules/pending.ts";
 import { RULE_TABLE } from "../game/systems/rules/index.ts";
 import { resolveTag, resolveTags } from "../game/systems/rules/aliases.ts";
+import { SceneStack, sceneFromComponent } from "../game/systems/scene/scene.ts";
+import { createDialogScene, parseDialogScript } from "../game/systems/scene/dialog.ts";
 
 const LOCALE = "zh-CN";
 let MESSAGES = {};
@@ -174,6 +176,10 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
     applyInit(store, loaded);
   }
 
+  // 场景栈：explore 永远在最底；对话/战斗往上压
+  const exploreScene = { id: "explore", input: [], handle: () => ({}) };
+  const scenes = new SceneStack(new Map([["explore", exploreScene]]), sceneFromComponent(undefined));
+
   let playerHandle = null;
   for (const entry of spawnEvents) {
     const handle = entry.data.handle;
@@ -246,6 +252,7 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
     packs: ordered.map((content) => `${content.pack.id}@${content.pack.version}`),
     seed,
     lastEvents: [],
+    scenes,
     devlog: new DevLog(),
   };
 }
@@ -305,6 +312,7 @@ function snapshot(message) {
     playerHandle: session.playerHandle,
     seed: session.seed,
     dead: session.dead === true,
+    scene: sceneView(),
     snapshot: {
       tick: frame.tick,
       // 地形转成普通数组：JSON 里 Int32Array 会变成奇怪的对象
@@ -407,6 +415,64 @@ function act(command) {
 
   return snapshot("不懂这个指令（w/a/s/d 走，e 捡，r 放）");
 }
+/** 当前场景的渲染数据（客户端只认这个，不认识脚本）。 */
+function sceneView() {
+  if (session === null) return null;
+  const top = session.scenes.top();
+  return {
+    id: top.id,
+    depth: session.scenes.depth(),
+    input: session.scenes.input(),
+    view: typeof top.describe === "function" ? top.describe() : null,
+  };
+}
+
+/** 读一个对话脚本（世界包里的 dialogs/*.json）。 */
+function loadDialogScript(scriptId) {
+  const world = session.world ?? "official.normal";
+  const path = "game/worlds/" + world + "/dialogs/" + scriptId + ".json";
+  const raw = JSON.parse(readFileSync(path, "utf8"));
+  return createDialogScene(parseDialogScript(raw));
+}
+
+/** 压一个场景上去。 */
+function pushScene(id, params) {
+  if (id !== "dialog") {
+    return { ok: false, error: "第一版只支持 dialog 场景" };
+  }
+  const scriptId = String(params.script ?? "");
+  let scene;
+  try {
+    scene = loadDialogScript(scriptId);
+  } catch (error) {
+    return { ok: false, error: "读不到对话脚本：" + messageOf(error) };
+  }
+  session.scenes.register(scene);
+  session.scenes.push("dialog", params);
+  return { ok: true };
+}
+
+/** 把一个命令交给场景，并执行它返回的意图。 */
+function sceneCommand(command) {
+  let result;
+  try {
+    result = session.scenes.handle(command, session.store.now());
+  } catch (error) {
+    return { ok: false, error: messageOf(error) };
+  }
+
+  if (result.next !== undefined) {
+    const next = result.next;
+    if (next.op === "pop") session.scenes.pop();
+    else if (next.op === "push" && typeof next.id === "string") session.scenes.push(next.id, next.params ?? {});
+    else if (next.op === "replace" && typeof next.id === "string") session.scenes.replace(next.id, next.params ?? {});
+  }
+
+  for (const effect of result.effects ?? []) session.store.submit(effect);
+
+  return { ok: true };
+}
+
 /** 玩家背包里有什么（名字、描述都带上，界面不用再查）。 */
 function inventoryList() {
   if (session === null || session.playerHandle === null) {
@@ -1051,6 +1117,63 @@ const server = createServer(async (request, response) => {
       } catch (error) {
         sendJson(response, { ok: false, error: messageOf(error) });
       }
+      return;
+    }
+
+    if (request.method === "POST" && request.url === "/api/talk") {
+      // 找相邻的、带 core.dialog 的角色，然后推开对话
+      const me = session.store.entity(session.playerHandle);
+      if (me.pos === null || me.space === null) {
+        sendJson(response, snapshot("它不在任何地方"));
+        return;
+      }
+      const here = session.store.space(me.space).occupantsAt(me.pos);
+      void here;
+      const space = session.store.space(me.space);
+      const neighbours = [
+        { x: me.pos.x + 1, y: me.pos.y },
+        { x: me.pos.x - 1, y: me.pos.y },
+        { x: me.pos.x, y: me.pos.y + 1 },
+        { x: me.pos.x, y: me.pos.y - 1 },
+      ];
+      let target = null;
+      for (const cell of neighbours) {
+        for (const handle of space.occupantsAt(cell)) {
+          if (handle === session.playerHandle) continue;
+          const entity = currentView().entity(handle);
+          if (entity.components["core.dialog"] !== undefined) { target = { handle, entity }; break; }
+        }
+        if (target !== null) break;
+      }
+
+      if (target === null) {
+        sendJson(response, snapshot("旁边没有人可以说话"));
+        return;
+      }
+
+      const dialog = target.entity.components["core.dialog"];
+      const scriptId = String(dialog.script ?? "");
+      const pushed = pushScene("dialog", { script: scriptId, speaker: target.handle });
+      sendJson(response, snapshot(pushed.ok === true ? "开始对话" : "打不开：" + pushed.error));
+      return;
+    }
+
+    if (request.method === "POST" && request.url === "/api/scene") {
+      const { op, id, params } = await readBody(request);
+      if (op === "pop") {
+        session.scenes.pop();
+        sendJson(response, snapshot("场景已退出"));
+        return;
+      }
+      const pushed = pushScene(String(id), params ?? {});
+      sendJson(response, pushed.ok === true ? snapshot("场景已进入") : snapshot("打不开：" + pushed.error));
+      return;
+    }
+
+    if (request.method === "POST" && request.url === "/api/scene/command") {
+      const { command } = await readBody(request);
+      const result = sceneCommand(String(command));
+      sendJson(response, snapshot(result.ok === true ? "继续" : "不行：" + result.error));
       return;
     }
 

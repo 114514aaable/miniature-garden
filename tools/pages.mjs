@@ -230,6 +230,8 @@ export const GAME_PAGE = `<!doctype html>
              padding: 6px 10px; background: rgba(10,12,16,0.92); border: 1px solid #2a303c;
              border-radius: 6px; color: #c7cdd6; font-size: 12px; white-space: pre-wrap; }
   #quick { position: absolute; right: 10px; bottom: 10px; z-index: var(--z-region); }
+  #dialog { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%);
+            width: min(560px, 86vw); z-index: var(--z-modal); }
   #minimap { position: absolute; right: 10px; top: 54px; padding: 4px; z-index: var(--z-region);
              background: rgba(16,19,26,0.8); border: 1px solid #2a303c; border-radius: 6px; }
   #devpanel { position: absolute; top: 10px; right: 10px; max-width: min(460px, 92vw); }
@@ -283,6 +285,7 @@ export const GAME_PAGE = `<!doctype html>
   <div id="settings" hidden></div>
   <div id="tooltip" hidden></div>
   <div id="death" hidden></div>
+  <div id="dialog" hidden></div>
   <div id="inventory" hidden></div>
 
   <details id="devpanel">

@@ -99,6 +99,11 @@ export class SceneStack {
     return [...this.layers];
   }
 
+  /** 把一个场景加进注册表（对话脚本是运行时读的，所以需要后注册）。 */
+  register(scene: Scene): void {
+    (this.registry as Map<string, Scene>).set(scene.id, scene);
+  }
+
   push(id: string, params: JsonValue = {}): void {
     if (!this.registry.has(id)) {
       throw new Error(`没有这个场景：${id}`);

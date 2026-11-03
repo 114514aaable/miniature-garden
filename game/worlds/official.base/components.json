@@ -233,5 +233,16 @@
         "consume"
       ]
     }
+  },
+  {
+    "id": "core.dialog",
+    "schema": {
+      "t": "object",
+      "fields": {
+        "script": {
+          "t": "str"
+        }
+      }
+    }
   }
 ]
