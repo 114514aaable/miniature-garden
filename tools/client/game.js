@@ -430,20 +430,29 @@ function renderClickPolicy() {
   const box = document.getElementById('quick');
   if (box === null) return;
 
-  const summary = ['hostile', 'neutral', 'friendly', 'item']
-    .map((key) => ACTION_LABEL[config.clickPolicy[key]])
-    .join(' ');
+  const SIZE = 34;
+  const cells = [];
 
-  const node = button('点击 ▾', () => togglePolicyWindow());
-  node.style.width = '96px';
-  node.style.height = '52px';
-  node.style['font-size'] = '12px';
-  node.title = '当前：' + summary;
+  // 第一格：打开点击配置
+  const open = button('点击', () => togglePolicyWindow());
+  open.style.width = SIZE + 'px';
+  open.style.height = SIZE + 'px';
+  open.style['font-size'] = '10px';
+  open.style['border-radius'] = '0';
+  open.style.border = '1px solid #4a6da8';
+  open.style.background = '#1d2432';
+  cells.push(open);
 
-  mount(box, col({ gap: 2, align: 'end' },
-    node,
-    text(summary, { policy: 'fixed' }),
-  ));
+  // 其余格子：空的，等以后放动作
+  for (let i = 1; i < 12; i += 1) {
+    const empty = text('', { policy: 'fixed', width: SIZE, height: SIZE });
+    empty.style['border-radius'] = '0';
+    empty.style.border = '1px solid #2a303c';
+    empty.style.background = 'transparent';
+    cells.push(empty);
+  }
+
+  mount(box, grid({ columns: 3, cell: SIZE, gap: 0 }, ...cells));
 }
 
 /** 弱窗口：贴着右下角，不遮全屏。 */

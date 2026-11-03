@@ -232,7 +232,8 @@ export const GAME_PAGE = `<!doctype html>
   #tooltip { position: fixed; z-index: 30; pointer-events: none; max-width: 320px;
              padding: 6px 10px; background: rgba(10,12,16,0.92); border: 1px solid #2a303c;
              border-radius: 6px; color: #c7cdd6; font-size: 12px; white-space: pre-wrap; }
-  #quick { position: absolute; right: 10px; bottom: 10px; z-index: var(--z-region); }
+  #quick { position: absolute; right: 10px; bottom: 10px; z-index: var(--z-region);
+           pointer-events: auto; }
   /* 弱窗口：贴着右下角，不遮全屏，不抢焦点 */
   #policy { position: absolute; right: 10px; bottom: 74px; z-index: var(--z-region-mask);
             background: #10131a; border: 1px solid #2a303c; border-radius: 8px;
