@@ -627,11 +627,19 @@ function useSkill(tag, x, y, extra = {}) {
   }
 
   if (signature.skill.target.kind === "entity") {
-    const handle = resolveTarget(x, y);
-    if (handle === undefined) {
-      return snapshot("旁边没有目标");
+    // 按签名声明的字段组参数：有的技能要 target（交谈），有的要 x/y（劈砍）
+    const fields = signature.params.fields ?? {};
+    const params = { actor: session.playerHandle };
+    if (fields.target !== undefined) {
+      const handle = resolveTarget(x, y);
+      if (handle === undefined) {
+        return snapshot("没有可以指向的目标");
+      }
+      params.target = handle;
     }
-    return run(tag, { actor: session.playerHandle, target: handle, ...extra }, signature.skill.cost);
+    if (fields.x !== undefined && x !== undefined) params.x = x;
+    if (fields.y !== undefined && y !== undefined) params.y = y;
+    return run(tag, { ...params, ...extra }, signature.skill.cost);
   }
 
   if (x === undefined || y === undefined) {

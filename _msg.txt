@@ -1,0 +1,5 @@
+﻿fix(rules): 实体目标技能按签名组参数——劈砍不再缺 x/y
+
+之前「目标为 entity」的分支只传 target，把 x/y 吞掉，attack 的 schema
+校验失败。改为按签名声明组装：有 target 传 target，有 x/y 传坐标，
+交谈与劈砍各自拿到自己需要的字段。
