@@ -1105,12 +1105,16 @@ const server = createServer(async (request, response) => {
         return;
       }
       const text = readFileSync("tools/client/" + name, "utf8");
-      response.writeHead(200, { "content-type": "application/javascript; charset=utf-8" });
+      response.writeHead(200, {
+        "content-type": "application/javascript; charset=utf-8",
+        "cache-control": "no-store",
+      });
       response.end(text);
       return;
     }
 
     if (request.url.startsWith("/web/")) {
+      // 构建产物每次重启都可能变，别让浏览器吃旧缓存
       const relative = request.url.slice("/web/".length).split("?")[0];
       const root = resolve("web");
       const file = resolve(root, relative);
@@ -1122,7 +1126,7 @@ const server = createServer(async (request, response) => {
       try {
         const data = readFileSync(file);
         const type = extname(file) === ".js" ? "text/javascript; charset=utf-8" : "application/octet-stream";
-        response.writeHead(200, { "content-type": type });
+        response.writeHead(200, { "content-type": type, "cache-control": "no-store" });
         response.end(data);
       } catch {
         response.writeHead(404);

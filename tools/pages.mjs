@@ -64,6 +64,9 @@ const CSS = `
   a { color: #8ab4f8; }
 `;
 
+/** 每次进程启动换一次，用来给页面脚本加版本号（防缓存）。 */
+const BUILD_ID = Date.now().toString(36);
+
 const ERRORS = `
 window.addEventListener('error', (event) => {
   const bar = document.getElementById('errbar');
@@ -169,7 +172,7 @@ export const LAUNCHER_PAGE = `<!doctype html>
   </div>
 </div>
 
-<script type="module" src="/client/launcher.js"></script>
+<script type="module" src="/client/launcher.js?v=${BUILD_ID}"></script>
 </html>`;
 
 /** 游戏：全屏地图 + HUD 叠加层。世界由 ?world= 指定。 */
@@ -309,7 +312,7 @@ window.addEventListener('error', function (event) {
 });
 </script>
 
-<script type="module" src="/client/game.js"></script>
+<script type="module" src="/client/game.js?v=${BUILD_ID}"></script>
 </html>`;
 
 /** 结构面板用的元素在启动器页里，这里只导出页面本身。 */
