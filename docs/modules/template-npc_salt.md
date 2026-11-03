@@ -10,3 +10,4 @@
 - `core.ai` — 智能
 - `core.solid` — 实心
 - `core.intent` — 意图
+- `core.dialog` — 对话

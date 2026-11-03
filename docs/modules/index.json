@@ -258,6 +258,25 @@
       "returnsEffects": true
     },
     {
+      "kind": "rule",
+      "id": "base.talk",
+      "name": "交谈",
+      "desc": "和旁边的角色说话；对话不花时间。",
+      "file": "rule-base.talk.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "actor": {
+            "t": "int"
+          },
+          "target": {
+            "t": "int"
+          }
+        }
+      },
+      "returnsEffects": true
+    },
+    {
       "kind": "component",
       "id": "core.health",
       "name": "生命",
@@ -537,6 +556,21 @@
       }
     },
     {
+      "kind": "component",
+      "id": "core.dialog",
+      "name": "对话",
+      "desc": "这个角色能说什么（脚本 id）。",
+      "file": "component-core.dialog.md",
+      "schema": {
+        "t": "object",
+        "fields": {
+          "script": {
+            "t": "str"
+          }
+        }
+      }
+    },
+    {
       "kind": "group",
       "id": "camp",
       "name": "camp",
@@ -610,7 +644,8 @@
         "core.stats",
         "core.ai",
         "core.solid",
-        "core.intent"
+        "core.intent",
+        "core.dialog"
       ]
     },
     {

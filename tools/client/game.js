@@ -547,9 +547,6 @@ async function sceneCommand(command) {
   render(await api('/api/scene/command', { command }));
 }
 
-async function talk() {
-  render(await api('/api/talk', {}));
-}
 
 function showDeath() {
   const box = document.getElementById('death');
@@ -829,7 +826,7 @@ window.addEventListener('keydown', (event) => {
   }
 
   if (!document.getElementById('settings').hidden) return;
-  if (parsed.kind === 'ui' && parsed.value === 'talk') { talk(); return; }
+  if (parsed.kind === 'ui' && parsed.value === 'talk') { useSkill('base.talk'); return; }
   if (parsed.kind === 'move') act(parsed.value);
   else if (parsed.kind === 'skill') useSkill(parsed.value);
 });

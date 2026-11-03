@@ -570,6 +570,33 @@ function aimAt(tag, x, y) {
   return result.value;
 }
 
+/** 给「目标为实体」的技能找目标：有坐标取那格，没坐标取相邻。 */
+function resolveTarget(x, y) {
+  const me = session.store.entity(session.playerHandle);
+  if (me.pos === null || me.space === null) return undefined;
+  const space = session.store.space(me.space);
+
+  if (x !== undefined && y !== undefined) {
+    const occupant = space.occupantsAt({ x, y }).find((handle) => handle !== session.playerHandle);
+    return occupant;
+  }
+
+  const neighbours = [
+    { x: me.pos.x + 1, y: me.pos.y },
+    { x: me.pos.x - 1, y: me.pos.y },
+    { x: me.pos.x, y: me.pos.y + 1 },
+    { x: me.pos.x, y: me.pos.y - 1 },
+  ];
+  for (const cell of neighbours) {
+    for (const handle of space.occupantsAt(cell)) {
+      if (handle === session.playerHandle) continue;
+      const entity = currentView().entity(handle);
+      if (entity.components["core.dialog"] !== undefined) return handle;
+    }
+  }
+  return undefined;
+}
+
 function useSkill(tag, x, y, extra = {}) {
   const sym = session.link.tags.get(tag);
   const signature = sym === undefined ? undefined : session.link.signatures[sym];
@@ -579,6 +606,14 @@ function useSkill(tag, x, y, extra = {}) {
 
   if (signature.skill.target.kind === "self") {
     return run(tag, { actor: session.playerHandle, ...extra }, signature.skill.cost);
+  }
+
+  if (signature.skill.target.kind === "entity") {
+    const handle = resolveTarget(x, y);
+    if (handle === undefined) {
+      return snapshot("旁边没有目标");
+    }
+    return run(tag, { actor: session.playerHandle, target: handle, ...extra }, signature.skill.cost);
   }
 
   if (x === undefined || y === undefined) {
@@ -629,6 +664,16 @@ function run(tag, params, costKey) {
   // 落空也要说话：否则玩家分不清「他打偏了」和「他没出手」
   if (result.value.missed === true) {
     session.devlog.action(session.store.now(), tag + ' 落空', { mode: result.value.mode ?? 'fixed' });
+  }
+
+  // 规则可以返回「场景意图」——宿主执行，规则不碰场景栈
+  if (result.value.scene !== undefined && result.value.scene !== null) {
+    const intent = result.value.scene;
+    if (intent.op === "push" && typeof intent.id === "string") {
+      pushScene(intent.id, intent.params ?? {});
+    } else if (intent.op === "pop") {
+      session.scenes.pop();
+    }
   }
 
   const effects = collectEffects(result.value);
@@ -1117,44 +1162,6 @@ const server = createServer(async (request, response) => {
       } catch (error) {
         sendJson(response, { ok: false, error: messageOf(error) });
       }
-      return;
-    }
-
-    if (request.method === "POST" && request.url === "/api/talk") {
-      // 找相邻的、带 core.dialog 的角色，然后推开对话
-      const me = session.store.entity(session.playerHandle);
-      if (me.pos === null || me.space === null) {
-        sendJson(response, snapshot("它不在任何地方"));
-        return;
-      }
-      const here = session.store.space(me.space).occupantsAt(me.pos);
-      void here;
-      const space = session.store.space(me.space);
-      const neighbours = [
-        { x: me.pos.x + 1, y: me.pos.y },
-        { x: me.pos.x - 1, y: me.pos.y },
-        { x: me.pos.x, y: me.pos.y + 1 },
-        { x: me.pos.x, y: me.pos.y - 1 },
-      ];
-      let target = null;
-      for (const cell of neighbours) {
-        for (const handle of space.occupantsAt(cell)) {
-          if (handle === session.playerHandle) continue;
-          const entity = currentView().entity(handle);
-          if (entity.components["core.dialog"] !== undefined) { target = { handle, entity }; break; }
-        }
-        if (target !== null) break;
-      }
-
-      if (target === null) {
-        sendJson(response, snapshot("旁边没有人可以说话"));
-        return;
-      }
-
-      const dialog = target.entity.components["core.dialog"];
-      const scriptId = String(dialog.script ?? "");
-      const pushed = pushScene("dialog", { script: scriptId, speaker: target.handle });
-      sendJson(response, snapshot(pushed.ok === true ? "开始对话" : "打不开：" + pushed.error));
       return;
     }
 

@@ -15,7 +15,8 @@
     "core.enemy_windup",
     "core.enemy_strike",
     "base.cast",
-    "core.use"
+    "core.use",
+    "base.talk"
   ],
   "onConflict": "error",
   "init": [

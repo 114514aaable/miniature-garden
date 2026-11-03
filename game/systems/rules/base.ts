@@ -16,6 +16,7 @@
 
 import { attackHandler, attackSignature } from "../../engine/core/src/rules/attack.ts";
 import { castHandler, castSignature } from "../../engine/core/src/rules/pending.ts";
+import { talkHandler, talkSignature } from "../../engine/core/src/rules/talk.ts";
 
 import { type Signature } from "../../engine/core/src/event/registry.ts";
 import { type EvaluateContext } from "../../engine/core/src/event/evaluate.ts";
@@ -30,4 +31,5 @@ export interface RuleEntry {
 export const BASE_RULES: readonly RuleEntry[] = [
   { signature: attackSignature, handler: attackHandler },
   { signature: castSignature, handler: castHandler },
+  { signature: talkSignature, handler: talkHandler },
 ];

@@ -2,7 +2,7 @@
 
 > 由 `node tools/gen-docs.mjs` 生成。**不要手改**——改语言包或代码。
 
-规则 11 条 · 组件 11 个 · 模板 5 个
+规则 12 条 · 组件 12 个 · 模板 5 个
 
 | 类型 | 名字 | id | 说明 |
 |---|---|---|---|
@@ -17,6 +17,7 @@
 | 规则 | [敌人出手](rule-core.enemy_strike.md) | `core.enemy_strike` | 按意图里的格子结算伤害；玩家不在格子里就落空。 |
 | 规则 | [劈砍](rule-base.attack.md) | `base.attack` | 攻击相邻格里的一个目标，伤害 = 攻击 − 防御。 |
 | 规则 | [蓄力劈砍](rule-base.cast.md) | `base.cast` | 先挂起，过几回合再结算；期间可以被打断。 |
+| 规则 | [交谈](rule-base.talk.md) | `base.talk` | 和旁边的角色说话；对话不花时间。 |
 | 组件 | [生命](component-core.health.md) | `core.health` | 血量：最大生命与当前生命。 |
 | 组件 | [属性](component-core.stats.md) | `core.stats` | 速度、攻击、防御。速度决定动作成本。 |
 | 组件 | [部位](component-core.body.md) | `core.body` | 分部位的血量与状态，供以后的部位战斗使用。 |
@@ -28,6 +29,7 @@
 | 组件 | [意图](component-core.intent.md) | `core.intent` | 敌人下回合要打的格子与结算时刻，绘制和判定共用。 |
 | 组件 | [core.pending](component-core.pending.md) | `core.pending` |  |
 | 组件 | [用法](component-core.use.md) | `core.use` | 这东西怎么用：效果列表 + 是否消耗。 |
+| 组件 | [对话](component-core.dialog.md) | `core.dialog` | 这个角色能说什么（脚本 id）。 |
 | 预制件 | camp | `camp` | 3 个实体 |
 | 模板 | [你](template-pc.md) | `pc` | 玩家角色。 |
 | 模板 | [木箱](template-prop_crate.md) | `prop_crate` | 实心障碍，挡路。 |
