@@ -26,8 +26,10 @@ export interface SkillMeta {
     readonly kind: "cell" | "entity" | "self";
     /** 最远几格（self 用 0）。 */
     readonly range: number;
-    /** 只把带这个组件的实体当作合法目标（可选）。 */
+    /** 只把带这个组件的实体当作合法目标（可选，旧写法）。 */
     readonly component?: string;
+    /** 命名过滤（base 的 filters，可选，新写法）。 */
+    readonly filter?: string;
   };
 }
 

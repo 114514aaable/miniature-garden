@@ -25,7 +25,7 @@ export const talkSignature: Signature = {
   returnsEffects: true,
   needsTimestamp: false,
   /** 说话不花时间：对话里世界本来就不该往前走。 */
-  skill: { name: "交谈", cost: "talk", target: { kind: "entity", range: 1, component: "core.dialog" } },
+  skill: { name: "交谈", cost: "talk", target: { kind: "entity", range: 1, filter: "talkable" } },
 };
 
 export function talkHandler(params: JsonValue, context: EvaluateContext): JsonValue {

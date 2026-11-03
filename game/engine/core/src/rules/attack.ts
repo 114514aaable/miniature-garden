@@ -24,7 +24,7 @@ export const attackSignature: Signature = {
   result: { t: "any" },
   returnsEffects: true,
   needsTimestamp: false,
-  skill: { name: "劈砍", cost: "attack", target: { kind: "entity", range: 1, component: "core.health" } },
+  skill: { name: "劈砍", cost: "attack", target: { kind: "entity", range: 1, filter: "living" } },
 };
 
 function numberIn(component: JsonValue | undefined, key: string, fallback: number): number {

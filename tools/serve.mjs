@@ -41,6 +41,7 @@ import { RULE_TABLE } from "../game/systems/rules/index.ts";
 import { resolveTag, resolveTags } from "../game/systems/rules/aliases.ts";
 import { SceneStack, sceneFromComponent } from "../game/systems/scene/scene.ts";
 import { createDialogScene, parseDialogScript } from "../game/systems/scene/dialog.ts";
+import { selectTargets } from "../game/engine/core/src/traversal/select.ts";
 
 const LOCALE = "zh-CN";
 let MESSAGES = {};
@@ -346,7 +347,12 @@ function snapshot(message) {
       tag: skill.tag,
       name: skill.name,
       cost: skill.cost,
-      target: { kind: skill.target.kind, range: skill.target.range, ...(skill.target.component === undefined ? {} : { component: skill.target.component }) },
+      target: {
+        kind: skill.target.kind,
+        range: skill.target.range,
+        ...(skill.target.component === undefined ? {} : { component: skill.target.component }),
+        ...(skill.target.filter === undefined ? {} : { filter: skill.target.filter }),
+      },
     })),
     events: session.lastEvents.map((entry) => `#${entry.id} ${entry.kind} ${JSON.stringify(entry.data)}`),
     devlog: session.devlog.tail(200).map(formatLine),
@@ -553,6 +559,30 @@ function inspectCell(x, y) {
 }
 
 /** 问：这个技能能不能落在这一格。 */
+/** 名字 → 条件；没有就返回 undefined（调用方退化到旧写法）。 */
+function conditionFor(name) {
+  if (typeof name !== "string") return undefined;
+  return session.loaded.traversal.filters[name];
+}
+
+/** 在给定的格子里按命名过滤挑目标。 */
+function selectIn(cells, filterName, options = {}) {
+  const condition = conditionFor(filterName);
+  if (condition === undefined) return [];
+
+  const view = currentView();
+  const spaceId = activeSpaceId();
+  if (spaceId === null) return [];
+  const space = session.store.space(spaceId);
+
+  const selector = {
+    occupantsAt: (cell) => space.occupantsAt(cell),
+    componentsOf: (handle) => view.entity(handle).components,
+  };
+
+  return selectTargets(selector, cells, condition, options);
+}
+
 function aimAt(tag, x, y) {
   const sym = session.link.tags.get(tag);
   const signature = sym === undefined ? undefined : session.link.signatures[sym];
@@ -573,6 +603,9 @@ function aimAt(tag, x, y) {
         kind,
         range: signature.skill.target.range,
         ...(signature.skill.target.component === undefined ? {} : { component: signature.skill.target.component }),
+        ...(conditionFor(signature.skill.target.filter) === undefined
+          ? {}
+          : { condition: conditionFor(signature.skill.target.filter) }),
         x,
         y,
       },
@@ -589,7 +622,11 @@ function aimAt(tag, x, y) {
 }
 
 /** 给「目标为实体」的技能找目标：有坐标取那格，没坐标取相邻。 */
-function resolveTarget(x, y) {
+function resolveTarget(x, y, filterName) {
+  if (typeof filterName === "string" && x !== undefined && y !== undefined) {
+    const found = selectIn([{ x, y }], filterName, { exclude: session.playerHandle, limit: 1 });
+    return found[0];
+  }
   const me = session.store.entity(session.playerHandle);
   if (me.pos === null || me.space === null) return undefined;
   const space = session.store.space(me.space);
@@ -631,7 +668,7 @@ function useSkill(tag, x, y, extra = {}) {
     const fields = signature.params.fields ?? {};
     const params = { actor: session.playerHandle };
     if (fields.target !== undefined) {
-      const handle = resolveTarget(x, y);
+      const handle = resolveTarget(x, y, signature.skill.target.filter);
       if (handle === undefined) {
         return snapshot("没有可以指向的目标");
       }

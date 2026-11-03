@@ -17,6 +17,7 @@ import { type JsonValue } from "../time.ts";
 import { type Signature } from "../event/registry.ts";
 import { type EvaluateContext } from "../event/evaluate.ts";
 import { blockersAt } from "./collision.ts";
+import { matches, type Condition } from "../traversal/filter.ts";
 
 export const aimSignature: Signature = {
   tag: "core.aim",
@@ -28,9 +29,12 @@ export const aimSignature: Signature = {
       range: { t: "int" },
       x: { t: "int" },
       y: { t: "int" },
-      /** 只接受带这个组件的目标（可选）。 */
+      /** 只接受带这个组件的目标（可选，旧写法）。 */
       component: { t: "str" },
+      /** 条件（来自 base 的 filters，可选，新写法）。 */
+      condition: { t: "any" },
     },
+    optional: ["component", "condition"],
   },
   result: { t: "any" },
   returnsEffects: false,
@@ -61,10 +65,15 @@ export function aimHandler(params: JsonValue, context: EvaluateContext): JsonVal
   const occupants = space.occupantsAt(cell).filter((handle) => handle !== (p.actor as number));
 
   if (p.kind === "entity") {
+    const condition = typeof p.condition === "object" && p.condition !== null ? (p.condition as Condition) : undefined;
     const wanted = typeof p.component === "string" ? p.component : undefined;
-    const target = occupants.find((handle) =>
-      wanted === undefined ? true : context.view.entity(handle).components[wanted] !== undefined,
-    );
+
+    const target = occupants.find((handle) => {
+      const components = context.view.entity(handle).components;
+      if (condition !== undefined) return matches(condition, components);
+      if (wanted !== undefined) return components[wanted] !== undefined;
+      return true;
+    });
     if (target === undefined) {
       return { ok: false, cells: [], reason: "那里没有可以作用的目标" };
     }
