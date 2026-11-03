@@ -462,6 +462,7 @@ function togglePolicyWindow() {
         closePolicyWindow();
         openPolicyWindow();
         renderClickPolicy();
+renderEquip();
       });
       node.style.width = '34px';
       node.style.height = '26px';
@@ -573,6 +574,39 @@ function isItem(entity) {
 
 function hasDialog(entity) {
   return Boolean(entity.components && entity.components['core.dialog']);
+}
+
+function renderMinimap(state) {
+  const box = document.getElementById('minimap');
+  if (box === null) return;
+
+  const space = (state.snapshot.spaces || [])[0];
+  if (space === undefined) return;
+
+  const cell = 4;
+  const size = minimapSize(space, cell);
+  const marks = (state.snapshot.entities || [])
+    .filter((entity) => entity.x !== undefined && entity.y !== undefined)
+    .map((entity) => ({
+      x: entity.x,
+      y: entity.y,
+      color: entity.handle === state.playerHandle ? "#8ab4f8" : "#c96a5a",
+    }));
+
+  mount(box, canvasNode(size.width, size.height, (context) => {
+    drawMinimap(context, { space, cell, marks });
+  }));
+}
+
+function renderEquip() {
+  const box = document.getElementById('equip');
+  if (box === null) return;
+  box.textContent = '';
+  for (let i = 0; i < 6; i += 1) {
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    box.appendChild(slot);
+  }
 }
 
 function showDeath() {
