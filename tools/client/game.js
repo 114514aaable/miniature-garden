@@ -420,19 +420,47 @@ const ACTION_LABEL = {
   take: '拾',
 };
 
+/**
+ * 右下角 3×4：一个按钮，打开「点击策略」弱窗口。
+ *
+ * 弱窗口 = 不抢焦点、不遮全屏、点外面就关——
+ * 开着它，游戏照常能操作。
+ */
 function renderClickPolicy() {
   const box = document.getElementById('quick');
   if (box === null) return;
 
-  const rows = CLICK_ROWS.map((row) => {
-    const current = config.clickPolicy[row.key];
-    const cells = row.actions.map((action) => {
+  const summary = ['hostile', 'neutral', 'friendly', 'item']
+    .map((key) => ACTION_LABEL[config.clickPolicy[key]])
+    .join(' ');
+
+  const node = button('点击 ▾', () => togglePolicyWindow());
+  node.style.width = '96px';
+  node.style.height = '52px';
+  node.style['font-size'] = '12px';
+  node.title = '当前：' + summary;
+
+  mount(box, col({ gap: 2, align: 'end' },
+    node,
+    text(summary, { policy: 'fixed' }),
+  ));
+}
+
+/** 弱窗口：贴着右下角，不遮全屏。 */
+function togglePolicyWindow() {
+  const box = document.getElementById('policy');
+  if (box === null) return;
+  if (!box.hidden) { closePolicyWindow(); return; }
+
+  const rows = CLICK_ROWS.map((entry) => {
+    const current = config.clickPolicy[entry.key];
+    const cells = entry.actions.map((action) => {
       const picked = current === action;
       const node = button(ACTION_LABEL[action], () => {
-        config = withConfig(config, {
-          clickPolicy: { ...config.clickPolicy, [row.key]: action },
-        });
+        config = withConfig(config, { clickPolicy: { ...config.clickPolicy, [entry.key]: action } });
         saveConfig(config);
+        closePolicyWindow();
+        openPolicyWindow();
         renderClickPolicy();
       });
       node.style.width = '34px';
@@ -445,15 +473,31 @@ function renderClickPolicy() {
     });
 
     return row({ gap: 2, align: 'center' },
-      text(row.label, { policy: 'fixed', width: 30 }),
+      text(entry.label, { policy: 'fixed', width: 30 }),
       ...cells,
     );
   });
 
-  mount(box, col({ gap: 2 }, ...rows));
+  mount(box, panel({ padding: 8, gap: 4, policy: 'fit' },
+    col({ gap: 4 },
+      ...rows,
+      row({ gap: 6, justify: 'end' }, button('关', () => closePolicyWindow())),
+    ),
+  ));
+  box.hidden = false;
 }
 
-renderClickPolicy();
+function openPolicyWindow() {
+  const box = document.getElementById('policy');
+  if (box !== null) togglePolicyWindow();
+}
+
+function closePolicyWindow() {
+  const box = document.getElementById('policy');
+  if (box === null) return;
+  box.hidden = true;
+  box.textContent = '';
+}
 
 function activateSlot(index) {
   const entry = hotbarSlots[index];
@@ -568,6 +612,16 @@ function cellAt(event) {
   const rect = canvas.getBoundingClientRect();
   return renderer.cellAt(event.clientX - rect.left, event.clientY - rect.top);
 }
+
+// 点别处就关弱窗口（它不抢焦点，所以靠自己监听）
+document.addEventListener('pointerdown', (event) => {
+  const box = document.getElementById('policy');
+  if (box === null || box.hidden) return;
+  const target = event.target;
+  if (target instanceof Element && target.closest('#policy')) return;
+  if (target instanceof Element && target.closest('#quick')) return;
+  closePolicyWindow();
+});
 
 document.getElementById('map').addEventListener('mousemove', (event) => {
   if (renderer === null) return;

@@ -12,9 +12,6 @@
  * 这里只放**表现层**的东西。玩法参数（时钟成本、伤害公式）在世界包里，不放这。
  */
 
-/** 配置格式版本：老版本读进来时按新默认迁移。 */
-export const CONFIG_VERSION = 3;
-
 /** 点击一个单位时默认做什么。 */
 export type ClickAction = "attack" | "talk" | "inspect";
 
@@ -39,8 +36,6 @@ export interface Config {
   readonly speed: number;
   /** 开发者模式：显示 tick、调度、意图等调试信息。 */
   readonly devMode: boolean;
-  /** 配置版本（用于迁移）。 */
-  readonly version: number;
   /** 点击默认行为：按阵营决定。 */
   readonly clickPolicy: ClickPolicy;
   /** 按键映射：物理键 → 命令。 */
@@ -48,7 +43,6 @@ export interface Config {
 }
 
 export const DEFAULT_CONFIG: Config = {
-  version: CONFIG_VERSION,
   clickPolicy: { hostile: "attack", neutral: "talk", friendly: "talk", item: "take" },
   hotbarCell: 38,
   inventoryCell: 38,
@@ -77,19 +71,13 @@ export function loadConfig(storage: Pick<Storage, "getItem"> = localStorage): Co
   try {
     const raw = storage.getItem(STORAGE_KEY);
     if (raw === null) return DEFAULT_CONFIG;
-    const saved = JSON.parse(raw) as Partial<Config> & { version?: number };
-
-    // 老版本配置：只保留稳定的东西（按键、界面尺寸），行为类一律回默认。
-    // 否则「以前存下的点击策略」会一直压着新默认值。
-    const migrated = (saved.version ?? 1) < CONFIG_VERSION;
-    const merged: Config = {
+    const saved = JSON.parse(raw) as Partial<Config>;
+    return {
       ...DEFAULT_CONFIG,
       ...saved,
-      version: CONFIG_VERSION,
       bindings: { ...DEFAULT_CONFIG.bindings, ...(saved.bindings ?? {}) },
-      ...(migrated ? { clickPolicy: DEFAULT_CONFIG.clickPolicy } : {}),
+      clickPolicy: { ...DEFAULT_CONFIG.clickPolicy, ...(saved.clickPolicy ?? {}) },
     };
-    return merged;
   } catch {
     return DEFAULT_CONFIG;
   }

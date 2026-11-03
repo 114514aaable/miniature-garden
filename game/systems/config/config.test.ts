@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { clampCell, CONFIG_VERSION, DEFAULT_CONFIG, loadConfig, saveConfig, withBinding, withConfig } from "./config.ts";
+import { clampCell, DEFAULT_CONFIG, loadConfig, saveConfig, withBinding, withConfig } from "./config.ts";
 
 function fakeStorage(initial: Record<string, string> = {}) {
   const data = { ...initial };
@@ -64,26 +64,6 @@ test("格子大小被夹在 24..96", () => {
   assert.equal(clampCell(Number.NaN), 38);
 });
 
-test("老版本配置：没有 version 就当老配置，仍然能读", () => {
-  const storage = fakeStorage({
-    "nw.config": JSON.stringify({ bindings: { KeyQ: "skill:core.cast" } }),
-  });
-
-  const config = loadConfig(storage);
-  assert.equal(config.bindings.KeyQ, "skill:core.cast");
-  assert.equal(config.version, CONFIG_VERSION);
-});
-
-test("新版本配置：版本号保留", () => {
-  const storage = fakeStorage({
-    "nw.config": JSON.stringify({ version: CONFIG_VERSION, hotbarCell: 48 }),
-  });
-
-  const config = loadConfig(storage);
-  assert.equal(config.hotbarCell, 48);
-  assert.equal(config.version, CONFIG_VERSION);
-});
-
 test("默认点击策略：敌对攻击、中立/友好交谈、物品拾取", () => {
   const config = loadConfig(fakeStorage());
   assert.deepEqual(config.clickPolicy, {
@@ -92,18 +72,4 @@ test("默认点击策略：敌对攻击、中立/友好交谈、物品拾取", (
     friendly: "talk",
     item: "take",
   });
-});
-
-test("老版本配置：点击策略回默认，按键保留", () => {
-  const storage = fakeStorage({
-    "nw.config": JSON.stringify({
-      clickPolicy: { hostile: "attack", neutral: "attack", friendly: "attack", item: "inspect" },
-      bindings: { KeyQ: "skill:core.cast" },
-    }),
-  });
-
-  const config = loadConfig(storage);
-  assert.equal(config.clickPolicy.neutral, "talk");
-  assert.equal(config.clickPolicy.item, "take");
-  assert.equal(config.bindings.KeyQ, "skill:core.cast");
 });

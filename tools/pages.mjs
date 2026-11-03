@@ -233,6 +233,11 @@ export const GAME_PAGE = `<!doctype html>
              padding: 6px 10px; background: rgba(10,12,16,0.92); border: 1px solid #2a303c;
              border-radius: 6px; color: #c7cdd6; font-size: 12px; white-space: pre-wrap; }
   #quick { position: absolute; right: 10px; bottom: 10px; z-index: var(--z-region); }
+  /* 弱窗口：贴着右下角，不遮全屏，不抢焦点 */
+  #policy { position: absolute; right: 10px; bottom: 74px; z-index: var(--z-region-mask);
+            background: #10131a; border: 1px solid #2a303c; border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+  #policy[hidden] { display: none; }
   #dialog { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%);
             width: min(560px, 86vw); z-index: var(--z-modal); }
   #minimap { position: absolute; right: 10px; top: 54px; padding: 4px; z-index: var(--z-region);
@@ -289,6 +294,7 @@ export const GAME_PAGE = `<!doctype html>
   <div id="tooltip" hidden></div>
   <div id="death" hidden></div>
   <div id="dialog" hidden></div>
+  <div id="policy" hidden></div>
   <div id="inventory" hidden></div>
 
   <details id="devpanel">
