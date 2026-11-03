@@ -63,6 +63,9 @@ migrateLocalState();
 
 /** 当前独占输入的窗口：null = 游戏本体。 */
 let uiFocus = null;
+
+/** 正在选目标的技能（E 说话、以后的法术）。 */
+let pendingSkill = null;
 const bindings = () => config.bindings;
 
 function formatDebug(debug) {
@@ -594,7 +597,7 @@ document.getElementById('map').addEventListener('mousemove', (event) => {
 
   const cell = cellAt(event);
   renderer.setCursor(cell);
-  api('/api/aim', { tag: 'base.attack', x: cell.x, y: cell.y }).then((result) => {
+  api('/api/aim', { tag: pendingSkill ?? 'base.attack', x: cell.x, y: cell.y }).then((result) => {
     renderer.setAim(result.ok ? result.cells : []);
   });
   api('/api/inspect', { x: cell.x, y: cell.y }).then((info) => {
@@ -637,6 +640,13 @@ document.getElementById('map').addEventListener('click', (event) => {
   if (renderer === null || lastState === null || uiFocus !== null) return;
   const cell = cellAt(event);
   const me = playerCell(lastState);
+
+  if (pendingSkill !== null) {
+    const tag = pendingSkill;
+    pendingSkill = null;
+    useSkill(tag, cell.x, cell.y);
+    return;
+  }
 
   // 点自己脚下：捡东西（这就是「拾取键」）
   if (me !== null && me.x === cell.x && me.y === cell.y) {
@@ -800,6 +810,12 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
+  if (pendingSkill !== null && event.code === 'Escape') {
+    pendingSkill = null;
+    document.getElementById('message').textContent = '取消';
+    return;
+  }
+
   // 场景在跑（对话）：数字键选选项、Esc 离开
   if (lastState !== null && lastState.scene && lastState.scene.id !== 'explore') {
     if (event.code === 'Escape') { sceneCommand('close'); return; }
@@ -826,7 +842,11 @@ window.addEventListener('keydown', (event) => {
   }
 
   if (!document.getElementById('settings').hidden) return;
-  if (parsed.kind === 'ui' && parsed.value === 'talk') { useSkill('base.talk'); return; }
+  if (parsed.kind === 'ui' && parsed.value === 'talk') {
+    pendingSkill = 'base.talk';
+    document.getElementById('message').textContent = '选择要交谈的人（Esc 取消）';
+    return;
+  }
   if (parsed.kind === 'move') act(parsed.value);
   else if (parsed.kind === 'skill') useSkill(parsed.value);
 });

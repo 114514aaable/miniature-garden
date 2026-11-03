@@ -557,7 +557,14 @@ function aimAt(tag, x, y) {
     {
       id: session.store.now() + 1,
       tag: "core.aim",
-      params: { actor: session.playerHandle, kind, range: signature.skill.target.range, x, y },
+      params: {
+        actor: session.playerHandle,
+        kind,
+        range: signature.skill.target.range,
+        ...(signature.skill.target.component === undefined ? {} : { component: signature.skill.target.component }),
+        x,
+        y,
+      },
     },
     session.link,
     session.handlers,

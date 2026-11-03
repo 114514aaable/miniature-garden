@@ -28,6 +28,8 @@ export const aimSignature: Signature = {
       range: { t: "int" },
       x: { t: "int" },
       y: { t: "int" },
+      /** 只接受带这个组件的目标（可选）。 */
+      component: { t: "str" },
     },
   },
   result: { t: "any" },
@@ -59,7 +61,10 @@ export function aimHandler(params: JsonValue, context: EvaluateContext): JsonVal
   const occupants = space.occupantsAt(cell).filter((handle) => handle !== (p.actor as number));
 
   if (p.kind === "entity") {
-    const target = occupants.find((handle) => context.view.entity(handle).components["core.health"] !== undefined);
+    const wanted = typeof p.component === "string" ? p.component : undefined;
+    const target = occupants.find((handle) =>
+      wanted === undefined ? true : context.view.entity(handle).components[wanted] !== undefined,
+    );
     if (target === undefined) {
       return { ok: false, cells: [], reason: "那里没有可以作用的目标" };
     }
