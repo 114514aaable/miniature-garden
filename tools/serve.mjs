@@ -335,7 +335,7 @@ function snapshot(message) {
       tag: skill.tag,
       name: skill.name,
       cost: skill.cost,
-      target: skill.target.kind,
+      target: { kind: skill.target.kind, range: skill.target.range, ...(skill.target.component === undefined ? {} : { component: skill.target.component }) },
     })),
     events: session.lastEvents.map((entry) => `#${entry.id} ${entry.kind} ${JSON.stringify(entry.data)}`),
     devlog: session.devlog.tail(200).map(formatLine),
