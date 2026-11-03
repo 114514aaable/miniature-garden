@@ -1,7 +1,6 @@
 import { api } from '/client/shared.js';
 import { attach } from '/web/game/systems/render/browser.js';
 import { row, col, text, button, toggle, modal, panel, grid, bar, canvasNode, withEvents } from '/web/game/systems/ui/spec.js';
-import { drawMinimap, minimapSize } from '/web/game/systems/ui/minimap.js';
 import { clampCell, loadConfig, saveConfig, withBinding, withConfig } from '/web/game/systems/config/config.js';
 import { commandFor, parseCommand } from '/web/game/systems/input/bindings.js';
 import { mount, render as renderNode } from '/web/game/systems/ui/dom.js';
@@ -490,6 +489,27 @@ function renderEquip() {
   }
 }
 
+/** 传给区域模块的上下文：它们不直接碰 config 与网络。 */
+function hudContext() {
+  return {
+    config,
+    setClickPolicy(key, action) {
+      config = withConfig(config, { clickPolicy: { ...config.clickPolicy, [key]: action } });
+      saveConfig(config);
+      refreshHud();
+    },
+    useSkill,
+    beginSelection,
+    needsTarget,
+  };
+}
+
+/** 重画所有常驻区域。 */
+function refreshHud() {
+  renderQuickbar(hudContext());
+  renderEquip();
+}
+
 function showDeath() {
   const box = document.getElementById('death');
   if (!box.hidden) return;
@@ -845,6 +865,7 @@ window.addEventListener('keydown', (event) => {
   }
   stateSkills = state.skills;
   hotbarItems = (await api('/api/inventory')).items || [];
+  refreshHud();
   render(state);
   applySettings();
   applyPortraitCollapsed();
