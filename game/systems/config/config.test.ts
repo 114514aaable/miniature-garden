@@ -83,3 +83,27 @@ test("新版本配置：版本号保留", () => {
   assert.equal(config.hotbarCell, 48);
   assert.equal(config.version, CONFIG_VERSION);
 });
+
+test("默认点击策略：敌对攻击、中立/友好交谈、物品拾取", () => {
+  const config = loadConfig(fakeStorage());
+  assert.deepEqual(config.clickPolicy, {
+    hostile: "attack",
+    neutral: "talk",
+    friendly: "talk",
+    item: "take",
+  });
+});
+
+test("老版本配置：点击策略回默认，按键保留", () => {
+  const storage = fakeStorage({
+    "nw.config": JSON.stringify({
+      clickPolicy: { hostile: "attack", neutral: "attack", friendly: "attack", item: "inspect" },
+      bindings: { KeyQ: "skill:core.cast" },
+    }),
+  });
+
+  const config = loadConfig(storage);
+  assert.equal(config.clickPolicy.neutral, "talk");
+  assert.equal(config.clickPolicy.item, "take");
+  assert.equal(config.bindings.KeyQ, "skill:core.cast");
+});

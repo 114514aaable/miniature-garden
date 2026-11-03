@@ -13,7 +13,18 @@
  */
 
 /** 配置格式版本：老版本读进来时按新默认迁移。 */
-export const CONFIG_VERSION = 2;
+export const CONFIG_VERSION = 3;
+
+/** 点击一个单位时默认做什么。 */
+export type ClickAction = "attack" | "talk" | "inspect";
+
+export interface ClickPolicy {
+  readonly hostile: ClickAction;
+  readonly neutral: ClickAction;
+  readonly friendly: ClickAction;
+  /** 点物品：直接拿走，还是先看看。 */
+  readonly item: "take" | "inspect";
+}
 
 export interface Config {
   /** 底部快捷栏格子边长（px）。 */
@@ -30,12 +41,15 @@ export interface Config {
   readonly devMode: boolean;
   /** 配置版本（用于迁移）。 */
   readonly version: number;
+  /** 点击默认行为：按阵营决定。 */
+  readonly clickPolicy: ClickPolicy;
   /** 按键映射：物理键 → 命令。 */
   readonly bindings: Readonly<Record<string, string>>;
 }
 
 export const DEFAULT_CONFIG: Config = {
   version: CONFIG_VERSION,
+  clickPolicy: { hostile: "attack", neutral: "talk", friendly: "talk", item: "take" },
   hotbarCell: 38,
   inventoryCell: 38,
   inventoryColumns: 8,
@@ -73,7 +87,7 @@ export function loadConfig(storage: Pick<Storage, "getItem"> = localStorage): Co
       ...saved,
       version: CONFIG_VERSION,
       bindings: { ...DEFAULT_CONFIG.bindings, ...(saved.bindings ?? {}) },
-      ...(migrated ? {} : {}),
+      ...(migrated ? { clickPolicy: DEFAULT_CONFIG.clickPolicy } : {}),
     };
     return merged;
   } catch {

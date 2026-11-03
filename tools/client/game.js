@@ -38,7 +38,7 @@ function migrateTag(tag) {
 
 /** 把浏览器的旧引用一次性迁移掉——启动时做，别等到用户点。 */
 function migrateLocalState() {
-  for (const key of ['nw.hotbar', 'nw.quick']) {
+  for (const key of ['nw.hotbar']) {
     try {
       const raw = JSON.parse(localStorage.getItem(key) || 'null');
       if (!Array.isArray(raw)) continue;
@@ -64,8 +64,6 @@ migrateLocalState();
 /** 当前独占输入的窗口：null = 游戏本体。 */
 let uiFocus = null;
 
-/** 点击默认行为：先写死，等要做配置界面时再挪回 config。 */
-const CLICK_ACTIONS = { hostile: 'attack', neutral: 'talk', friendly: 'talk', item: 'take' };
 
 /**
  * 统一的「选目标」：所有需要目标的技能都走这里。
@@ -402,138 +400,60 @@ function renderHotbar(state) {
   mount(document.getElementById('skills'), row({ gap: 8, align: 'center' }, bar, ...extras));
 }
 
-const QUICK_COLUMNS = 3;
-const QUICK_SLOTS = 12;
-
-const DEFAULT_QUICK = [
-  { kind: 'skill', ref: 'core.take' },
-  { kind: 'skill', ref: 'core.drop' },
-  { kind: 'skill', ref: 'core.wait' },
-  { kind: 'skill', ref: 'base.attack' },
-  { kind: 'ui', ref: 'inventory' },
-  { kind: 'ui', ref: 'settings' },
-  { kind: 'ui', ref: 'save' },
-  { kind: 'ui', ref: 'load' },
-  null, null, null, null,
+/**
+ * 右下角 3×4：点击策略面板。
+ *
+ * 四行 = 敌对 / 中立 / 友好 / 物品；三列 = 可选动作。
+ * 点一下立即生效并存进 config，刷新还在。
+ */
+const CLICK_ROWS = [
+  { key: 'hostile', label: '敌对', actions: ['attack', 'talk', 'inspect'] },
+  { key: 'neutral', label: '中立', actions: ['attack', 'talk', 'inspect'] },
+  { key: 'friendly', label: '友好', actions: ['attack', 'talk', 'inspect'] },
+  { key: 'item', label: '物品', actions: ['take', 'inspect'] },
 ];
 
-function loadQuick() {
-  try {
-    const raw = JSON.parse(localStorage.getItem('nw.quick') || 'null');
-    if (!Array.isArray(raw)) return [...DEFAULT_QUICK];
-    const slots = new Array(QUICK_SLOTS).fill(null);
-    for (let i = 0; i < QUICK_SLOTS; i += 1) slots[i] = raw[i] ?? null;
-    return slots;
-  } catch {
-    return [...DEFAULT_QUICK];
-  }
-}
-
-let quickSlots = loadQuick();
-
-const SKILL_FALLBACK = {
-  'core.take': '拾取',
-  'core.drop': '放下',
-  'core.wait': '等待',
-  'base.attack': '劈砍',
-  'base.cast': '蓄力',
-  'core.use': '使用',
+const ACTION_LABEL = {
+  attack: '攻',
+  talk: '谈',
+  inspect: '看',
+  take: '拾',
 };
 
-function quickLabel(entry) {
-  if (entry === null) return '';
-  if (entry.kind === 'skill') {
-    const skill = hotbarSkills.find((row) => row.tag === entry.ref);
-    return skill ? skill.name : (SKILL_FALLBACK[entry.ref] ?? entry.ref);
-  }
-  return { inventory: '背包', settings: '设置', save: '存档', load: '读档' }[entry.ref] ?? entry.ref;
-}
-
-function activateQuick(index) {
-  const entry = quickSlots[index];
-  if (entry === null) return;
-  if (entry.kind === 'skill') {
-    const skill = hotbarSkills.find((row) => row.tag === entry.ref);
-    if (skill === undefined) return;
-    if (needsTarget(skill)) { beginSelection(skill.tag, skill.name); return; }
-    useSkill(entry.ref);
-    return;
-  }
-  if (entry.ref === 'inventory') toggleInventory();
-  else if (entry.ref === 'settings') openSettings();
-  else if (entry.ref === 'save') api('/api/save', {}).then((next) => { if (lastState !== null) render(next); });
-  else if (entry.ref === 'load') api('/api/load', {}).then((next) => { if (lastState !== null) render(next); });
-}
-
-/** 小地图：把当前空间压成一张缩略图，玩家蓝、其他红。 */
-function renderMinimap(state) {
-  const box = document.getElementById('minimap');
+function renderClickPolicy() {
+  const box = document.getElementById('quick');
   if (box === null) return;
 
-  const space = (state.snapshot.spaces || [])[0];
-  if (space === undefined) return;
-
-  const cell = 4;
-  const size = minimapSize(space, cell);
-  const marks = (state.snapshot.entities || [])
-    .filter((entity) => entity.x !== undefined && entity.y !== undefined)
-    .map((entity) => ({
-      x: entity.x,
-      y: entity.y,
-      color: entity.handle === state.playerHandle ? "#8ab4f8" : "#c96a5a",
-    }));
-
-  mount(box, canvasNode(size.width, size.height, (context) => {
-    drawMinimap(context, { space, cell, marks });
-  }));
-}
-
-function renderQuick() {
-  const cells = quickSlots.map((entry, index) => {
-    const label = quickLabel(entry);
-    const node = button(label, () => activateQuick(index));
-    node.style.width = config.hotbarCell + 'px';
-    node.style.height = config.hotbarCell + 'px';
-    node.style['font-size'] = '10px';
-    node.style.padding = '0';
-    node.style['border-radius'] = '0';
-    node.style.border = '1px solid #2a303c';
-    node.style.background = entry ? '#1d2432' : 'transparent';
-
-    return withEvents(node, {
-      dragover: (event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; },
-      drop: (event) => {
-        event.preventDefault();
-        const data = JSON.parse(event.dataTransfer.getData('text/plain'));
-        quickSlots[index] = { kind: data.kind, ref: data.ref };
-        localStorage.setItem('nw.quick', JSON.stringify(quickSlots));
-        renderEquip();
-  renderQuick();
-      },
-      contextmenu: (event) => {
-        event.preventDefault();
-        quickSlots[index] = null;
-        localStorage.setItem('nw.quick', JSON.stringify(quickSlots));
-        renderQuick();
-      },
+  const rows = CLICK_ROWS.map((row) => {
+    const current = config.clickPolicy[row.key];
+    const cells = row.actions.map((action) => {
+      const picked = current === action;
+      const node = button(ACTION_LABEL[action], () => {
+        config = withConfig(config, {
+          clickPolicy: { ...config.clickPolicy, [row.key]: action },
+        });
+        saveConfig(config);
+        renderClickPolicy();
+      });
+      node.style.width = '34px';
+      node.style.height = '26px';
+      node.style['font-size'] = '12px';
+      node.style['border-radius'] = '0';
+      node.style.border = picked ? '1px solid #8ab4f8' : '1px solid #2a303c';
+      node.style.background = picked ? '#26303f' : 'transparent';
+      return node;
     });
+
+    return row({ gap: 2, align: 'center' },
+      text(row.label, { policy: 'fixed', width: 30 }),
+      ...cells,
+    );
   });
 
-  mount(document.getElementById('quick'), grid({ columns: QUICK_COLUMNS, cell: config.hotbarCell, gap: 0 }, ...cells));
+  mount(box, col({ gap: 2 }, ...rows));
 }
 
-renderQuick();
-
-function renderEquip() {
-  const box = document.getElementById('equip');
-  if (box === null) return;
-  box.textContent = '';
-  for (let i = 0; i < 6; i += 1) {
-    const slot = document.createElement('div');
-    slot.className = 'slot';
-    box.appendChild(slot);
-  }
-}
+renderClickPolicy();
 
 function activateSlot(index) {
   const entry = hotbarSlots[index];
@@ -711,7 +631,7 @@ document.getElementById('map').addEventListener('click', (event) => {
   // 点别人：按「操作组」的默认行为决定
   const target = entityAtCell(cell);
   if (target !== null && isItem(target)) {
-    if (CLICK_ACTIONS.item === 'take') {
+    if (config.clickPolicy.item === 'take') {
       const me = playerCell(lastState);
       if (me !== null && me.x === cell.x && me.y === cell.y) {
         useSkill('core.take');
@@ -724,7 +644,7 @@ document.getElementById('map').addEventListener('click', (event) => {
 
   if (target !== null) {
     const disposition = dispositionOf(target);
-    const action = CLICK_ACTIONS[disposition] ?? 'inspect';
+    const action = config.clickPolicy[disposition] ?? 'inspect';
 
     // 没有血的不是战斗目标（箱子、掉在地上的东西）——只观察
     const living = Boolean(target.components && target.components['core.health']);
@@ -804,7 +724,6 @@ async function openSettings(page = 'root') {
           config = withConfig(config, { devMode: !config.devMode });
           saveConfig(config);
           applyDevMode();
-  renderQuick();
           openSettings('config');
         }),
       ),
