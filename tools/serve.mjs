@@ -1144,7 +1144,7 @@ const server = createServer(async (request, response) => {
 
     if (request.url.startsWith("/client/")) {
       const name = request.url.slice("/client/".length).split("?")[0];
-      if (!/^[a-z0-9_-]+\.js$/.test(name)) {
+      if (!/^([a-z0-9_-]+\/)*[a-z0-9_-]+\.js$/.test(name)) {
         response.writeHead(404);
         response.end("not found");
         return;

@@ -15,7 +15,14 @@
 
 import { readFileSync } from "node:fs";
 
-const FILES = ["tools/client/game.js", "tools/client/launcher.js", "tools/client/shared.js"];
+const FILES = [
+  "tools/client/game.js",
+  "tools/client/launcher.js",
+  "tools/client/shared.js",
+  "tools/client/hud/quickbar.js",
+  "tools/client/hud/status.js",
+  "tools/client/hud/minimap.js",
+];
 
 const GLOBALS = new Set([
   "Array", "Boolean", "Date", "Element", "Error", "HTMLElement", "Intl", "JSON", "Map", "Math",

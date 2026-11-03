@@ -5,6 +5,9 @@ import { drawMinimap, minimapSize } from '/web/game/systems/ui/minimap.js';
 import { clampCell, loadConfig, saveConfig, withBinding, withConfig } from '/web/game/systems/config/config.js';
 import { commandFor, parseCommand } from '/web/game/systems/input/bindings.js';
 import { mount, render as renderNode } from '/web/game/systems/ui/dom.js';
+import { closePolicy, renderQuickbar } from '/client/hud/quickbar.js';
+import { renderStatus } from '/client/hud/status.js';
+import { renderMinimap } from '/client/hud/minimap.js';
 
 
 // 游戏页面不该有浏览器的默认权力：拖拽不要导航、右键不要菜单、文字不要选中
@@ -123,15 +126,7 @@ function render(state) {
   renderMinimap(state);
   renderDialog(state);
 
-  const ready = state.hud.readyAt > state.tick
-    ? '恢复中 还要 ' + (state.hud.readyAt - state.tick) + ' 回合'
-    : '可以行动';
-
-  mount(document.getElementById('status'), col({ gap: 6 },
-    bar(state.hud.hp, state.hud.hpMax, { label: 'HP', showValue: true, height: 16, color: state.hud.hp * 3 < state.hud.hpMax ? '#c96a5a' : '#4fd658' }),
-    text('背包 ' + state.hud.inventory.length + ' · tick ' + state.tick, { policy: 'fixed' }),
-    text(ready, { policy: 'fixed' }),
-  ));
+  renderStatus(state);
 
   if (state.dead) showDeath();
   document.getElementById('message').textContent = state.message;
@@ -406,114 +401,6 @@ function renderHotbar(state) {
  * 四行 = 敌对 / 中立 / 友好 / 物品；三列 = 可选动作。
  * 点一下立即生效并存进 config，刷新还在。
  */
-const CLICK_ROWS = [
-  { key: 'hostile', label: '敌对', actions: ['attack', 'talk', 'inspect'] },
-  { key: 'neutral', label: '中立', actions: ['attack', 'talk', 'inspect'] },
-  { key: 'friendly', label: '友好', actions: ['attack', 'talk', 'inspect'] },
-  { key: 'item', label: '物品', actions: ['take', 'inspect'] },
-];
-
-const ACTION_LABEL = {
-  attack: '攻',
-  talk: '谈',
-  inspect: '看',
-  take: '拾',
-};
-
-/**
- * 右下角 3×4：一个按钮，打开「点击策略」弱窗口。
- *
- * 弱窗口 = 不抢焦点、不遮全屏、点外面就关——
- * 开着它，游戏照常能操作。
- */
-function renderClickPolicy() {
-  const box = document.getElementById('quick');
-  if (box === null) return;
-
-  const SIZE = 34;
-  const cells = [];
-
-  // 第一格：打开点击配置
-  const open = button('点击', () => togglePolicyWindow());
-  open.style.width = SIZE + 'px';
-  open.style.height = SIZE + 'px';
-  open.style['font-size'] = '10px';
-  open.style['border-radius'] = '0';
-  open.style.border = '1px solid #4a6da8';
-  open.style.background = '#1d2432';
-  cells.push(open);
-
-  // 其余格子：空的，等以后放动作
-  for (let i = 1; i < 12; i += 1) {
-    const empty = text('', { policy: 'fixed', width: SIZE, height: SIZE });
-    empty.style['border-radius'] = '0';
-    empty.style.border = '1px solid #2a303c';
-    empty.style.background = 'transparent';
-    cells.push(empty);
-  }
-
-  mount(box, grid({ columns: 3, cell: SIZE, gap: 0 }, ...cells));
-}
-
-/** 弱窗口：贴着右下角，不遮全屏。 */
-function togglePolicyWindow() {
-  const box = document.getElementById('policy');
-  if (box === null) return;
-  if (!box.hidden) { closePolicyWindow(); return; }
-
-  const rows = CLICK_ROWS.map((entry) => {
-    const current = config.clickPolicy[entry.key];
-    const cells = entry.actions.map((action) => {
-      const picked = current === action;
-      const node = button(ACTION_LABEL[action], () => {
-        config = withConfig(config, { clickPolicy: { ...config.clickPolicy, [entry.key]: action } });
-        saveConfig(config);
-        closePolicyWindow();
-        openPolicyWindow();
-        try {
-  renderClickPolicy();
-  renderEquip();
-} catch (error) {
-  const box = document.getElementById('quick');
-  if (box !== null) box.textContent = '右下角渲染失败：' + (error && error.message ? error.message : error);
-  throw error;
-}
-      });
-      node.style.width = '34px';
-      node.style.height = '26px';
-      node.style['font-size'] = '12px';
-      node.style['border-radius'] = '0';
-      node.style.border = picked ? '1px solid #8ab4f8' : '1px solid #2a303c';
-      node.style.background = picked ? '#26303f' : 'transparent';
-      return node;
-    });
-
-    return row({ gap: 2, align: 'center' },
-      text(entry.label, { policy: 'fixed', width: 30 }),
-      ...cells,
-    );
-  });
-
-  mount(box, panel({ padding: 8, gap: 4, policy: 'fit' },
-    col({ gap: 4 },
-      ...rows,
-      row({ gap: 6, justify: 'end' }, button('关', () => closePolicyWindow())),
-    ),
-  ));
-  box.hidden = false;
-}
-
-function openPolicyWindow() {
-  const box = document.getElementById('policy');
-  if (box !== null) togglePolicyWindow();
-}
-
-function closePolicyWindow() {
-  const box = document.getElementById('policy');
-  if (box === null) return;
-  box.hidden = true;
-  box.textContent = '';
-}
 
 function activateSlot(index) {
   const entry = hotbarSlots[index];
@@ -591,27 +478,6 @@ function hasDialog(entity) {
   return Boolean(entity.components && entity.components['core.dialog']);
 }
 
-function renderMinimap(state) {
-  const box = document.getElementById('minimap');
-  if (box === null) return;
-
-  const space = (state.snapshot.spaces || [])[0];
-  if (space === undefined) return;
-
-  const cell = 4;
-  const size = minimapSize(space, cell);
-  const marks = (state.snapshot.entities || [])
-    .filter((entity) => entity.x !== undefined && entity.y !== undefined)
-    .map((entity) => ({
-      x: entity.x,
-      y: entity.y,
-      color: entity.handle === state.playerHandle ? "#8ab4f8" : "#c96a5a",
-    }));
-
-  mount(box, canvasNode(size.width, size.height, (context) => {
-    drawMinimap(context, { space, cell, marks });
-  }));
-}
 
 function renderEquip() {
   const box = document.getElementById('equip');
@@ -669,7 +535,7 @@ document.addEventListener('pointerdown', (event) => {
   const target = event.target;
   if (target instanceof Element && target.closest('#policy')) return;
   if (target instanceof Element && target.closest('#quick')) return;
-  closePolicyWindow();
+  closePolicy();
 });
 
 document.getElementById('map').addEventListener('mousemove', (event) => {
