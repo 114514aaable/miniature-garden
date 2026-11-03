@@ -601,6 +601,10 @@ function dispositionOf(entity) {
   return value === 'hostile' || value === 'friendly' ? value : 'neutral';
 }
 
+function isItem(entity) {
+  return Boolean(entity.components && entity.components['core.item']);
+}
+
 function hasDialog(entity) {
   return Boolean(entity.components && entity.components['core.dialog']);
 }
@@ -625,11 +629,28 @@ function openOperationGroup() {
     );
   });
 
+  const itemRow = row({ gap: 6, align: 'center' },
+    text('物品', { policy: 'fixed', width: 48 }),
+    button((config.clickPolicy.item === 'take' ? '● ' : '') + '拾取', () => {
+      config = withConfig(config, { clickPolicy: { ...config.clickPolicy, item: 'take' } });
+      saveConfig(config);
+      closeOperationGroup();
+      openOperationGroup();
+    }),
+    button((config.clickPolicy.item === 'inspect' ? '● ' : '') + '观察', () => {
+      config = withConfig(config, { clickPolicy: { ...config.clickPolicy, item: 'inspect' } });
+      saveConfig(config);
+      closeOperationGroup();
+      openOperationGroup();
+    }),
+  );
+
   const box = document.getElementById('operation');
   box.hidden = false;
   box.textContent = '';
   box.appendChild(renderNode(modal(col({ gap: 8 },
     ...rows,
+    itemRow,
     text('没有对话的角色，选择「交谈」时会自动改成攻击。', { policy: 'fixed' }),
     row({ gap: 8, justify: 'end' }, button('关闭', () => closeOperationGroup())),
   ), { title: '操作组' })));
@@ -740,6 +761,18 @@ document.getElementById('map').addEventListener('click', (event) => {
 
   // 点别人：按「操作组」的默认行为决定
   const target = entityAtCell(cell);
+  if (target !== null && isItem(target)) {
+    if (config.clickPolicy.item === 'take') {
+      const me = playerCell(lastState);
+      if (me !== null && me.x === cell.x && me.y === cell.y) {
+        useSkill('core.take');
+      } else {
+        document.getElementById('message').textContent = '走过去才能捡起来。';
+      }
+    }
+    return;
+  }
+
   if (target !== null) {
     const disposition = dispositionOf(target);
     const action = config.clickPolicy[disposition] ?? 'inspect';

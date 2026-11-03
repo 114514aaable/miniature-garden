@@ -19,6 +19,8 @@ export interface ClickPolicy {
   readonly hostile: ClickAction;
   readonly neutral: ClickAction;
   readonly friendly: ClickAction;
+  /** 点物品：直接拿走，还是先看看。 */
+  readonly item: "take" | "inspect";
 }
 
 export interface Config {
@@ -47,7 +49,7 @@ export const DEFAULT_CONFIG: Config = {
   inventoryRows: 5,
   speed: 10,
   devMode: false,
-  clickPolicy: { hostile: "attack", neutral: "talk", friendly: "talk" },
+  clickPolicy: { hostile: "attack", neutral: "talk", friendly: "talk", item: "take" },
   bindings: {
     KeyW: "move:w",
     KeyA: "move:a",
