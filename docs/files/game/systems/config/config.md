@@ -10,6 +10,7 @@
 - `DEFAULT_CONFIG`
 - `clampCell`
 - `loadConfig`
+- `normalizeAction`
 - `saveConfig`
 - `withBinding`
 - `withConfig`

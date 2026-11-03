@@ -181,6 +181,33 @@ region.*          10
 
 **粒子必须在实体之后、情报叠加之前**——否则血条会被火星盖住。
 
+### 11. 客户端目录（三层）
+
+```
+tools/client/
+├─ game.js        启动、网络、输入路由、场景分发（只做调度）
+├─ shared.js      错误条 + api
+├─ launcher.js    启动器脚本
+├─ hud/           区域：常驻、不抢焦点、点外面不关
+│   ├─ status.js
+│   ├─ minimap.js
+│   └─ quickbar.js
+└─ （windows/ 与 scenes/ 尚未拆）
+```
+
+**区域（region）**：一直在、只读 state、通过 `mount` 画进固定容器。
+**窗口（window）**：抢焦点、有 open/close 生命周期（背包、设置）。
+**场景（scene）**：换掉玩法（对话、战斗）。
+
+判断标准：**它在不在、抢不抢键盘、换不换玩法**。
+
+区域模块**不直接碰 config 与网络**——宿主传一个 `ctx`：
+```
+{ clickPolicy（getter）, setClickPolicy, skills（getter）, useSkill, beginSelection, needsTarget }
+```
+
+**会变的数据传 getter，不传值**——否则会出现「改了但显示没变」。
+
 ## 相关（先别读，用到再看）
 
 | 文档 | 什么时候需要 |

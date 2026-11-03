@@ -4,9 +4,12 @@
 
 ## 导出
 
-- `ACTION_LABEL`
+- `BUILTIN_LABEL`
 - `CLICK_ROWS`
+- `actionLabel`
+- `actionsFor`
 - `closePolicy`
+- `cycleAction`
 - `renderQuickbar`
 - `togglePolicy`
 
