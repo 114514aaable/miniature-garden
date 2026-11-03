@@ -235,7 +235,9 @@ export const GAME_PAGE = `<!doctype html>
   #quick { position: absolute; right: 10px; bottom: 10px; z-index: var(--z-region);
            pointer-events: auto; }
   /* 弱窗口：贴着右下角，不遮全屏，不抢焦点 */
-  #policy { position: absolute; right: 10px; bottom: 74px; z-index: var(--z-region-mask);
+  /* 弱窗口：小卡片，不遮背景，能点 */
+  #policy { position: absolute; right: 10px; bottom: 146px; z-index: var(--z-region-mask);
+            pointer-events: auto; width: max-content;
             background: #10131a; border: 1px solid #2a303c; border-radius: 8px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
   #policy[hidden] { display: none; }
