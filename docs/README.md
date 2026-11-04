@@ -7,6 +7,7 @@
 | 写一个世界包（第一次） | [pack-guide.md](pack-guide.md) |
 | 查 world.json 的字段 | [world-format.md](world-format.md) |
 | 查某个规则/组件/模板的契约 | [modules/README.md](modules/README.md)（机器可读：[modules/index.json](modules/index.json)） |
+| **修 bug 前先看：每个文件干什么、有哪些函数** | [MAP.md](MAP.md)（自动生成） |
 | 现在做到哪了、下一步做什么 | [status.md](status.md) |
 | 理解整体设计 | [architecture.md](architecture.md) |
 | 看要做什么、不做什么 | [requirements.md](requirements.md) |
