@@ -453,7 +453,7 @@ function sceneView() {
 
 /** 读一个对话脚本（世界包里的 dialogs/*.json）。 */
 function loadDialogScript(scriptId) {
-  const world = session.world ?? "official.normal";
+  const world = session.world ?? "";
   const path = "game/worlds/" + world + "/dialogs/" + scriptId + ".json";
   const raw = JSON.parse(readFileSync(path, "utf8"));
   return createDialogScene(parseDialogScript(raw));

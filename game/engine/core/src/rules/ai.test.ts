@@ -19,6 +19,11 @@ function setup(enemyAt: { x: number; y: number }, walls: Array<{ x: number; y: n
 
   const templates = new TemplateRegistry();
   templates.defineComponent("core.solid", { t: "object", fields: {} });
+  templates.defineComponent("core.melee", {
+    t: "object",
+    fields: { damage: { t: "int" }, windup: { t: "int" } },
+    optional: ["windup"],
+  });
   templates.defineComponent("core.intent", {
     t: "object",
     fields: {
@@ -32,6 +37,7 @@ function setup(enemyAt: { x: number; y: number }, walls: Array<{ x: number; y: n
     id: "npc_salt",
     components: {
       "core.solid": {},
+      "core.melee": { damage: 2 },
       "core.intent": { kind: "melee", tiles: [], damage: 0, resolveAt: 0 },
     },
   });

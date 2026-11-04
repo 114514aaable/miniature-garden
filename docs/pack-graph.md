@@ -9,11 +9,11 @@
 
 | 种类 | 数量 |
 |---|---|
-| component | 14 |
+| component | 15 |
 | rule | 13 |
 | template | 5 |
-| entity | 5 |
 | terrain | 4 |
+| biome | 3 |
 | traversal | 1 |
 | space | 1 |
 | group | 1 |
@@ -43,17 +43,16 @@ graph LR
     component_core_dialog["对话"]
     component_core_disposition["阵营"]
     component_core_persistence["存在感"]
+    component_core_melee["近战"]
     traversal_base_traversal["base.traversal"]
+    biome_temperate["温带"]
+    biome_swamp["湿地"]
+    biome_dry["旱地"]
   end
   subgraph "official.normal"
-    space_harbor["harbor"]
+    space_field["field"]
     template_npc_salt["盐商"]
     template_item_potion["药水"]
-    entity_pc["pc"]
-    entity_salt["salt"]
-    entity_crate["crate"]
-    entity_lamp["lamp"]
-    entity_potion["potion"]
     group_camp["camp"]
     world_main["main"]
   end
@@ -72,19 +71,9 @@ graph LR
     rule_base_talk["交谈"]
     rule_base_sweep["横扫"]
   end
-  entity_crate --> space_harbor
-  entity_crate --> template_prop_crate
-  entity_lamp --> space_harbor
-  entity_lamp --> template_item_lamp
-  entity_pc --> space_harbor
-  entity_pc --> template_pc
-  entity_potion --> space_harbor
-  entity_potion --> template_item_potion
-  entity_salt --> space_harbor
-  entity_salt --> template_npc_salt
-  space_harbor --> terrain_1
-  space_harbor --> terrain_2
-  space_harbor --> terrain_3
+  space_field --> terrain_1
+  space_field --> terrain_2
+  space_field --> terrain_3
   template_item_lamp --> component_core_item
   template_item_potion --> component_core_item
   template_item_potion --> component_core_sprite
@@ -117,6 +106,6 @@ graph LR
   world_main --> rule_core_take
   world_main --> rule_core_use
   world_main --> rule_core_wait
-  world_main --> space_harbor
+  world_main --> space_field
 ```
 

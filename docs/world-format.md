@@ -7,9 +7,9 @@
 
 ```json
 {
-  "start": { "space": "harbor", "x": 1, "y": 1 },
+  "start": { "space": "field", "x": 1, "y": 1 },
   "rules": ["core.move", "base.attack", "base.talk"],
-  "init": [{ "kind": "stamp", "group": "camp", "space": "harbor", "x": 4, "y": 4 }],
+  "init": [{ "kind": "stamp", "group": "camp", "space": "field", "x": 4, "y": 4 }],
   "persistence": { "activeRadius": 25, "sweepEvery": 50 },
   "onConflict": "error"
 }
@@ -42,7 +42,7 @@ base.*    base 包提供的基础玩法（劈砍、蓄力、交谈）
 
 ```json
 { "kind": "patch", "handle": 0, "component": "core.health", "data": { "hp": 10 } }
-{ "kind": "stamp", "group": "camp", "space": "harbor", "x": 4, "y": 4 }
+{ "kind": "stamp", "group": "camp", "space": "field", "x": 4, "y": 4 }
 ```
 
 `stamp` 会把预制件按偏移铺开（见 `groups/`）。

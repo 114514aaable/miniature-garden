@@ -194,7 +194,7 @@ node tools/serve.mjs
 
 ```json
 "init": [
-  { "kind": "stamp", "group": "camp", "space": "harbor", "x": 4, "y": 4 }
+  { "kind": "stamp", "group": "camp", "space": "field", "x": 4, "y": 4 }
 ]
 ```
 

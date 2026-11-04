@@ -56,11 +56,23 @@ export function enemyTurnHandler(params: JsonValue, context: EvaluateContext): J
 
   // 够得着：先起手，下回合再打（给玩家躲的机会）。
   if (distance === 1) {
+    // 伤害与起手时长来自数据（core.melee），不是规则里写死
+    const melee = enemy.components["core.melee"];
+    if (melee === undefined) {
+      return { ok: false, reason: "它没有 core.melee，不知道打多重" };
+    }
+
     return {
       ok: true,
       next: {
         tag: "core.enemy_windup",
-        params: { enemy: p.enemy, dx, dy, damage: 2, ticks: 3 },
+        params: {
+          enemy: p.enemy,
+          dx,
+          dy,
+          damage: numberIn(melee, "damage", 0),
+          ticks: numberIn(melee, "windup", 3),
+        },
       },
     };
   }

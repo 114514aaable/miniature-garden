@@ -282,5 +282,22 @@
         "ttl"
       ]
     }
+  },
+  {
+    "id": "core.melee",
+    "schema": {
+      "t": "object",
+      "fields": {
+        "damage": {
+          "t": "int"
+        },
+        "windup": {
+          "t": "int"
+        }
+      },
+      "optional": [
+        "windup"
+      ]
+    }
   }
 ]
