@@ -2,7 +2,7 @@
 
 > 由 `node tools/gen-docs.mjs` 生成。**不要手改**——改语言包或代码。
 
-规则 13 条 · 组件 14 个 · 模板 5 个
+规则 13 条 · 组件 16 个 · 模板 5 个
 
 | 类型 | 名字 | id | 说明 |
 |---|---|---|---|
@@ -33,7 +33,9 @@
 | 组件 | [对话](component-core.dialog.md) | `core.dialog` | 这个角色能说什么（脚本 id）。 |
 | 组件 | [阵营](component-core.disposition.md) | `core.disposition` | 敌对 / 中立 / 友好，决定点击默认行为。 |
 | 组件 | [存在感](component-core.persistence.md) | `core.persistence` | 锚定 / 普通 / 短暂：决定离得远时要不要继续留在世界里。 |
-| 预制件 | camp | `camp` | 3 个实体 |
+| 组件 | [近战](component-core.melee.md) | `core.melee` | 伤害与起手回合数：写在模板里，规则读它。 |
+| 组件 | [行动方式](component-core.locomotion.md) | `core.locomotion` | 能贴哪些面：ground（地面）、liquid（水里）、solid、air。 |
+| 预制件 | camp | `camp` | 4 个实体 |
 | 模板 | [你](template-pc.md) | `pc` | 玩家角色。 |
 | 模板 | [木箱](template-prop_crate.md) | `prop_crate` | 实心障碍，挡路。 |
 | 模板 | [油灯](template-item_lamp.md) | `item_lamp` | 一盏可以捡起来的灯。 |

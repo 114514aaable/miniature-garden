@@ -8,3 +8,4 @@
 - `core.item` — 物品
 - `core.sprite` — 贴图
 - `core.use` — 用法
+- `core.locomotion` — 行动方式

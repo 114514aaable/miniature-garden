@@ -653,6 +653,46 @@
       }
     },
     {
+      "kind": "component",
+      "id": "core.melee",
+      "name": "近战",
+      "desc": "伤害与起手回合数：写在模板里，规则读它。",
+      "file": "component-core.melee.md",
+      "schema": {
+        "t": "object",
+        "fields": {
+          "damage": {
+            "t": "int"
+          },
+          "windup": {
+            "t": "int"
+          }
+        },
+        "optional": [
+          "windup"
+        ]
+      }
+    },
+    {
+      "kind": "component",
+      "id": "core.locomotion",
+      "name": "行动方式",
+      "desc": "能贴哪些面：ground（地面）、liquid（水里）、solid、air。",
+      "file": "component-core.locomotion.md",
+      "schema": {
+        "t": "object",
+        "fields": {
+          "surfaces": {
+            "t": "array",
+            "of": {
+              "t": "str"
+            },
+            "max": 8
+          }
+        }
+      }
+    },
+    {
       "kind": "group",
       "id": "camp",
       "name": "camp",
@@ -673,6 +713,11 @@
           "template": "prop_crate",
           "dx": 2,
           "dy": 0
+        },
+        {
+          "template": "npc_salt",
+          "dx": 3,
+          "dy": 1
         }
       ]
     },
@@ -729,7 +774,9 @@
         "core.intent",
         "core.dialog",
         "core.disposition",
-        "core.persistence"
+        "core.persistence",
+        "core.locomotion",
+        "core.melee"
       ]
     },
     {
@@ -742,7 +789,8 @@
       "components": [
         "core.item",
         "core.sprite",
-        "core.use"
+        "core.use",
+        "core.locomotion"
       ]
     }
   ]

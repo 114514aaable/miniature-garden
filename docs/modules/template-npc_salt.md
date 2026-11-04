@@ -13,3 +13,5 @@
 - `core.dialog` — 对话
 - `core.disposition` — 阵营
 - `core.persistence` — 存在感
+- `core.locomotion` — 行动方式
+- `core.melee` — 近战

@@ -6,3 +6,4 @@
 - `item_lamp` 偏移 (0, 0)
 - `prop_crate` 偏移 (1, 0)
 - `prop_crate` 偏移 (2, 0)
+- `npc_salt` 偏移 (3, 1)

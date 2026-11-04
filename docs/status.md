@@ -26,7 +26,8 @@ game/
 tools/
 ├─ serve.mjs        本地服务 + 全部接口
 ├─ client/          页面脚本：game.js（调度）+ hud/（区域）+ launcher + shared
-official.dungeon     元胞自动机地牢（第二个世界）
+official.dungeon     元胞自动机地牢（纯洞穴，4 个洞厅）
+official.cavern      叠加世界：地表 + 洞穴 + 洞底（流水线示例）
 ├─ pages.mjs        HTML/CSS 骨架
 ├─ play.mjs         无头跑世界
 ├─ gen-docs / gen-tree / gen-pack-graph / gen-file-docs   文档生成
@@ -34,6 +35,26 @@ official.dungeon     元胞自动机地牢（第二个世界）
 ```
 
 **分层规矩**：规则返回效果，宿主执行；场景返回意图，宿主执行；区域不碰 config 与网络（走 ctx）。
+
+## 生成器（当前能力）
+
+```
+field/noise  噪声 → 群系 → 地形（overworld）
+caves        元胞自动机（fill / iterations / regions / chambers）
+pipeline     overworld → caves → blend，可叠加成「地表 + 洞穴」
+尺寸         4..200，开局现场生成；存档按 seed + 尺寸复现
+```
+
+生成流水线：每步只改同一个 sandbox（地形 + 具名图层），纯函数、可单测。
+
+## 输入与体验
+
+```
+长按方向键    固定 140ms 节奏地走一格（松手/失焦停）
+动作互斥      客户端一次只发一个动作
+服务端限速    60ms 内重复请求 → 「慢一点」
+小地图        按地图尺寸缩放（1..4 px/格，最长边 ≤180）
+```
 
 ## 最近做完的
 
