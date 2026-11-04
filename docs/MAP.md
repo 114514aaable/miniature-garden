@@ -61,7 +61,7 @@ game/systems/render/*（投影成画面数据）
   - `placeOf(entity: Entity) → Place | null`
   - `interface Place`
   - `const PLACE`
-- **`game/engine/core/src/entity/template.ts`**（188 行）
+- **`game/engine/core/src/entity/template.ts`**（193 行）
   模板：世界包里「一类东西长什么样」。
   - `interface Template`
   - `interface TemplateLink`
@@ -582,6 +582,8 @@ game/systems/render/*（投影成画面数据）
   把 TS 转成浏览器能跑的 JS（构建产物放 web/）。
 - **`tools/check-client.mjs`**（90 行）
   页面脚本的「有没有调用不存在的函数」检查。
+- **`tools/check-data.mjs`**（137 行）
+  数据体检：数据化之后，规则要的字段，包里到底有没有。
 - **`tools/check-locale.mjs`**（99 行）
   语言包体检：包里每个 id 都应该有名字。
 - **`tools/gen-docs.mjs`**（188 行）
@@ -609,7 +611,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（1602 行）
+- **`tools/serve.mjs`**（1604 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。

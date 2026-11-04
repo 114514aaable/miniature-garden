@@ -19,6 +19,7 @@
 
 ## 被引用
 
+- [`tools/check-data.mjs`](tools/check-data.md)
 - [`tools/check-locale.mjs`](tools/check-locale.md)
 - [`tools/gen-docs.mjs`](tools/gen-docs.md)
 - [`tools/serve.mjs`](tools/serve.md)

@@ -387,7 +387,7 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
     devlog: new DevLog(),
   };
 
-  if (generationNote !== null) session.notice = generationNote;
+  session.generationNote = generationNote;
 }
 
 // ── 快照 ────────────────────────────────────────────────
@@ -1475,7 +1475,9 @@ const server = createServer(async (request, response) => {
         session.options = typeof options === "object" && options !== null ? options : {};
         session.dead = false;
         session.disabled = [...disabled];
-        sendJson(response, snapshot("世界已载入"));
+        const note =
+          session.loaded.startWarning ?? session.generationNote ?? "世界已载入";
+        sendJson(response, snapshot(note));
       } catch (error) {
         sendJson(response, { launcher: true, worlds: [], errors: [{ id, error: messageOf(error) }] });
       }

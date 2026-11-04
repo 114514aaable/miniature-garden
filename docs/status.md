@@ -79,5 +79,6 @@ PORT=8788 node tools/serve.mjs
 node --test --test-isolation=none     # 471 个测试
 node tools/typecheck.mjs              # 0 错误
 node tools/check-client.mjs           # 页面脚本自检
+node tools/check-data.mjs            # 数据体检（规则要的字段有没有）
 node tools/gen-docs.mjs && node tools/gen-file-docs.mjs && node tools/gen-map.mjs && node tools/gen-tree.mjs && node tools/gen-pack-graph.mjs
 ```

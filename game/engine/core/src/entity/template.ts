@@ -85,6 +85,11 @@ export class TemplateRegistry {
   }
 
   /** 取模板（已合并继承链）；返回副本，外面改不到内部。 */
+  /** 所有模板 id（按注册顺序）。数据体检、调试用。 */
+  ids(): readonly string[] {
+    return [...this.templates.keys()];
+  }
+
   get(id: string): Template {
     return structuredClone(this.resolve(id, []));
   }
