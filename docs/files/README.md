@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 86 个文件。
+共 89 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -50,6 +50,8 @@
 | `game/engine/core/src/traversal/select.ts` | 选定核心：从一组格子里挑出「符合条件的目标」。 | [md](game/engine/core/src/traversal/select.md) |
 | `game/engine/core/src/traversal/shapes.ts` | 命名形状与命名条件：把 base 的 traversal.json 变成可用的东西。 | [md](game/engine/core/src/traversal/shapes.md) |
 | `game/engine/core/src/traversal/transform.ts` | 偏移 → 偏移：形状的组合就是靠这几个变换。 | [md](game/engine/core/src/traversal/transform.md) |
+| `game/engine/core/src/worldgen/noise.ts` | 噪声：把「种子 + 坐标」变成 0..1 的值。 | [md](game/engine/core/src/worldgen/noise.md) |
+| `game/engine/core/src/worldgen/select.ts` | 选：把「若干场」翻译成「群系」，再把群系翻译成「地形」。 | [md](game/engine/core/src/worldgen/select.md) |
 | `game/engine/core/types/node-shim.d.ts` | 临时的 node 类型声明。 | [md](game/engine/core/types/node-shim.d.md) |
 | `game/systems/camera/camera.ts` | 相机：把「看哪儿」从渲染里拆出来。 | [md](game/systems/camera/camera.md) |
 | `game/systems/config/config.ts` | 界面配置：所有「可能想调」的东西集中在这里。 | [md](game/systems/config/config.md) |
@@ -88,6 +90,7 @@
 | `tools/gen-file-docs.mjs` | 每个源文件生成一篇 md（docs/files/...）。 | [md](tools/gen-file-docs.md) |
 | `tools/gen-pack-graph.mjs` | 世界包的引用图（Mermaid）。 | [md](tools/gen-pack-graph.md) |
 | `tools/gen-tree.mjs` | 扫源码里的 import，画一张引用树。 | [md](tools/gen-tree.md) |
+| `tools/gen-world.mjs` | 生成一张地图（MVP：噪声 → 群系 → 地形号）。 | [md](tools/gen-world.md) |
 | `tools/import-csv.mjs` | CSV → 模板 JSON（宿主侧工具）。 | [md](tools/import-csv.md) |
 | `tools/pack-reader.mjs` | 读包工具（宿主侧）：把文件夹变成 PackContent。 | [md](tools/pack-reader.md) |
 | `tools/pages.mjs` | 两个页面：启动器和游戏。 | [md](tools/pages.md) |
