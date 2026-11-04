@@ -84,7 +84,7 @@ let uiFocus = null;
 /**
  * 统一的「选目标」：所有需要目标的技能都走这里。
  *   selection = { tag, label }
- * 鼠标移动用它预览，点击提交，Esc 取消。
+ * 鼠标移动用它预览，点击提交，右键取消（Esc 也认，但提示按右键写）。
  */
 let selection = null;
 
@@ -105,7 +105,7 @@ function beginSelection(tag, label) {
   selection = { tag, label };
   aim.setTag(tag);
   const box = document.getElementById('message');
-  if (box) box.textContent = '选择目标：' + label + '（Esc 取消）';
+  if (box) box.textContent = '选择目标：' + label + '（右键取消）';
 }
 
 function cancelSelection() {
