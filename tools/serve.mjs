@@ -44,6 +44,7 @@ import { createDialogScene, parseDialogScript } from "../game/systems/scene/dial
 import { selectTargets } from "../game/engine/core/src/traversal/select.ts";
 import { nearestWhere } from "../game/engine/core/src/space.ts";
 import { buildPassage } from "../game/systems/rules/passage.ts";
+import { clampSize, generateTerrain } from "../game/engine/core/src/worldgen/generate.ts";
 import { offsetsOf } from "../game/engine/core/src/traversal/shapes.ts";
 import { cellsOf } from "../game/engine/core/src/traversal/resolve.ts";
 
@@ -163,9 +164,113 @@ let session = null;
 
 /** 规则表：签名 + 处理器。关掉一条规则就是把它从这里跳过。 */
 
-function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, offTemplates = new Set()) {
-  const merged = mergePacks(ordered);
-  const loaded = loadWorld(merged);
+/** 把生成的图换进包的定义里（这样还是走 loadWorld 那一道校验）。 */
+function withGeneratedSpace(merged, loaded, seed, options) {
+  const none = { merged, note: null };
+  const generation = loaded.world.generation;
+  if (generation === undefined) return none;
+
+  const width = Number(options?.width);
+  const height = Number(options?.height);
+  if (!Number.isFinite(width) || !Number.isFinite(height)) return none;
+
+  const ids = new Map();
+  for (const terrain of loaded.terrains.values()) {
+    if (terrain.code !== undefined) ids.set(terrain.code, terrain.id);
+  }
+
+  // 这张图至少要放得下现有内容（实体坐标 + 预制件尺寸），否则放大
+  let needWidth = 0;
+  let needHeight = 0;
+  for (const entity of loaded.entities) {
+    needWidth = Math.max(needWidth, entity.pos.x + 2);
+    needHeight = Math.max(needHeight, entity.pos.y + 2);
+  }
+  for (const stamp of loaded.world.init ?? []) {
+    if (stamp.kind !== "stamp") continue;
+    const group = loaded.groups.get(stamp.group);
+    if (group === undefined) continue;
+    let maxDx = 0;
+    let maxDy = 0;
+    for (const item of group.entities) {
+      maxDx = Math.max(maxDx, item.dx);
+      maxDy = Math.max(maxDy, item.dy);
+    }
+    needWidth = Math.max(needWidth, stamp.x + maxDx + 2);
+    needHeight = Math.max(needHeight, stamp.y + maxDy + 2);
+  }
+
+  let generated;
+  try {
+    generated = generateTerrain({
+      seed,
+      width: clampSize(Math.max(width, needWidth)),
+      height: clampSize(Math.max(height, needHeight)),
+      fields: generation.fields ?? {},
+      biomes: loaded.biomes,
+      terrainIdByCode: ids,
+      levels: generation.levels ?? {},
+    });
+  } catch (error) {
+    console.warn("[worldgen] " + messageOf(error));
+    return none;
+  }
+
+  const spaceId = loaded.world.start.space;
+  const definitions = new Map(merged.definitions);
+  const key = "space:" + spaceId;
+  const existing = definitions.get(key);
+  if (existing === undefined) return none;
+
+  definitions.set(key, {
+    ...existing,
+    data: { id: spaceId, width: generated.width, height: generated.height, terrain: [...generated.terrain] },
+  });
+
+  // 出生点夹进新范围（具体能不能站交给 loadWorld 处理）
+  const worldDef = definitions.get("world:main");
+  if (worldDef !== undefined) {
+    const start = worldDef.data.start ?? {};
+    definitions.set("world:main", {
+      ...worldDef,
+      data: {
+        ...worldDef.data,
+        start: {
+          space: spaceId,
+          x: Math.min(Math.max(Number(start.x) || 0, 1), generated.width - 2),
+          y: Math.min(Math.max(Number(start.y) || 0, 1), generated.height - 2),
+        },
+      },
+    });
+  }
+
+  const targetWidth = clampSize(Math.max(width, needWidth));
+  const targetHeight = clampSize(Math.max(height, needHeight));
+  const note =
+    targetWidth !== clampSize(width) || targetHeight !== clampSize(height)
+      ? `这张图放不下现有内容，已放大到 ${generated.width}×${generated.height}`
+      : null;
+
+  return { merged: { ...merged, definitions }, note };
+}
+
+function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, offTemplates = new Set(), options = {}) {
+  const merged0 = mergePacks(ordered);
+  const base = loadWorld(merged0);
+  const generated = withGeneratedSpace(merged0, base, seed, options);
+  const merged = generated.merged;
+
+  let loaded = base;
+  let generationNote = generated.note;
+  if (merged !== merged0) {
+    try {
+      loaded = loadWorld(merged);
+    } catch (error) {
+      // 地图太小放不下建筑之类：退回原地图，别让人打不开
+      generationNote = "这张图放不下现有内容（" + messageOf(error) + "），改用默认地图";
+      loaded = base;
+    }
+  }
 
   // 物种 × 地形：两边各自声明，加载期对接一次
   const templateIds = [...merged.definitions.values()].filter((def) => def.kind === "template").map((def) => def.id);
@@ -185,6 +290,11 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
       overrides: entity.overrides,
     });
   }
+  // 包里没有 pc 就在出生点放一个（玩家是宿主概念，不是世界内容）
+  if (!loaded.entities.some((entity) => entity.template === "pc")) {
+    store.submit({ kind: "spawn", space: loaded.start.space, cell: loaded.start.pos, template: "pc" });
+  }
+
   const spawnEvents = store.step();
 
   // 开局初始化：只在「新开局」执行（读档跳过）。
@@ -276,6 +386,8 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
     scenes,
     devlog: new DevLog(),
   };
+
+  if (generationNote !== null) session.notice = generationNote;
 }
 
 // ── 快照 ────────────────────────────────────────────────
@@ -339,7 +451,6 @@ function snapshot(message = "") {
 
   return {
     launcher: false,
-    ...(notice !== null ? { message: notice } : {}),
     tile: TILE,
     playerHandle: session.playerHandle,
     seed: session.seed,
@@ -360,7 +471,7 @@ function snapshot(message = "") {
     hud: playerHud(),
     tick: session.store.now(),
     hash: session.store.headHash,
-    message,
+    message: notice ?? message,
     rules: session.loaded.rules,
     packs: session.packs,
     worldHash: session.loaded.hash,
@@ -1112,6 +1223,7 @@ function saveGame(slot = "quick") {
     playerReadyAt: session.playerReadyAt,
     scheduler: session.scheduler.upcoming(999).map((due) => [due.handle, due.tick]),
     disabled: session.disabled ?? [],
+    options: session.options ?? {},
     // 场景栈连同每层的内部状态（比如对话说到第几句）
     scene: session.scenes.export(),
   };
@@ -1154,12 +1266,20 @@ function loadGame(slot = "quick") {
   }
 
   // 存档自带规则集：按它的 disabled 重建，再导入状态。
-  session = buildSession(ordered, new Set(resolveTags(data.disabled ?? [])), data.seed ?? 0, false);
+  session = buildSession(
+    ordered,
+    new Set(resolveTags(data.disabled ?? [])),
+    data.seed ?? 0,
+    false,
+    new Set(),
+    data.options ?? {},
+  );
   session.world = data.world;
   session.dead = false;
   session.store.importState(data.engine);
   session.playerHandle = data.playerHandle;
   session.seed = data.seed ?? 0;
+  session.options = data.options ?? {};
   session.playerReadyAt = data.playerReadyAt;
   session.scheduler = new Scheduler(
     data.scheduler.map(([handle, readyAt]) => ({ handle, readyAt })),
@@ -1340,11 +1460,18 @@ const server = createServer(async (request, response) => {
         const { byId } = collectPacks();
         const entry = readSelection()[String(id)];
         const offTemplates = new Set(Array.isArray(entry) ? [] : (entry?.offTemplates ?? []));
-        session = buildSession(closureOf(String(id), byId), new Set([...disabled].map(resolveTag)), Number(seed) || 0, true, offTemplates);
+        session = buildSession(
+          closureOf(String(id), byId),
+          new Set([...disabled].map(resolveTag)),
+          Number(seed) || 0,
+          true,
+          offTemplates,
+          typeof options === "object" && options !== null ? options : {},
+        );
         session.world = String(id);
         // 出生点被挪过（生成地图里正好是水）就在这里说一句
-        if (session.loaded.startWarning !== undefined) session.notice = session.loaded.startWarning;
         ensurePlayerOnWalkable();
+        if (session.loaded.startWarning !== undefined) session.notice = session.loaded.startWarning;
         session.options = typeof options === "object" && options !== null ? options : {};
         session.dead = false;
         session.disabled = [...disabled];

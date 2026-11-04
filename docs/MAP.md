@@ -324,6 +324,15 @@ game/systems/render/*（投影成画面数据）
   - `mirror(offsets: readonly Offset[], axis: "x" | "y" | "both" = "x") → Offset[]`
   - `translate(offsets: readonly Offset[], dx: number, dy: number) → Offset[]`
   - `keep(offsets: readonly Offset[], predicate: (offset: Offset) => boolean) → Offset[]`
+- **`game/engine/core/src/worldgen/generate.ts`**（106 行）
+  生成一片地形：种子 + 尺寸 + 场参数 + 群系 → 地形号数组。
+  - `clampSize(value: number) → number`
+  - `generateTerrain(options: GenerateOptions) → GenerateResult`
+  - `interface FieldConfig`
+  - `interface GenerateOptions`
+  - `interface GenerateResult`
+  - `const MAX_SIZE`
+  - `const MIN_SIZE`
 - **`game/engine/core/src/worldgen/noise.ts`**（107 行）
   噪声：把「种子 + 坐标」变成 0..1 的值。
   - `valueNoise(seed: number, x: number, y: number, scale: number) → number`
@@ -600,7 +609,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（1475 行）
+- **`tools/serve.mjs`**（1602 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。
