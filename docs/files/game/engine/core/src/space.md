@@ -11,6 +11,7 @@
 - `Space`
 - `SpaceId`
 - `Visitor`
+- `nearestWhere`
 
 ## 依赖
 
@@ -26,3 +27,4 @@
 - [`game/engine/core/src/stencils.ts`](game/engine/core/src/stencils.md)
 - [`game/engine/core/src/store.ts`](game/engine/core/src/store.md)
 - [`game/systems/render/project.ts`](game/systems/render/project.md)
+- [`tools/serve.mjs`](tools/serve.md)

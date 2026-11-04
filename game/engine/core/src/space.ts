@@ -203,3 +203,47 @@ export class Space {
     return x * this.strides[0] + y * this.strides[1];
   }
 }
+
+/**
+ * 从 from 开始 BFS，找最近一个满足 ok 的格子（同距离按「上右下左」）。
+ *
+ * 确定性：顺序固定，不依赖随机或对象遍历顺序。
+ * 找不到返回 null（说明整片都站不了，调用方决定怎么办）。
+ */
+export function nearestWhere(
+  space: Space,
+  from: Cell,
+  ok: (cell: Cell) => boolean,
+): Cell | null {
+  // 起点可能越界（比如地图缩了）：先夹到范围内，否则 BFS 永远走不进去
+  const start = {
+    x: Math.min(Math.max(from.x, 0), space.width - 1),
+    y: Math.min(Math.max(from.y, 0), space.height - 1),
+  };
+
+  if (ok(start)) return start;
+
+  const seen = new Set<string>([`${start.x},${start.y}`]);
+  const queue: Cell[] = [start];
+  const steps = [
+    { x: 0, y: -1 },
+    { x: 1, y: 0 },
+    { x: 0, y: 1 },
+    { x: -1, y: 0 },
+  ];
+
+  while (queue.length > 0) {
+    const cell = queue.shift() as Cell;
+    for (const step of steps) {
+      const next = { x: cell.x + step.x, y: cell.y + step.y };
+      const key = `${next.x},${next.y}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (!space.inBounds(next)) continue;
+      if (ok(next)) return next;
+      queue.push(next);
+    }
+  }
+
+  return null;
+}

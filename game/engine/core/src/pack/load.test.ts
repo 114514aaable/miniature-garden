@@ -113,11 +113,21 @@ test("实体站在墙上：拒绝", () => {
   assert.throws(() => load(definitions), /不可通行地形/);
 });
 
-test("出生点不可走：拒绝", () => {
-  const definitions = minimal().map((item) =>
-    item.kind === "world" ? def("world", "main", { start: { space: "dock", x: 1, y: 1 } }) : item,
+test("出生点不可走：挪到最近的能站格子并给出警告", () => {
+  const loaded = load(
+    minimal().map((item) => {
+      if (item.kind === "space") {
+        return def("space", "dock", { id: "dock", width: 3, height: 3, terrain: [0, 1, 1, 1, 1, 1, 1, 1, 1] });
+      }
+      if (item.kind === "world") {
+        return def("world", "main", { start: { space: "dock", x: 2, y: 2 }, rules: ["core.move"] });
+      }
+      return item;
+    }),
   );
-  assert.throws(() => load(definitions), /出生点在不可通行地形上/);
+
+  assert.deepEqual(loaded.start.pos, { x: 0, y: 0 });
+  assert.match(loaded.startWarning ?? "", /挪到了/);
 });
 
 test("多个空间按名字排序分配句柄", () => {

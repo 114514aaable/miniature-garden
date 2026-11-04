@@ -12,7 +12,7 @@
  *   5. 收集世界启用的规则标签——包负责选，宿主负责实现。
  */
 
-import { type Cell, Space, type SpaceId } from "../space.ts";
+import { type Cell, nearestWhere, Space, type SpaceId } from "../space.ts";
 import { type JsonValue, canonicalize, hashText } from "../time.ts";
 import { type Schema } from "../event/schema.ts";
 import { TemplateRegistry } from "../entity/template.ts";
@@ -57,6 +57,8 @@ export interface LoadedWorld {
   readonly entities: readonly LoadedEntity[];
   readonly terrains: ReadonlyMap<number, TerrainDef>;
   readonly start: { readonly space: SpaceId; readonly pos: Cell };
+  /** 出生点被挪过时的说明（没有就不出现）。 */
+  readonly startWarning?: string;
   /** 空间名 → 数字句柄。存档和调试都用得上。 */
   readonly spaceIds: ReadonlyMap<string, SpaceId>;
   /** 这个世界启用哪些规则（标签），由宿主对到实现。 */
@@ -173,6 +175,7 @@ export function loadWorld(
     entities,
     terrains,
     start,
+    ...(start.warning === undefined ? {} : { startWarning: start.warning }),
     spaceIds,
     rules: world.rules ?? [],
     init: world.init ?? [],
@@ -248,7 +251,7 @@ function resolveStart(
   spaceIds: ReadonlyMap<string, SpaceId>,
   spaces: readonly Space[],
   terrains: ReadonlyMap<number, TerrainDef>,
-): { space: SpaceId; pos: Cell } {
+): { space: SpaceId; pos: Cell; warning?: string } {
   const spaceId = spaceIds.get(world.start.space);
   if (spaceId === undefined) {
     throw new Error(`出生点引用了不存在的空间：${world.start.space}`);
@@ -260,7 +263,17 @@ function resolveStart(
     throw new Error(`出生点越界：(${pos.x}, ${pos.y})`);
   }
   if (!isPassable(terrains, space.terrainAt(pos))) {
-    throw new Error(`出生点在不可通行地形上：(${pos.x}, ${pos.y})`);
+    // 出生点在水里/墙里：挪到最近的能站格子，别让玩家一开局就掉河里
+    const fallback = nearestWhere(space, pos, (cell: Cell) => isPassable(terrains, space.terrainAt(cell)));
+    if (fallback === null) {
+      throw new Error(`出生点在不可通行地形上，而且这个空间没有能站的地方：(${pos.x}, ${pos.y})`);
+    }
+
+    return {
+      space: spaceId,
+      pos: fallback,
+      warning: `出生点 (${pos.x}, ${pos.y}) 不能站，挪到了 (${fallback.x}, ${fallback.y})`,
+    };
   }
 
   return { space: spaceId, pos };

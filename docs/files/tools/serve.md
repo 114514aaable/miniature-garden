@@ -20,6 +20,7 @@
 - [`game/engine/core/src/rules/clock.ts`](game/engine/core/src/rules/clock.md)
 - [`game/engine/core/src/rules/pending.ts`](game/engine/core/src/rules/pending.md)
 - [`game/engine/core/src/rules/scheduler.ts`](game/engine/core/src/rules/scheduler.md)
+- [`game/engine/core/src/space.ts`](game/engine/core/src/space.md)
 - [`game/engine/core/src/store.ts`](game/engine/core/src/store.md)
 - [`game/engine/core/src/traversal/resolve.ts`](game/engine/core/src/traversal/resolve.md)
 - [`game/engine/core/src/traversal/select.ts`](game/engine/core/src/traversal/select.md)

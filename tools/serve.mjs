@@ -42,6 +42,7 @@ import { resolveTag, resolveTags } from "../game/systems/rules/aliases.ts";
 import { SceneStack, sceneFromComponent } from "../game/systems/scene/scene.ts";
 import { createDialogScene, parseDialogScript } from "../game/systems/scene/dialog.ts";
 import { selectTargets } from "../game/engine/core/src/traversal/select.ts";
+import { nearestWhere } from "../game/engine/core/src/space.ts";
 import { offsetsOf } from "../game/engine/core/src/traversal/shapes.ts";
 import { cellsOf } from "../game/engine/core/src/traversal/resolve.ts";
 
@@ -316,7 +317,12 @@ function readNumberArray(component, key) {
   return Array.isArray(value) ? value.filter((item) => typeof item === "number") : [];
 }
 
-function snapshot(message) {
+function snapshot(message = "") {
+  // 每次出快照前先保证玩家站得住；提示优先用调用方给的
+  ensurePlayerOnWalkable();
+  const notice = session.notice ?? null;
+  session.notice = null;
+
   const frame = session.projector.snapshot({
     tick: session.store.now(),
     spaces: session.loaded.spaces,
@@ -326,6 +332,7 @@ function snapshot(message) {
 
   return {
     launcher: false,
+    ...(notice !== null ? { message: notice } : {}),
     tile: TILE,
     playerHandle: session.playerHandle,
     seed: session.seed,
@@ -631,6 +638,37 @@ function ruleTools() {
       return selectIn(cells, filter, options);
     },
   };
+}
+
+/**
+ * 玩家脚下的格子必须能站。
+ *
+ * 什么时候会站不住：换了地图、读档、地图重新生成之后。
+ * 处理：挪到最近一个能站的格子，并在界面留一句话。
+ */
+function ensurePlayerOnWalkable() {
+  if (session === null) return;
+
+  const player = session.store.entity(session.playerHandle);
+  if (player.pos === null || player.space === null) return;
+
+  const space = session.store.space(player.space);
+  const passable = (cell) => {
+    const terrain = session.loaded.terrains.get(space.terrainAt(cell));
+    return terrain !== undefined && terrain.passable && space.occupantsAt(cell).length === 0;
+  };
+
+  if (passable(player.pos)) return;
+
+  const target = nearestWhere(space, player.pos, passable);
+  if (target === null) {
+    session.notice = "脚下的地不能站，而且附近没有能站的地方";
+    return;
+  }
+
+  session.store.inject({ kind: "remove", space: player.space, cell: player.pos, handle: session.playerHandle });
+  session.store.inject({ kind: "place", space: player.space, cell: target, handle: session.playerHandle });
+  session.notice = "脚下的地不能站，被挪到了 (" + target.x + ", " + target.y + ")";
 }
 
 function aimAt(tag, x, y) {
@@ -1282,6 +1320,8 @@ const server = createServer(async (request, response) => {
         const offTemplates = new Set(Array.isArray(entry) ? [] : (entry?.offTemplates ?? []));
         session = buildSession(closureOf(String(id), byId), new Set([...disabled].map(resolveTag)), Number(seed) || 0, true, offTemplates);
         session.world = String(id);
+        // 出生点被挪过（生成地图里正好是水）就在这里说一句
+        if (session.loaded.startWarning !== undefined) session.notice = session.loaded.startWarning;
         session.options = typeof options === "object" && options !== null ? options : {};
         session.dead = false;
         session.disabled = [...disabled];

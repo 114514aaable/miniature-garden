@@ -12,7 +12,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { AIR, type Cell, Space } from "./space.ts";
+import { AIR, type Cell, nearestWhere, Space } from "./space.ts";
 import { DIAGONAL, ORTHOGONAL, line, rect, ring } from "./stencils.ts";
 
 function room(): Space {
@@ -194,4 +194,26 @@ test("cellSize 只是元数据，不参与任何计算", () => {
 test("尺寸非法直接报错", () => {
   assert.throws(() => new Space(1, 0, 3), /正整数/);
   assert.throws(() => new Space(1, 2.5, 3), /正整数/);
+});
+
+test("nearestWhere：自己被接受就返回自己", () => {
+  const space = new Space(1, 5, 5);
+  assert.deepEqual(nearestWhere(space, { x: 2, y: 2 }, () => true), { x: 2, y: 2 });
+});
+
+test("nearestWhere：找不到就 null", () => {
+  const space = new Space(1, 5, 5);
+  assert.equal(nearestWhere(space, { x: 2, y: 2 }, () => false), null);
+});
+
+test("nearestWhere：优先上方，其次右、下、左（确定性）", () => {
+  const space = new Space(1, 5, 5);
+  const ok = (cell: Cell) => cell.x === 2 && cell.y === 1;
+  assert.deepEqual(nearestWhere(space, { x: 2, y: 2 }, ok), { x: 2, y: 1 });
+});
+
+test("nearestWhere：越界的起点也能救回来", () => {
+  const space = new Space(1, 5, 5);
+  const ok = (cell: Cell) => cell.x === 0 && cell.y === 0;
+  assert.deepEqual(nearestWhere(space, { x: -3, y: -3 }, ok), { x: 0, y: 0 });
 });
