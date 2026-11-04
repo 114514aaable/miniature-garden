@@ -19,5 +19,6 @@
 
 ## 被引用
 
+- [`tools/check-locale.mjs`](tools/check-locale.md)
 - [`tools/gen-docs.mjs`](tools/gen-docs.md)
 - [`tools/serve.mjs`](tools/serve.md)

@@ -548,8 +548,8 @@
     {
       "kind": "component",
       "id": "core.pending",
-      "name": "core.pending",
-      "desc": "",
+      "name": "挂起",
+      "desc": "过几回合才结算的动作（蓄力、延迟陷阱）。",
       "file": "component-core.pending.md",
       "schema": {
         "t": "object",

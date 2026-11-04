@@ -6,10 +6,10 @@
 
 | 层 | 文件数 |
 |---|---|
-| 内核 | 68 |
+| 内核 | 78 |
 | 系统 | 41 |
-| 宿主工具 | 9 |
-| 页面脚本 | 3 |
+| 宿主工具 | 13 |
+| 页面脚本 | 7 |
 
 ## tools/serve.mjs
 
@@ -63,6 +63,13 @@ tools/serve.mjs
       └─ game/engine/core/src/pack/merge.ts  (已展开)
       └─ game/engine/core/src/space.ts  (已展开)
       └─ game/engine/core/src/time.ts  (已展开)
+      └─ game/engine/core/src/traversal/shapes.ts
+        └─ game/engine/core/src/time.ts  (已展开)
+        └─ game/engine/core/src/traversal/filter.ts
+          └─ game/engine/core/src/time.ts  (已展开)
+        └─ game/engine/core/src/traversal/offsets.ts
+        └─ game/engine/core/src/traversal/transform.ts
+          └─ game/engine/core/src/traversal/offsets.ts  (已展开)
     └─ game/engine/core/src/store.ts  (已展开)
     └─ game/engine/core/src/time.ts  (已展开)
   └─ game/engine/core/src/pack/load.ts  (已展开)
@@ -76,6 +83,12 @@ tools/serve.mjs
     └─ game/engine/core/src/time.ts  (已展开)
   └─ game/engine/core/src/rules/scheduler.ts
   └─ game/engine/core/src/store.ts  (已展开)
+  └─ game/engine/core/src/traversal/resolve.ts
+    └─ game/engine/core/src/traversal/offsets.ts  (已展开)
+  └─ game/engine/core/src/traversal/select.ts
+    └─ game/engine/core/src/time.ts  (已展开)
+    └─ game/engine/core/src/traversal/filter.ts  (已展开)
+  └─ game/engine/core/src/traversal/shapes.ts  (已展开)
   └─ game/systems/log/devlog.ts
     └─ game/engine/core/src/time.ts  (已展开)
   └─ game/systems/render/project.ts
@@ -99,6 +112,7 @@ tools/serve.mjs
       └─ game/engine/core/src/event/registry.ts  (已展开)
       └─ game/engine/core/src/rules/collision.ts  (已展开)
       └─ game/engine/core/src/time.ts  (已展开)
+      └─ game/engine/core/src/traversal/filter.ts  (已展开)
     └─ game/engine/core/src/rules/enemy-actions.ts
       └─ game/engine/core/src/event/evaluate.ts  (已展开)
       └─ game/engine/core/src/event/registry.ts  (已展开)
@@ -127,6 +141,10 @@ tools/serve.mjs
         └─ game/engine/core/src/event/registry.ts  (已展开)
         └─ game/engine/core/src/time.ts  (已展开)
       └─ game/engine/core/src/rules/pending.ts  (已展开)
+      └─ game/engine/core/src/rules/sweep.ts
+        └─ game/engine/core/src/event/evaluate.ts  (已展开)
+        └─ game/engine/core/src/event/registry.ts  (已展开)
+        └─ game/engine/core/src/time.ts  (已展开)
       └─ game/engine/core/src/rules/talk.ts
         └─ game/engine/core/src/event/evaluate.ts  (已展开)
         └─ game/engine/core/src/event/registry.ts  (已展开)
@@ -165,8 +183,18 @@ tools/client/game.js
   └─ game/systems/ui/dom.ts
     └─ game/systems/ui/spec.ts
       └─ game/systems/ui/flex.ts
-  └─ game/systems/ui/minimap.ts
   └─ game/systems/ui/spec.ts  (已展开)
+  └─ tools/client/hud/aim.js
+  └─ tools/client/hud/minimap.js
+    └─ game/systems/ui/dom.ts  (已展开)
+    └─ game/systems/ui/minimap.ts
+    └─ game/systems/ui/spec.ts  (已展开)
+  └─ tools/client/hud/quickbar.js
+    └─ game/systems/ui/dom.ts  (已展开)
+    └─ game/systems/ui/spec.ts  (已展开)
+  └─ tools/client/hud/status.js
+    └─ game/systems/ui/dom.ts  (已展开)
+    └─ game/systems/ui/spec.ts  (已展开)
   └─ tools/client/shared.js
 ```
 
@@ -207,33 +235,37 @@ tools/build-web.mjs
 
 | 文件 | 被引用 |
 |---|---|
-| `game/engine/core/src/time.ts` | 35 处：`game/engine/core/src/entity/entity.ts`, `game/engine/core/src/entity/merge.test.ts`, `game/engine/core/src/entity/merge.ts`, `game/engine/core/src/entity/template.ts` … |
+| `game/engine/core/src/time.ts` | 39 处：`game/engine/core/src/entity/entity.ts`, `game/engine/core/src/entity/merge.test.ts`, `game/engine/core/src/entity/merge.ts`, `game/engine/core/src/entity/template.ts` … |
 | `game/engine/core/src/space.ts` | 24 处：`game/engine/core/src/entity/entity.ts`, `game/engine/core/src/event/effects.test.ts`, `game/engine/core/src/event/effects.ts`, `game/engine/core/src/event/evaluate.test.ts` … |
-| `game/engine/core/src/event/registry.ts` | 15 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/event/evaluate.ts`, `game/engine/core/src/event/registry.test.ts` … |
+| `game/engine/core/src/event/registry.ts` | 16 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/event/evaluate.ts`, `game/engine/core/src/event/registry.test.ts` … |
 | `game/engine/core/src/store.ts` | 13 处：`tools/play.mjs`, `tools/serve.mjs`, `game/engine/core/src/event/effects.test.ts`, `game/engine/core/src/event/effects.ts` … |
-| `game/engine/core/src/event/evaluate.ts` | 12 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/rules/ai.ts`, `game/engine/core/src/rules/aim.ts` … |
+| `game/engine/core/src/event/evaluate.ts` | 13 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/rules/ai.ts`, `game/engine/core/src/rules/aim.ts` … |
 | `game/engine/core/src/event/view.ts` | 11 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/event/evaluate.ts`, `game/engine/core/src/event/view.test.ts` … |
 | `game/engine/core/src/entity/entity.ts` | 11 处：`game/engine/core/src/entity/entity.test.ts`, `game/engine/core/src/entity/place.ts`, `game/engine/core/src/event/view.ts`, `game/engine/core/src/rules/ai.test.ts` … |
 | `game/engine/core/src/entity/template.ts` | 11 处：`game/engine/core/src/entity/template.test.ts`, `game/engine/core/src/event/view.ts`, `game/engine/core/src/pack/load.ts`, `game/engine/core/src/rules/ai.test.ts` … |
+| `game/engine/core/src/pack/merge.ts` | 8 处：`tools/gen-pack-graph.mjs`, `tools/play.mjs`, `tools/serve.mjs`, `game/engine/core/src/pack/graph.test.ts` … |
+| `game/systems/ui/spec.ts` | 7 处：`tools/client/game.js`, `tools/client/hud/minimap.js`, `tools/client/hud/quickbar.js`, `tools/client/hud/status.js` … |
 | `game/engine/core/src/pack/manifest.ts` | 7 处：`tools/pack-reader.mjs`, `game/engine/core/src/pack/load.test.ts`, `game/engine/core/src/pack/manifest.test.ts`, `game/engine/core/src/pack/merge.test.ts` … |
-| `game/engine/core/src/pack/merge.ts` | 7 处：`tools/play.mjs`, `tools/serve.mjs`, `game/engine/core/src/pack/graph.test.ts`, `game/engine/core/src/pack/graph.ts` … |
 | `game/engine/core/src/event/schema.ts` | 7 处：`game/engine/core/src/entity/template.ts`, `game/engine/core/src/event/evaluate.ts`, `game/engine/core/src/event/registry.ts`, `game/engine/core/src/event/schema.test.ts` … |
+| `game/systems/ui/dom.ts` | 5 处：`tools/client/game.js`, `tools/client/hud/minimap.js`, `tools/client/hud/quickbar.js`, `tools/client/hud/status.js` … |
 | `game/systems/render/project.ts` | 5 处：`tools/serve.mjs`, `game/systems/render/browser.ts`, `game/systems/render/contract.test.ts`, `game/systems/render/draw.test.ts` … |
 | `game/engine/core/src/entity/merge.ts` | 5 处：`game/engine/core/src/entity/merge.test.ts`, `game/engine/core/src/entity/template.ts`, `game/engine/core/src/event/view.ts`, `game/engine/core/src/store.ts` … |
-| `game/systems/ui/spec.ts` | 4 处：`tools/client/game.js`, `tools/client/launcher.js`, `game/systems/ui/dom.ts`, `game/systems/ui/spec.test.ts` |
+| `game/engine/core/src/pack/order.ts` | 4 处：`tools/gen-pack-graph.mjs`, `tools/play.mjs`, `tools/serve.mjs`, `game/engine/core/src/pack/order.test.ts` |
 | `game/engine/core/src/pack/load.ts` | 4 处：`tools/play.mjs`, `tools/serve.mjs`, `game/engine/core/src/pack/init.ts`, `game/engine/core/src/pack/load.test.ts` |
 | `game/engine/core/src/rules/collision.ts` | 4 处：`game/engine/core/src/rules/ai.ts`, `game/engine/core/src/rules/aim.ts`, `game/engine/core/src/rules/collision.test.ts`, `game/engine/core/src/rules/move.ts` |
-| `game/systems/render/atlas.ts` | 4 处：`game/systems/render/atlas.test.ts`, `game/systems/render/browser.ts`, `game/systems/render/draw.test.ts`, `game/systems/render/draw.ts` |
-| `game/engine/core/src/pack/order.ts` | 3 处：`tools/play.mjs`, `tools/serve.mjs`, `game/engine/core/src/pack/order.test.ts` |
-| `game/engine/core/src/event/effects.ts` | 3 处：`tools/serve.mjs`, `game/engine/core/src/event/effects.test.ts`, `game/engine/core/src/store.entity.test.ts` |
-| `game/engine/core/src/rules/pending.ts` | 3 处：`tools/serve.mjs`, `game/engine/core/src/rules/pending.test.ts`, `game/systems/rules/base.ts` |
+| `game/engine/core/src/traversal/filter.ts` | 4 处：`game/engine/core/src/rules/aim.ts`, `game/engine/core/src/traversal/select.ts`, `game/engine/core/src/traversal/shapes.ts`, `game/engine/core/src/traversal/traversal.test.ts` |
+| `game/engine/core/src/traversal/offsets.ts` | 4 处：`game/engine/core/src/traversal/resolve.ts`, `game/engine/core/src/traversal/shapes.ts`, `game/engine/core/src/traversal/transform.ts`, `game/engine/core/src/traversal/traversal.test.ts` |
 
 ## 没有被引用的文件
 
+- `tools/check-client.mjs`
+- `tools/check-locale.mjs`
 - `tools/gen-docs.mjs`
+- `tools/gen-file-docs.mjs`
+- `tools/gen-pack-graph.mjs`
 - `tools/gen-tree.mjs`
 - `tools/import-csv.mjs`
 - `tools/typecheck.mjs`
 - `game/engine/core/types/node-shim.d.ts`
 
-> 共 71 个源文件（另有 50 个测试），262 条引用。
+> 共 86 个源文件（另有 53 个测试），301 条引用。

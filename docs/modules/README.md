@@ -28,7 +28,7 @@
 | 组件 | [实心](component-core.solid.md) | `core.solid` | 占住格子，别人走不过来。 |
 | 组件 | [贴图](component-core.sprite.md) | `core.sprite` | 指向图集里的一帧；没有就退回字符。 |
 | 组件 | [意图](component-core.intent.md) | `core.intent` | 敌人下回合要打的格子与结算时刻，绘制和判定共用。 |
-| 组件 | [core.pending](component-core.pending.md) | `core.pending` |  |
+| 组件 | [挂起](component-core.pending.md) | `core.pending` | 过几回合才结算的动作（蓄力、延迟陷阱）。 |
 | 组件 | [用法](component-core.use.md) | `core.use` | 这东西怎么用：效果列表 + 是否消耗。 |
 | 组件 | [对话](component-core.dialog.md) | `core.dialog` | 这个角色能说什么（脚本 id）。 |
 | 组件 | [阵营](component-core.disposition.md) | `core.disposition` | 敌对 / 中立 / 友好，决定点击默认行为。 |

@@ -9,11 +9,12 @@
 
 | 种类 | 数量 |
 |---|---|
-| component | 13 |
-| rule | 12 |
+| component | 14 |
+| rule | 13 |
 | template | 5 |
 | entity | 5 |
 | terrain | 4 |
+| traversal | 1 |
 | space | 1 |
 | group | 1 |
 | world | 1 |
@@ -37,10 +38,12 @@ graph LR
     component_core_solid["实心"]
     component_core_sprite["贴图"]
     component_core_intent["意图"]
-    component_core_pending["core.pending"]
+    component_core_pending["挂起"]
     component_core_use["用法"]
     component_core_dialog["对话"]
     component_core_disposition["阵营"]
+    component_core_persistence["存在感"]
+    traversal_base_traversal["base.traversal"]
   end
   subgraph "official.normal"
     space_harbor["harbor"]
@@ -67,6 +70,7 @@ graph LR
     rule_base_cast["蓄力劈砍"]
     rule_core_use["使用"]
     rule_base_talk["交谈"]
+    rule_base_sweep["横扫"]
   end
   entity_crate --> space_harbor
   entity_crate --> template_prop_crate
@@ -90,6 +94,7 @@ graph LR
   template_npc_salt --> component_core_disposition
   template_npc_salt --> component_core_health
   template_npc_salt --> component_core_intent
+  template_npc_salt --> component_core_persistence
   template_npc_salt --> component_core_solid
   template_npc_salt --> component_core_stats
   template_pc --> component_core_container
@@ -101,6 +106,7 @@ graph LR
   template_prop_crate --> component_core_solid
   world_main --> rule_base_attack
   world_main --> rule_base_cast
+  world_main --> rule_base_sweep
   world_main --> rule_base_talk
   world_main --> rule_core_aim
   world_main --> rule_core_drop

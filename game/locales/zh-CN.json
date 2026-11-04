@@ -98,5 +98,9 @@
   "component.core.persistence.name": "存在感",
   "component.core.persistence.desc": "锚定 / 普通 / 短暂：决定离得远时要不要继续留在世界里。",
   "rule.base.sweep.name": "横扫",
-  "rule.base.sweep.desc": "打自己周围一圈里所有活着的目标。"
+  "rule.base.sweep.desc": "打自己周围一圈里所有活着的目标。",
+  "component.core.pending.name": "挂起",
+  "component.core.pending.desc": "过几回合才结算的动作（蓄力、延迟陷阱）。",
+  "world.official.normal.name": "盐港",
+  "world.official.normal.desc": "示例世界：一个港口、一个盐商、一盏灯。"
 }

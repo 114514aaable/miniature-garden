@@ -1,6 +1,6 @@
-# core.pending
+# 挂起
 
-`core.pending`
+`core.pending` — 过几回合才结算的动作（蓄力、延迟陷阱）。
 
 ## Schema
 ```json

@@ -29,9 +29,15 @@ function renderWorlds() {
     row.className = 'world' + (world.id === activeWorld ? ' picked' : '') + (world.ok ? '' : ' bad');
 
     const info = document.createElement('div');
+    if (world.description) {
+      const desc = document.createElement('div');
+      desc.className = 'desc';
+      desc.textContent = world.description;
+      info.appendChild(desc);
+    }
     const name = document.createElement('div');
     name.className = 'name';
-    name.textContent = world.id + ' @' + world.version;
+    name.textContent = (world.name || world.id) + '  @' + world.version;
     info.appendChild(name);
     const packs = document.createElement('div');
     packs.className = 'packs';

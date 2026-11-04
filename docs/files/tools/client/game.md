@@ -13,6 +13,7 @@
 - [`game/systems/render/browser.ts`](game/systems/render/browser.md)
 - [`game/systems/ui/dom.ts`](game/systems/ui/dom.md)
 - [`game/systems/ui/spec.ts`](game/systems/ui/spec.md)
+- [`tools/client/hud/aim.js`](tools/client/hud/aim.md)
 - [`tools/client/hud/minimap.js`](tools/client/hud/minimap.md)
 - [`tools/client/hud/quickbar.js`](tools/client/hud/quickbar.md)
 - [`tools/client/hud/status.js`](tools/client/hud/status.md)

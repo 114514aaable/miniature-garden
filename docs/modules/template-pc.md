@@ -9,4 +9,4 @@
 - `core.stats` — 属性
 - `core.container` — 物品栏
 - `core.solid` — 实心
-- `core.pending` — core.pending
+- `core.pending` — 挂起

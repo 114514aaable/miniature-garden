@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 84 个文件。
+共 86 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -76,7 +76,9 @@
 | `game/systems/ui/spec.ts` | UI 描述：一组纯数据，能单测，不碰 DOM。 | [md](game/systems/ui/spec.md) |
 | `tools/build-web.mjs` | 把 TS 转成浏览器能跑的 JS（构建产物放 web/）。 | [md](tools/build-web.md) |
 | `tools/check-client.mjs` | 页面脚本的「有没有调用不存在的函数」检查。 | [md](tools/check-client.md) |
+| `tools/check-locale.mjs` | 语言包体检：包里每个 id 都应该有名字。 | [md](tools/check-locale.md) |
 | `tools/client/game.js` |  | [md](tools/client/game.md) |
+| `tools/client/hud/aim.js` | 瞄准高亮：记住「鼠标在哪、当前选了什么技能」，随时可以重算。 | [md](tools/client/hud/aim.md) |
 | `tools/client/hud/minimap.js` | 右上区域：小地图。 | [md](tools/client/hud/minimap.md) |
 | `tools/client/hud/quickbar.js` | 右下角区域：点击策略。 | [md](tools/client/hud/quickbar.md) |
 | `tools/client/hud/status.js` | 左下区域：状态（血量条 + 计数 + 可否行动）。 | [md](tools/client/hud/status.md) |
