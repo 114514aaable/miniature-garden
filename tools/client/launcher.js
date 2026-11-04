@@ -323,7 +323,8 @@ document.getElementById('m-start').addEventListener('click', async () => {
     show('packs');
     return;
   }
-  openStartDialog(activeWorld);
+  const world = worlds.find((item) => item.id === activeWorld) || { id: activeWorld, name: activeWorld };
+  openStartDialog(world);
 });
 
 document.getElementById('m-load').addEventListener('click', async () => {
