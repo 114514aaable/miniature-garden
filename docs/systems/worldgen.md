@@ -92,29 +92,79 @@ generators → biomes → structures
 
 ## 3. 结构（structures.json）
 
+结构是「带图例的字符画」。**图例放在结构自己身上**——符号只在这栋建筑里有意义。
+
+### 图例可以指向两种东西
+
 ```json
 [
   {
     "id": "hut",
-    "size": [5, 4],
-    "terrain": [
+    "legend": {
+      "#": { "terrain": "wall" },
+      ".": { "terrain": "floor" },
+      "D": { "terrain": "door" }
+    },
+    "map": [
       "#####",
       "#...#",
       "#..D#",
       "#####"
     ],
-    "legend": { "#": "wall", ".": "floor", "D": "door" },
-    "entities": [{ "template": "prop_crate", "dx": 1, "dy": 1 }],
-    "groups": [{ "group": "camp", "dx": 2, "dy": 2 }]
+    "entities": [{ "template": "prop_crate", "dx": 1, "dy": 1 }]
+  },
+  {
+    "id": "village",
+    "legend": {
+      "#": { "terrain": "wall" },
+      ".": { "terrain": "floor" },
+      "h": { "structure": "hut", "align": "center" },
+      "w": { "structure": "well", "align": "center" }
+    },
+    "map": [
+      "#####",
+      "#h.h#",
+      "#.w.#",
+      "#####"
+    ]
   }
 ]
 ```
 
-- **字符画**而不是坐标数组：人读得懂，AI 好写，diff 看得到；
-- `legend` 把字符映射到地形名；
-- `entities` / `groups` 按偏移摆放（复用已有的模板与预制件）。
+```
+terrain 条目     → 这一格铺这个地形
+structure 条目   → 把另一个结构盖在这里（默认左上对齐，可写 align: center）
+```
 
-**结构不知道自己在哪个群系**——允许清单在群系那边。
+**这就是组合**：村庄由小屋拼成，小屋由地形拼成。和模板的 `extends` 同一个味道。
+
+### 四条规则
+
+1. **符号是局部的**——每个结构自己的图例，互不干扰；
+2. **后盖的覆盖先盖的**——地图从左到右、从上到下；子结构整个盖上去；
+3. **对齐**——`align: "top-left"`（默认）或 `"center"`；
+4. **递归保护**——结构引用图不能有环，加载期检查（和模板继承一样）。
+
+### 四种写法，可以混用
+
+| 写法 | 适合 | 说明 |
+|---|---|---|
+| `pattern` + `palette` | 少量地形 | 最短，字符画 |
+| `rows` | 多种地形 | 地形名直写，空格分隔，支持 `name*n` |
+| `legend` + `map` | 有子结构 | 符号 → 地形 或 子结构 |
+| `cells` | 个别格子 | 覆盖组件/朝向，或 `skip: true` 保留原地形 |
+
+**加载时归一成同一份「地形名矩阵 + 实体列表 + 子结构列表」**，运行时只认这一种。
+
+### 其它字段
+
+```json
+"anchors": [{ "kind": "door", "x": 2, "y": 3, "facing": "south" }],
+"allow": { "rotate": true, "mirror": true }
+```
+
+- `anchors`：连接点（学 Minecraft 的 jigsaw）——**先只定义格式，不实现**；
+- `allow`：允许摆放时旋转/镜像——同样先留字段。
 
 ## 阶段：一串 op
 
