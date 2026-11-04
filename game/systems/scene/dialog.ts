@@ -124,6 +124,19 @@ export function createDialogScene(script: DialogScript): Scene {
       return { effects: [] };
     },
 
+    /** 存档：只记当前节点 id。 */
+    snapshot(): JsonValue {
+      return { node: nodeId };
+    },
+
+    /** 读档：回到那一句。 */
+    restore(state: JsonValue): void {
+      const data = typeof state === "object" && state !== null ? (state as Record<string, JsonValue>) : {};
+      if (typeof data.node === "string" && script.nodes[data.node] !== undefined) {
+        nodeId = data.node;
+      }
+    },
+
     /** 给客户端渲染用的视图。 */
     describe(): JsonValue {
       const node = script.nodes[nodeId] ?? { text: "", choices: [] };

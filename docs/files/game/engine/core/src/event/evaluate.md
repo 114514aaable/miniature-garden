@@ -15,6 +15,7 @@
 - `Handler`
 - `HandlerMap`
 - `ObjectRef`
+- `RuleTools`
 - `evaluate`
 
 ## 依赖
@@ -33,6 +34,7 @@
 - [`game/engine/core/src/rules/inventory.ts`](game/engine/core/src/rules/inventory.md)
 - [`game/engine/core/src/rules/move.ts`](game/engine/core/src/rules/move.md)
 - [`game/engine/core/src/rules/pending.ts`](game/engine/core/src/rules/pending.md)
+- [`game/engine/core/src/rules/sweep.ts`](game/engine/core/src/rules/sweep.md)
 - [`game/engine/core/src/rules/talk.ts`](game/engine/core/src/rules/talk.md)
 - [`game/engine/core/src/rules/use.ts`](game/engine/core/src/rules/use.md)
 - [`game/systems/rules/base.ts`](game/systems/rules/base.md)

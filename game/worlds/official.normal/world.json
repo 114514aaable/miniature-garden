@@ -16,7 +16,8 @@
     "core.enemy_strike",
     "base.cast",
     "core.use",
-    "base.talk"
+    "base.talk",
+    "base.sweep"
   ],
   "onConflict": "error",
   "init": [

@@ -13,6 +13,7 @@ base 包的规则：劈砍、蓄力劈砍。
 - [`game/engine/core/src/event/registry.ts`](game/engine/core/src/event/registry.md)
 - [`game/engine/core/src/rules/attack.ts`](game/engine/core/src/rules/attack.md)
 - [`game/engine/core/src/rules/pending.ts`](game/engine/core/src/rules/pending.md)
+- [`game/engine/core/src/rules/sweep.ts`](game/engine/core/src/rules/sweep.md)
 - [`game/engine/core/src/rules/talk.ts`](game/engine/core/src/rules/talk.md)
 - [`game/engine/core/src/time.ts`](game/engine/core/src/time.md)
 

@@ -28,8 +28,15 @@
     },
     "component": {
       "t": "str"
+    },
+    "condition": {
+      "t": "any"
     }
-  }
+  },
+  "optional": [
+    "component",
+    "condition"
+  ]
 }
 ```
 

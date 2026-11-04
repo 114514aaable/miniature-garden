@@ -43,10 +43,24 @@ export interface Frame {
   readonly parentId: number | null;
 }
 
+/** 宿主给规则的可选能力（遍历、选定之类，规则自己不实现）。 */
+export interface RuleTools {
+  /** 命名形状 → 偏移。 */
+  offsets?(shape: string): readonly { readonly dx: number; readonly dy: number }[] | undefined;
+  /** 在给定格子里按命名过滤挑目标。 */
+  select?(
+    cells: readonly { readonly x: number; readonly y: number }[],
+    filter: string,
+    options?: { readonly exclude?: number; readonly limit?: number },
+  ): readonly number[];
+}
+
 export interface EvaluateContext {
   readonly frame: Frame;
   readonly view: WorldView;
   readonly children: readonly JsonValue[];
+  /** 宿主注入的能力（可选）。 */
+  readonly tools?: RuleTools;
 }
 
 export type Handler = (params: JsonValue, context: EvaluateContext) => JsonValue;
@@ -68,6 +82,8 @@ export type EvaluateResult =
 export interface EvaluateOptions {
   readonly source?: string;
   readonly maxDepth?: number;
+  /** 宿主能力，透传给处理器。 */
+  readonly tools?: RuleTools;
 }
 
 export const DEFAULT_MAX_DEPTH = 3;
@@ -142,7 +158,7 @@ export function evaluate(
 
     let value: JsonValue;
     try {
-      value = handler(node.params, { frame, view, children });
+      value = handler(node.params, { frame, view, children, ...(options.tools === undefined ? {} : { tools: options.tools }) });
     } catch (error) {
       return fail(frame, describe(error));
     }

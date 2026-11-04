@@ -96,5 +96,7 @@
   "component.core.disposition.name": "阵营",
   "component.core.disposition.desc": "敌对 / 中立 / 友好，决定点击默认行为。",
   "component.core.persistence.name": "存在感",
-  "component.core.persistence.desc": "锚定 / 普通 / 短暂：决定离得远时要不要继续留在世界里。"
+  "component.core.persistence.desc": "锚定 / 普通 / 短暂：决定离得远时要不要继续留在世界里。",
+  "rule.base.sweep.name": "横扫",
+  "rule.base.sweep.desc": "打自己周围一圈里所有活着的目标。"
 }

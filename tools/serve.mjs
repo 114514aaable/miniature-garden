@@ -42,6 +42,8 @@ import { resolveTag, resolveTags } from "../game/systems/rules/aliases.ts";
 import { SceneStack, sceneFromComponent } from "../game/systems/scene/scene.ts";
 import { createDialogScene, parseDialogScript } from "../game/systems/scene/dialog.ts";
 import { selectTargets } from "../game/engine/core/src/traversal/select.ts";
+import { offsetsOf } from "../game/engine/core/src/traversal/shapes.ts";
+import { cellsOf } from "../game/engine/core/src/traversal/resolve.ts";
 
 const LOCALE = "zh-CN";
 let MESSAGES = {};
@@ -583,6 +585,45 @@ function selectIn(cells, filterName, options = {}) {
   return selectTargets(selector, cells, condition, options);
 }
 
+/**
+ * 范围技能的高亮：用遍历核心算「以施法者为中心、命名形状」的格子。
+ * 规则层命中判定也用同一份偏移，所以画的和打的一定一致。
+ */
+function aimArea(shapeName, actorHandle) {
+  const actor = session.store.entity(actorHandle);
+  if (actor.pos === null || actor.space === null) {
+    return { ok: false, cells: [], reason: "它不在任何地方" };
+  }
+
+  const spec = session.loaded.traversal;
+  let offsets;
+  try {
+    offsets = offsetsOf(spec, shapeName);
+  } catch (error) {
+    return { ok: false, cells: [], reason: messageOf(error) };
+  }
+
+  const space = session.store.space(actor.space);
+  const cells = cellsOf(actor.pos, offsets, { width: space.width, height: space.height });
+  return { ok: true, cells: cells.map((cell) => [cell.x, cell.y]), reason: null };
+}
+
+/** 规则能用到的宿主能力：形状、选定。和 aim 用同一份数据。 */
+function ruleTools() {
+  return {
+    offsets(shape) {
+      try {
+        return offsetsOf(session.loaded.traversal, shape);
+      } catch {
+        return undefined;
+      }
+    },
+    select(cells, filter, options) {
+      return selectIn(cells, filter, options);
+    },
+  };
+}
+
 function aimAt(tag, x, y) {
   const sym = session.link.tags.get(tag);
   const signature = sym === undefined ? undefined : session.link.signatures[sym];
@@ -591,6 +632,10 @@ function aimAt(tag, x, y) {
   }
   if (signature.skill.target.kind === "self") {
     return { ok: false, cells: [], reason: "这个技能不需要目标" };
+  }
+
+  if (signature.skill.target.kind === "area") {
+    return aimArea(String(signature.skill.target.shape ?? ""), session.playerHandle);
   }
 
   const kind = signature.skill.target.kind === "entity" ? "entity" : "cell";
@@ -679,6 +724,11 @@ function useSkill(tag, x, y, extra = {}) {
     return run(tag, { ...params, ...extra }, signature.skill.cost);
   }
 
+  if (signature.skill.target.kind === "area") {
+    // 范围技能以自己为中心，不需要点格子
+    return run(tag, { actor: session.playerHandle, ...extra }, signature.skill.cost);
+  }
+
   if (x === undefined || y === undefined) {
     return snapshot(`${signature.skill.name} 需要先指出目标格`);
   }
@@ -710,7 +760,7 @@ function run(tag, params, costKey) {
   const envelope = { id: session.store.now() + 1, tag, params };
   session.devlog.action(session.store.now(), tag, params);
 
-  const result = evaluate(envelope, session.link, session.handlers, currentView());
+  const result = evaluate(envelope, session.link, session.handlers, currentView(), { tools: ruleTools() });
   if (!result.ok) {
     session.devlog.action(session.store.now(), `${tag} 求值失败`, {
       message: result.diagnostics[0]?.message ?? "未知",
@@ -990,6 +1040,8 @@ function saveGame(slot = "quick") {
     playerReadyAt: session.playerReadyAt,
     scheduler: session.scheduler.upcoming(999).map((due) => [due.handle, due.tick]),
     disabled: session.disabled ?? [],
+    // 场景栈连同每层的内部状态（比如对话说到第几句）
+    scene: session.scenes.export(),
   };
   mkdirSync(SAVE_DIR, { recursive: true });
   writeFileSync(slotPath(slot), JSON.stringify(data), "utf8");
@@ -1041,6 +1093,26 @@ function loadGame(slot = "quick") {
     data.scheduler.map(([handle, readyAt]) => ({ handle, readyAt })),
     session.store.now(),
   );
+
+  // 场景：按层重建（对话要重新读脚本），再让每层恢复内部状态
+  if (Array.isArray(data.scene) && data.scene.length > 0) {
+    const layers = [];
+    for (const layer of data.scene) {
+      if (layer.id === "dialog") {
+        try {
+          session.scenes.register(loadDialogScript(String(layer.params?.script ?? "")));
+        } catch {
+          continue;
+        }
+      }
+      layers.push({
+        id: String(layer.id),
+        params: layer.params ?? {},
+        ...(layer.state === undefined ? {} : { state: layer.state }),
+      });
+    }
+    if (layers.length > 0) session.scenes.restore(layers);
+  }
   session.lastEvents = [];
   session.devlog.action(session.store.now(), "读档", { tick: session.store.now(), world: data.world });
   return { ok: true, message: "已读档（tick " + session.store.now() + "）" };

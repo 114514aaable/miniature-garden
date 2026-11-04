@@ -110,8 +110,15 @@
           },
           "component": {
             "t": "str"
+          },
+          "condition": {
+            "t": "any"
           }
-        }
+        },
+        "optional": [
+          "component",
+          "condition"
+        ]
       },
       "returnsEffects": false
     },
@@ -276,6 +283,32 @@
             "t": "int"
           }
         }
+      },
+      "returnsEffects": true
+    },
+    {
+      "kind": "rule",
+      "id": "base.sweep",
+      "name": "横扫",
+      "desc": "打自己周围一圈里所有活着的目标。",
+      "file": "rule-base.sweep.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "actor": {
+            "t": "int"
+          },
+          "shape": {
+            "t": "str"
+          },
+          "filter": {
+            "t": "str"
+          }
+        },
+        "optional": [
+          "shape",
+          "filter"
+        ]
       },
       "returnsEffects": true
     },

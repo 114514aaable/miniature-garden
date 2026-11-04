@@ -23,13 +23,15 @@ export interface SkillMeta {
   /** 引用 clock.costs 的键，不写死数字。 */
   readonly cost: string;
   readonly target: {
-    readonly kind: "cell" | "entity" | "self";
+    readonly kind: "cell" | "entity" | "self" | "area";
     /** 最远几格（self 用 0）。 */
     readonly range: number;
     /** 只把带这个组件的实体当作合法目标（可选，旧写法）。 */
     readonly component?: string;
     /** 命名过滤（base 的 filters，可选，新写法）。 */
     readonly filter?: string;
+    /** 范围技能用的命名形状（base 的 shapes）。 */
+    readonly shape?: string;
   };
 }
 
@@ -116,7 +118,7 @@ function checkSkill(skill: SkillMeta, tag: string): void {
     throw new Error(`技能 ${tag} 缺少成本键（clock.costs 里的名字）`);
   }
   const target = skill.target;
-  if (target === undefined || !["cell", "entity", "self"].includes(target.kind)) {
+  if (target === undefined || !["cell", "entity", "self", "area"].includes(target.kind)) {
     throw new Error(`技能 ${tag} 的目标类型非法`);
   }
   if (!Number.isInteger(target.range) || target.range < 0 || target.range > 16) {

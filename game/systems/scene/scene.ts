@@ -47,12 +47,18 @@ export interface Scene {
   handle(command: string, context: SceneContext): SceneResult;
   /** 给客户端的渲染数据（形状由场景自己决定）。 */
   describe?(): JsonValue;
+  /** 存档时要记住的内部状态（比如对话说到第几句）。 */
+  snapshot?(): JsonValue;
+  /** 读档时恢复内部状态。 */
+  restore?(state: JsonValue): void;
 }
 
 /** 场景栈的一层。 */
 export interface SceneLayer {
   readonly id: string;
   readonly params: JsonValue;
+  /** 场景自己的内部状态（由 snapshot() 产生）。 */
+  readonly state?: JsonValue;
 }
 
 /**
@@ -94,9 +100,27 @@ export class SceneStack {
     return this.layers.length;
   }
 
-  /** 全部层（调试与存档用）。 */
+  /** 全部层（调试用）。 */
   all(): readonly SceneLayer[] {
     return [...this.layers];
+  }
+
+  /** 存档用：每层带上场景自己的状态。 */
+  export(): SceneLayer[] {
+    return this.layers.map((layer) => {
+      const scene = this.registry.get(layer.id);
+      return { ...layer, ...(scene?.snapshot === undefined ? {} : { state: scene.snapshot() }) };
+    });
+  }
+
+  /** 读档：整体恢复栈，并让每层恢复自己的状态。 */
+  restore(layers: readonly SceneLayer[]): void {
+    if (layers.length === 0) return;
+    this.layers = layers.map((layer) => ({ id: layer.id, params: layer.params, ...(layer.state === undefined ? {} : { state: layer.state }) }));
+    for (const layer of this.layers) {
+      const scene = this.registry.get(layer.id);
+      if (scene?.restore !== undefined && layer.state !== undefined) scene.restore(layer.state);
+    }
   }
 
   /** 把一个场景加进注册表（对话脚本是运行时读的，所以需要后注册）。 */

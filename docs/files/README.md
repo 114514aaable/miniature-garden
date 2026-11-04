@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 83 个文件。
+共 84 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -36,6 +36,7 @@
 | `game/engine/core/src/rules/rng.ts` | 随机数：无状态派发。 | [md](game/engine/core/src/rules/rng.md) |
 | `game/engine/core/src/rules/scheduler.ts` | 调度器：谁该动了。 | [md](game/engine/core/src/rules/scheduler.md) |
 | `game/engine/core/src/rules/sum.ts` | 第一个规则：求和。 | [md](game/engine/core/src/rules/sum.md) |
+| `game/engine/core/src/rules/sweep.ts` | 横扫：打「自己周围一圈」里所有活着的目标。 | [md](game/engine/core/src/rules/sweep.md) |
 | `game/engine/core/src/rules/talk.ts` | 交谈：和「劈砍」一样是一条技能——有目标、有射程、能进快捷栏。 | [md](game/engine/core/src/rules/talk.md) |
 | `game/engine/core/src/rules/use.ts` | 使用物品：把背包里的东西「用」出去。 | [md](game/engine/core/src/rules/use.md) |
 | `game/engine/core/src/rules/wait.ts` | 等待：什么都不做，只让时间走。 | [md](game/engine/core/src/rules/wait.md) |
