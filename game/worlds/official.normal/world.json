@@ -52,5 +52,25 @@
       "water": 0.4,
       "hill": 0.65
     }
+  },
+  "startMenu": {
+    "fields": [
+      {
+        "key": "seed",
+        "label": "种子",
+        "type": "number",
+        "default": 0
+      },
+      {
+        "key": "size",
+        "label": "地图尺寸",
+        "type": "select",
+        "values": [
+          "40x20",
+          "64x32"
+        ],
+        "default": "40x20"
+      }
+    ]
   }
 }

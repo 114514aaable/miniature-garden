@@ -136,13 +136,14 @@ function scanWorlds() {
   const worlds = roots.map((root) => {
     try {
       const ordered = closureOf(root.pack.id, byId);
-      loadWorld(mergePacks(ordered));
+      const loaded = loadWorld(mergePacks(ordered));
       return {
         id: root.pack.id,
         version: root.pack.version,
         // 启动器直接显示中文名，不用再查语言包
         name: MESSAGES["world." + root.pack.id + ".name"] ?? root.pack.id,
         description: MESSAGES["world." + root.pack.id + ".desc"] ?? "",
+        startMenu: loaded.world.startMenu ?? { fields: [{ key: "seed", label: "种子", type: "number", default: 0 }] },
         packs: ordered.map((content) => `${content.pack.id}@${content.pack.version}`),
         ok: true,
       };
@@ -328,6 +329,7 @@ function snapshot(message) {
     tile: TILE,
     playerHandle: session.playerHandle,
     seed: session.seed,
+    options: session.options ?? {},
     dead: session.dead === true,
     scene: sceneView(),
     snapshot: {
@@ -1272,7 +1274,7 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.method === "POST" && request.url === "/api/start") {
-      const { id, off, seed } = await readBody(request);
+      const { id, off, seed, options } = await readBody(request);
       const disabled = new Set(Array.isArray(off) ? off : []);
       try {
         const { byId } = collectPacks();
@@ -1280,6 +1282,7 @@ const server = createServer(async (request, response) => {
         const offTemplates = new Set(Array.isArray(entry) ? [] : (entry?.offTemplates ?? []));
         session = buildSession(closureOf(String(id), byId), new Set([...disabled].map(resolveTag)), Number(seed) || 0, true, offTemplates);
         session.world = String(id);
+        session.options = typeof options === "object" && options !== null ? options : {};
         session.dead = false;
         session.disabled = [...disabled];
         sendJson(response, snapshot("世界已载入"));

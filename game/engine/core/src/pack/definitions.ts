@@ -70,6 +70,8 @@ export interface WorldDef {
    */
   /** 生成参数（离线工具读，运行时不用）。 */
   readonly generation?: JsonValue;
+  /** 开始游戏时要问的选项（由包声明，界面负责画）。 */
+  readonly startMenu?: JsonValue;
   readonly persistence?: {
     readonly activeRadius?: number;
     readonly sweepEvery?: number;
@@ -170,6 +172,7 @@ const WORLD_SCHEMA: Schema = {
     rules: { t: "array", of: STR, max: 64 },
     init: { t: "array", of: { t: "any" }, max: 64 },
     generation: { t: "any" },
+    startMenu: { t: "any" },
     persistence: {
       t: "object",
       fields: { activeRadius: INT, sweepEvery: INT },
@@ -177,7 +180,7 @@ const WORLD_SCHEMA: Schema = {
     },
     onConflict: { t: "enum", values: ["error", "warn", "override"] },
   },
-  optional: ["rules", "init", "generation", "persistence", "onConflict"],
+  optional: ["rules", "init", "generation", "startMenu", "persistence", "onConflict"],
 };
 
 export function parseSpaceDef(raw: unknown, path = "$space"): SpaceDef {

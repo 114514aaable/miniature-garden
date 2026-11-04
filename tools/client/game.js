@@ -33,6 +33,15 @@ document.addEventListener('selectstart', (event) => {
 
 const params = new URLSearchParams(location.search);
 const worldId = params.get('world');
+
+/** 开始菜单里选的选项（种子之外的东西）。 */
+const startOptions = (() => {
+  try {
+    return JSON.parse(params.get('options') || '{}');
+  } catch {
+    return {};
+  }
+})();
 const offFromUrl = (params.get('off') || '').split(',').filter(Boolean);
 const off = offFromUrl.length > 0
   ? offFromUrl
@@ -906,7 +915,7 @@ window.addEventListener('keydown', (event) => {
   // 读档流程已经建好会话，直接用；否则按选择开局。
   let state = await api('/api/state');
   if (!state || state.launcher) {
-    state = await api('/api/start', { id: worldId, off, seed });
+    state = await api('/api/start', { id: worldId, off, seed, options: startOptions });
   }
   if (!state || state.launcher) {
     document.getElementById('errbar').hidden = false;

@@ -77,11 +77,43 @@ function renderWorlds() {
   for (const bad of [] ) { void bad; }
 }
 
-function openSeedDialog(worldId) {
+/**
+ * 开始游戏：选项由世界包声明（world.json 的 startMenu），这里只负责画。
+ *
+ * 现在支持两种字段：
+ *   number  数字输入
+ *   select  下拉（一排按钮）
+ */
+function openStartDialog(world) {
   const existing = document.getElementById('seedbox');
   if (existing) existing.remove();
 
-  let seed = localStorage.getItem('nw.seed') || String(Math.floor(Math.random() * 1000000000));
+  const fields = (world.startMenu && world.startMenu.fields) || [{ key: 'seed', label: '种子', type: 'number', default: 0 }];
+  const values = {};
+
+  const controls = fields.map((item) => {
+    const saved = item.key === 'seed' ? localStorage.getItem('nw.seed') : localStorage.getItem('nw.' + item.key);
+    const initial = saved !== null && saved !== '' ? saved : item.default;
+    values[item.key] = item.type === 'select' ? String(initial ?? item.values[0]) : Number(initial ?? 0);
+
+    if (item.type === 'select') {
+      const buttons = [];
+      for (const value of item.values || []) {
+        const node = button(String(value), () => {
+          values[item.key] = value;
+          for (const other of buttons) {
+            other.style.border = other === node ? '2px solid #8ab4f8' : '1px solid #2a303c';
+          }
+        });
+        node.style.border = String(initial) === String(value) ? '2px solid #8ab4f8' : '1px solid #2a303c';
+        buttons.push(node);
+      }
+      return field(item.label, row({ gap: 6 }, ...buttons));
+    }
+
+    const seed = String(values[item.key]);
+    return field(item.label, input(seed, (next) => { values[item.key] = Number(next) || 0; }, { type: 'number' }));
+  });
 
   const box = document.createElement('div');
   box.id = 'seedbox';
@@ -90,18 +122,27 @@ function openSeedDialog(worldId) {
   box.style.zIndex = '50';
 
   const body = col({ gap: 12 },
-    field('种子', input(seed, (next) => { seed = next; }, { type: 'number' })),
+    ...controls,
     row({ gap: 8, justify: 'end' },
       button('取消', () => box.remove()),
       button('开始', () => {
-        const value = String(Number(seed) || 0);
-        localStorage.setItem('nw.seed', value);
-        location.href = '/game?world=' + encodeURIComponent(worldId) + '&seed=' + encodeURIComponent(value);
+        localStorage.setItem('nw.seed', String(values.seed ?? 0));
+        for (const [key, value] of Object.entries(values)) {
+          if (key !== 'seed') localStorage.setItem('nw.' + key, String(value));
+        }
+        const options = { ...values };
+        delete options.seed;
+        const params = new URLSearchParams({
+          world: world.id,
+          seed: String(values.seed ?? 0),
+          options: JSON.stringify(options),
+        });
+        location.href = '/game?' + params.toString();
       }),
     ),
   );
 
-  mount(box, modal(body, { title: worldId + ' · 输入种子' }));
+  mount(box, modal(body, { title: (world.name || world.id) + ' · 开始' }));
   document.body.appendChild(box);
 }
 
@@ -282,7 +323,7 @@ document.getElementById('m-start').addEventListener('click', async () => {
     show('packs');
     return;
   }
-  openSeedDialog(activeWorld);
+  openStartDialog(activeWorld);
 });
 
 document.getElementById('m-load').addEventListener('click', async () => {
