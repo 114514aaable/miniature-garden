@@ -114,5 +114,8 @@
   "component.core.locomotion.name": "行动方式",
   "component.core.locomotion.desc": "能贴哪些面：ground（地面）、liquid（水里）、solid、air。",
   "world.official.dungeon.name": "元胞地牢",
-  "world.official.dungeon.desc": "元胞自动机挖出来的洞穴。"
+  "world.official.dungeon.desc": "元胞自动机挖出来的洞穴。",
+  "terrain.4.name": "洞底",
+  "world.official.cavern.name": "洞穴地表",
+  "world.official.cavern.desc": "噪声地表 + 元胞洞穴叠加：洞里是洞底。"
 }

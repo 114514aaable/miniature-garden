@@ -26,5 +26,12 @@
     "passable": true,
     "code": "floor",
     "surface": "ground"
+  },
+  {
+    "id": "4",
+    "name": "洞底",
+    "passable": true,
+    "code": "cave_floor",
+    "surface": "ground"
   }
 ]

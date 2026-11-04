@@ -230,6 +230,26 @@ mask             无随机
 - 存档记录 `seed` 与尺寸，读档按同样参数复现；
 - 离线工具 `gen-world` 与开局生成共用一份算法。
 
+## 流水线：多层叠加
+
+`generation.pipeline` 是一串算子，**每一步只改同一个 sandbox**（地形数组 + 具名图层）：
+
+```json
+"pipeline": [
+  { "op": "overworld", "levels": { "water": 0.4, "hill": 0.65 } },
+  { "op": "caves", "fill": 0.56, "iterations": 4, "chambers": 3 },
+  { "op": "blend", "floor": "cave_floor", "wall": "keep" }
+]
+```
+
+| op | 做什么 |
+|---|---|
+| `overworld` | 噪声 + 群系 → 地表地形 |
+| `caves` | 元胞 → 写一层 `cave`（1 = 洞） |
+| `blend` | 洞穴层的「地」换成 `floor`；`wall` 选 `keep`（保留地表）或 `solid`（填墙） |
+
+**顺序有意义，后写的覆盖先写的。** 示例世界 `official.cavern` 就是三层叠加。
+
 ## 校验
 
 ```

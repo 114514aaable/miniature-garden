@@ -46,6 +46,7 @@ import { nearestWhere } from "../game/engine/core/src/space.ts";
 import { buildPassage } from "../game/systems/rules/passage.ts";
 import { clampSize, generateTerrain } from "../game/engine/core/src/worldgen/generate.ts";
 import { generateCaves } from "../game/engine/core/src/worldgen/caves.ts";
+import { createSandbox, runPipeline } from "../game/engine/core/src/worldgen/pipeline.ts";
 import { offsetsOf } from "../game/engine/core/src/traversal/shapes.ts";
 import { cellsOf } from "../game/engine/core/src/traversal/resolve.ts";
 
@@ -203,7 +204,9 @@ function withGeneratedSpace(merged, loaded, seed, options) {
 
   let generated;
   try {
-    generated = generation.generator === "caves"
+    generated = Array.isArray(generation.pipeline)
+      ? runPipelineToTerrain(generation.pipeline, seed, clampSize(Math.max(width, needWidth)), clampSize(Math.max(height, needHeight)), loaded, ids)
+      : generation.generator === "caves"
       ? cavesToTerrain(generation, seed, clampSize(Math.max(width, needWidth)), clampSize(Math.max(height, needHeight)), ids)
       : generateTerrain({
       seed,
@@ -255,6 +258,17 @@ function withGeneratedSpace(merged, loaded, seed, options) {
       : null;
 
   return { merged: { ...merged, definitions }, note };
+}
+
+/** 流水线 → 地形数组（地表、洞穴、混合都可以）。 */
+function runPipelineToTerrain(steps, seed, width, height, loaded, ids) {
+  const fallback = ids.get("floor");
+  if (fallback === undefined) throw new Error("流水线需要一个 floor 地形");
+
+  const sandbox = createSandbox(seed, width, height, fallback);
+  runPipeline(sandbox, steps, { biomes: loaded.biomes, terrainIdByCode: ids });
+
+  return { width: sandbox.width, height: sandbox.height, terrain: sandbox.terrain, stats: {} };
 }
 
 /** 元胞地牢：墙/空 → 地形号。 */

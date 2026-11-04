@@ -324,7 +324,7 @@ game/systems/render/*（投影成画面数据）
   - `mirror(offsets: readonly Offset[], axis: "x" | "y" | "both" = "x") → Offset[]`
   - `translate(offsets: readonly Offset[], dx: number, dy: number) → Offset[]`
   - `keep(offsets: readonly Offset[], predicate: (offset: Offset) => boolean) → Offset[]`
-- **`game/engine/core/src/worldgen/caves.ts`**（134 行）
+- **`game/engine/core/src/worldgen/caves.ts`**（244 行）
   元胞地牢：元胞自动机（cellular automata）挖洞穴。
   - `generateCaves(options: CavesOptions) → CavesResult`
   - `interface CavesOptions`
@@ -348,6 +348,14 @@ game/systems/render/*（投影成画面数据）
   - `interface FbmOptions`
   - `type NoiseKind`
   - `const NOISE_KINDS`
+- **`game/engine/core/src/worldgen/pipeline.ts`**（148 行）
+  生成流水线：把生成算法拆成「一步一个算子」，串起来跑。
+  - `createSandbox(seed: number, width: number, height: number, fill: number) → Sandbox`
+  - `runPipeline(sandbox: Sandbox, steps: readonly Step[], deps: PipelineDeps,) → Sandbox`
+  - `interface Sandbox`
+  - `interface PipelineDeps`
+  - `type Step`
+  - `const CAVE_LAYER`
 - **`game/engine/core/src/worldgen/select.ts`**（74 行）
   选：把「若干场」翻译成「群系」，再把群系翻译成「地形」。
   - `matchesRange(range: BiomeRange, sample: Sample) → boolean`
@@ -555,7 +563,7 @@ game/systems/render/*（投影成画面数据）
 
 ### 页面脚本 tools/client
 
-- **`tools/client/game.js`**（952 行）
+- **`tools/client/game.js`**（1004 行）
   import { api } from '/client/shared.js';
 - **`tools/client/hud/aim.js`**（62 行）
   瞄准高亮：记住「鼠标在哪、当前选了什么技能」，随时可以重算。
@@ -576,7 +584,7 @@ game/systems/render/*（投影成画面数据）
 - **`tools/client/hud/status.js`**（32 行）
   左下区域：状态（血量条 + 计数 + 可否行动）。
   - `renderStatus(state)`
-- **`tools/client/launcher.js`**（437 行）
+- **`tools/client/launcher.js`**（448 行）
   import { modal, col, row, text, button, input, field } from '/web/game/systems/ui/spec.js';
 - **`tools/client/shared.js`**（35 行）
   页面共用：错误提示 + API 调用。
@@ -617,7 +625,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（1632 行）
+- **`tools/serve.mjs`**（1662 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。

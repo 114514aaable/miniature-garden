@@ -19,4 +19,5 @@
 ## 被引用
 
 - [`game/engine/core/src/worldgen/generate.ts`](game/engine/core/src/worldgen/generate.md)
+- [`game/engine/core/src/worldgen/pipeline.ts`](game/engine/core/src/worldgen/pipeline.md)
 - [`tools/gen-world.mjs`](tools/gen-world.md)
