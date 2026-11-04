@@ -32,6 +32,8 @@ export interface SkillMeta {
     readonly filter?: string;
     /** 范围技能用的命名形状（base 的 shapes）。 */
     readonly shape?: string;
+    /** 范围以谁为中心：自己（默认）还是鼠标格。 */
+    readonly anchor?: "self" | "cell";
   };
 }
 

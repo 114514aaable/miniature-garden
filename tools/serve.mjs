@@ -589,7 +589,7 @@ function selectIn(cells, filterName, options = {}) {
  * 范围技能的高亮：用遍历核心算「以施法者为中心、命名形状」的格子。
  * 规则层命中判定也用同一份偏移，所以画的和打的一定一致。
  */
-function aimArea(shapeName, actorHandle) {
+function aimArea(shapeName, actorHandle, anchor, x, y) {
   const actor = session.store.entity(actorHandle);
   if (actor.pos === null || actor.space === null) {
     return { ok: false, cells: [], reason: "它不在任何地方" };
@@ -604,7 +604,11 @@ function aimArea(shapeName, actorHandle) {
   }
 
   const space = session.store.space(actor.space);
-  const cells = cellsOf(actor.pos, offsets, { width: space.width, height: space.height });
+  // 锚点：默认跟着自己；anchor === "cell" 时跟着鼠标格
+  const origin = anchor === "cell" && x !== undefined && y !== undefined
+    ? { x, y }
+    : actor.pos;
+  const cells = cellsOf(origin, offsets, { width: space.width, height: space.height });
   return { ok: true, cells: cells.map((cell) => [cell.x, cell.y]), reason: null };
 }
 
@@ -635,7 +639,13 @@ function aimAt(tag, x, y) {
   }
 
   if (signature.skill.target.kind === "area") {
-    return aimArea(String(signature.skill.target.shape ?? ""), session.playerHandle);
+    return aimArea(
+      String(signature.skill.target.shape ?? ""),
+      session.playerHandle,
+      signature.skill.target.anchor,
+      x,
+      y,
+    );
   }
 
   const kind = signature.skill.target.kind === "entity" ? "entity" : "cell";

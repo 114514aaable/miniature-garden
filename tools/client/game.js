@@ -74,6 +74,9 @@ let uiFocus = null;
  */
 let selection = null;
 
+/** 最后一次鼠标所在的格子：状态变了也要按它重算高亮。 */
+let hoverCell = null;
+
 /** 这个技能要不要先选目标？ */
 function needsTarget(skill) {
   return skill.target !== undefined && skill.target.kind !== 'self';
@@ -81,6 +84,7 @@ function needsTarget(skill) {
 
 function beginSelection(tag, label) {
   selection = { tag, label };
+  refreshAim();
   const box = document.getElementById('message');
   if (box) box.textContent = '选择目标：' + label + '（Esc 取消）';
 }
@@ -88,6 +92,7 @@ function beginSelection(tag, label) {
 function cancelSelection() {
   if (selection === null) return false;
   selection = null;
+  refreshAim();
   const box = document.getElementById('message');
   if (box) box.textContent = '取消';
   return true;
@@ -121,6 +126,8 @@ function render(state) {
   if (portrait) portrait.textContent = state.playerGlyph || '@';
   const plate = document.getElementById('nameplate');
   if (plate) plate.textContent = state.playerName || '你';
+
+  refreshAim();
 
   renderMinimap(state);
   renderDialog(state);
@@ -516,6 +523,18 @@ function refreshHud() {
   renderEquip();
 }
 
+/** 按当前鼠标格重算高亮（鼠标没动也可能因为选择/场景变化而要重画）。 */
+function refreshAim() {
+  if (renderer === null || hoverCell === null) return;
+  api('/api/aim', {
+    tag: selection === null ? 'base.attack' : selection.tag,
+    x: hoverCell.x,
+    y: hoverCell.y,
+  }).then((result) => {
+    renderer.setAim(result.ok ? result.cells : []);
+  });
+}
+
 function showDeath() {
   const box = document.getElementById('death');
   if (!box.hidden) return;
@@ -571,6 +590,7 @@ document.getElementById('map').addEventListener('mousemove', (event) => {
   aimTimer = now;
 
   const cell = cellAt(event);
+  hoverCell = cell;
   renderer.setCursor(cell);
   api('/api/aim', { tag: selection === null ? 'base.attack' : selection.tag, x: cell.x, y: cell.y }).then((result) => {
     renderer.setAim(result.ok ? result.cells : []);
@@ -619,6 +639,7 @@ document.getElementById('map').addEventListener('click', (event) => {
   if (selection !== null) {
     const tag = selection.tag;
     selection = null;
+    hoverCell = cell;
     useSkill(tag, cell.x, cell.y);
     return;
   }
