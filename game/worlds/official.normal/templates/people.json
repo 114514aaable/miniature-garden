@@ -34,6 +34,10 @@
         "surfaces": [
           "ground"
         ]
+      },
+      "core.melee": {
+        "damage": 2,
+        "windup": 3
       }
     }
   },
