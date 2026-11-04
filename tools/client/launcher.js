@@ -94,16 +94,16 @@ function on(id, handler) {
   node.addEventListener('click', handler);
 }
 
-function openStartDialog(world) {
+function openStartDialog(world, preset = null) {
   const existing = document.getElementById('seedbox');
   if (existing) existing.remove();
 
   const fields = (world.startMenu && world.startMenu.fields) || [{ key: 'seed', label: '种子', type: 'number', default: 0 }];
-  const values = {};
+  const values = { ...(preset || {}) };
 
   const controls = fields.map((item) => {
     const saved = item.key === 'seed' ? localStorage.getItem('nw.seed') : localStorage.getItem('nw.' + item.key);
-    const initial = saved !== null && saved !== '' ? saved : item.default;
+    const initial = values[item.key] ?? (saved !== null && saved !== '' ? saved : item.default);
     values[item.key] = item.type === 'select' ? String(initial ?? item.values[0]) : Number(initial ?? 0);
 
     if (item.type === 'select') {
@@ -131,7 +131,22 @@ function openStartDialog(world) {
   box.style.inset = '0';
   box.style.zIndex = '50';
 
+  // 生成方式：在「噪声野外」和「元胞地牢」之间切
+  const choices = (worlds || []).filter((item) => item.startMenu);
+  const switchRow = choices.length > 1
+    ? [field('生成方式', row({ gap: 6 },
+        ...choices.map((item) => {
+          const node = button(item.name || item.id, () => {
+            openStartDialog(item, values);
+          });
+          node.style.border = item.id === world.id ? '2px solid #8ab4f8' : '1px solid #2a303c';
+          return node;
+        }),
+      ))]
+    : [];
+
   const body = col({ gap: 12 },
+    ...switchRow,
     ...controls,
     row({ gap: 8, justify: 'end' },
       button('取消', () => box.remove()),

@@ -848,6 +848,9 @@ document.getElementById('settingsbtn').addEventListener('click', () => {
 });
 
 window.addEventListener('keydown', (event) => {
+  // 长按的重复事件一律丢掉：一次按键 = 一次动作
+  if (event.repeat) return;
+
   if (capturingBinding !== false) {
     const oldCode = capturingBinding;
     capturingBinding = false;

@@ -557,7 +557,13 @@ function summarizeIntent(intent, entity) {
 
 // ── 动作 ────────────────────────────────────────────────
 
+/** 回合闸：上一步还没结算完，就不接受新的动作。 */
+function notReady() {
+  return session.store.now() < session.playerReadyAt;
+}
+
 function act(command) {
+  if (notReady()) return snapshot("还没恢复，等一下");
   if (session.playerHandle === null) {
     return snapshot("这个世界没有玩家角色");
   }
@@ -909,6 +915,8 @@ function resolveTarget(x, y, filterName) {
 }
 
 function useSkill(tag, x, y, extra = {}) {
+  if (notReady()) return snapshot("还没恢复，等一下");
+
   const sym = session.link.tags.get(tag);
   const signature = sym === undefined ? undefined : session.link.signatures[sym];
   if (signature === undefined || signature.skill === undefined) {
