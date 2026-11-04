@@ -4,10 +4,11 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 89 个文件。
+共 91 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
+| `game/engine/core/src/bind.ts` | 「对接」：两边各自声明自己能接什么，再算谁和谁接得上。 | [md](game/engine/core/src/bind.md) |
 | `game/engine/core/src/entity/entity.ts` | 实体：世界里「一个东西」的最小记录。 | [md](game/engine/core/src/entity/entity.md) |
 | `game/engine/core/src/entity/merge.ts` | 合并：模板默认值 + 实例覆盖 = 这个实体此刻的完整数据。 | [md](game/engine/core/src/entity/merge.md) |
 | `game/engine/core/src/entity/place.ts` | 位置：内核唯一保留的组件名。 | [md](game/engine/core/src/entity/place.md) |
@@ -69,6 +70,7 @@
 | `game/systems/rules/aliases.ts` | 旧 tag 的别名表。 | [md](game/systems/rules/aliases.md) |
 | `game/systems/rules/base.ts` | base 包的规则：劈砍、蓄力劈砍。 | [md](game/systems/rules/base.md) |
 | `game/systems/rules/index.ts` | 规则清单：一条规则 = 签名 + 处理器。 | [md](game/systems/rules/index.md) |
+| `game/systems/rules/passage.ts` | 通行：物种 × 地形 的对接结果。 | [md](game/systems/rules/passage.md) |
 | `game/systems/scene/dialog.ts` | 对话框场景。 | [md](game/systems/scene/dialog.md) |
 | `game/systems/scene/scene.ts` | 场景：世界现在处于哪种「玩法状态」。 | [md](game/systems/scene/scene.md) |
 | `game/systems/tick/phases.ts` | 每 tick 的阶段表。 | [md](game/systems/tick/phases.md) |

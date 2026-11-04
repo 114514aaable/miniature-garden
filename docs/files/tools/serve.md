@@ -29,6 +29,7 @@
 - [`game/systems/render/project.ts`](game/systems/render/project.md)
 - [`game/systems/rules/aliases.ts`](game/systems/rules/aliases.md)
 - [`game/systems/rules/index.ts`](game/systems/rules/index.md)
+- [`game/systems/rules/passage.ts`](game/systems/rules/passage.md)
 - [`game/systems/scene/dialog.ts`](game/systems/scene/dialog.md)
 - [`game/systems/scene/scene.ts`](game/systems/scene/scene.md)
 - [`game/systems/tick/phases.ts`](game/systems/tick/phases.md)

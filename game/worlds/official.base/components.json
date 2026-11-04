@@ -299,5 +299,20 @@
         "windup"
       ]
     }
+  },
+  {
+    "id": "core.locomotion",
+    "schema": {
+      "t": "object",
+      "fields": {
+        "surfaces": {
+          "t": "array",
+          "of": {
+            "t": "str"
+          },
+          "max": 8
+        }
+      }
+    }
   }
 ]

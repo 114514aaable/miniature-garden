@@ -110,5 +110,7 @@
   "biome.dry.name": "旱地",
   "biome.dry.desc": "兜底群系：什么气候都能接。",
   "component.core.melee.name": "近战",
-  "component.core.melee.desc": "伤害与起手回合数：写在模板里，规则读它。"
+  "component.core.melee.desc": "伤害与起手回合数：写在模板里，规则读它。",
+  "component.core.locomotion.name": "行动方式",
+  "component.core.locomotion.desc": "能贴哪些面：ground（地面）、liquid（水里）、solid、air。"
 }

@@ -29,6 +29,11 @@
       },
       "core.persistence": {
         "level": "anchored"
+      },
+      "core.locomotion": {
+        "surfaces": [
+          "ground"
+        ]
       }
     }
   },
@@ -54,6 +59,11 @@
               "hp": 20
             }
           }
+        ]
+      },
+      "core.locomotion": {
+        "surfaces": [
+          "ground"
         ]
       }
     }

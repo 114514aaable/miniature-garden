@@ -3,24 +3,28 @@
     "id": "0",
     "name": "空气",
     "passable": true,
-    "code": "air"
+    "code": "air",
+    "surface": "air"
   },
   {
     "id": "1",
     "name": "墙",
     "passable": false,
-    "code": "wall"
+    "code": "wall",
+    "surface": "solid"
   },
   {
     "id": "2",
     "name": "水",
     "passable": false,
-    "code": "water"
+    "code": "water",
+    "surface": "liquid"
   },
   {
     "id": "3",
     "name": "地板",
     "passable": true,
-    "code": "floor"
+    "code": "floor",
+    "surface": "ground"
   }
 ]

@@ -43,6 +43,7 @@ import { SceneStack, sceneFromComponent } from "../game/systems/scene/scene.ts";
 import { createDialogScene, parseDialogScript } from "../game/systems/scene/dialog.ts";
 import { selectTargets } from "../game/engine/core/src/traversal/select.ts";
 import { nearestWhere } from "../game/engine/core/src/space.ts";
+import { buildPassage } from "../game/systems/rules/passage.ts";
 import { offsetsOf } from "../game/engine/core/src/traversal/shapes.ts";
 import { cellsOf } from "../game/engine/core/src/traversal/resolve.ts";
 
@@ -165,6 +166,13 @@ let session = null;
 function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, offTemplates = new Set()) {
   const merged = mergePacks(ordered);
   const loaded = loadWorld(merged);
+
+  // 物种 × 地形：两边各自声明，加载期对接一次
+  const templateIds = [...merged.definitions.values()].filter((def) => def.kind === "template").map((def) => def.id);
+  const passage = buildPassage(
+    [...loaded.terrains.values()],
+    templateIds.map((id) => ({ id, components: loaded.templates.get(id).components })),
+  );
 
   const store = new Store(loaded.spaces, { templates: loaded.templates });
   for (const entity of loaded.entities) {
@@ -637,6 +645,11 @@ function ruleTools() {
     select(cells, filter, options) {
       return selectIn(cells, filter, options);
     },
+    canEnter(handle, spaceId, cell) {
+      const entity = session.store.entity(handle);
+      const space = session.store.space(spaceId);
+      return session.passage.canEnter(entity.template, space.terrainAt(cell));
+    },
   };
 }
 
@@ -655,7 +668,11 @@ function ensurePlayerOnWalkable() {
   const space = session.store.space(player.space);
   const passable = (cell) => {
     const terrain = session.loaded.terrains.get(space.terrainAt(cell));
-    return terrain !== undefined && terrain.passable && space.occupantsAt(cell).length === 0;
+    return (
+      terrain !== undefined &&
+      session.passage.canEnter(player.template, space.terrainAt(cell)) &&
+      space.occupantsAt(cell).length === 0
+    );
   };
 
   if (passable(player.pos)) return;

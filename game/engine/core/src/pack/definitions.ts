@@ -28,6 +28,8 @@ export interface TerrainDef {
   readonly passable: boolean;
   /** 稳定的英文代号：给生成器/脚本用，不受语言影响。 */
   readonly code?: string;
+  /** 这一格是什么面：ground / liquid / solid / air（通行对接用）。 */
+  readonly surface?: string;
 }
 
 export interface SpaceDef {
@@ -108,8 +110,8 @@ const ENTITY_SCHEMA: Schema = {
 
 const TERRAIN_SCHEMA: Schema = {
   t: "object",
-  fields: { name: STR, passable: { t: "bool" }, code: STR },
-  optional: ["code"],
+  fields: { name: STR, passable: { t: "bool" }, code: STR, surface: STR },
+  optional: ["code", "surface"],
 };
 
 /** 预制件：一组实体 + 相对偏移。 */
@@ -237,8 +239,14 @@ export function parseTerrainDef(raw: unknown, idKey: string, path = "$terrain"):
     throw new SchemaError(`${path}.id`, `地形号不能有前导零："${idKey}"`);
   }
 
-  const def = raw as { name: string; passable: boolean; code?: string };
-  return { id, name: def.name, passable: def.passable, ...(def.code === undefined ? {} : { code: def.code }) };
+  const def = raw as { name: string; passable: boolean; code?: string; surface?: string };
+  return {
+    id,
+    name: def.name,
+    passable: def.passable,
+    ...(def.code === undefined ? {} : { code: def.code }),
+    ...(def.surface === undefined ? {} : { surface: def.surface }),
+  };
 }
 
 export function parseGroupDef(raw: unknown, idKey: string, path = "$group"): GroupDef {

@@ -53,7 +53,9 @@ export function moveHandler(params: JsonValue, context: EvaluateContext): JsonVa
     return { ok: false, reason: "一次只能走一格，而且不能斜着走" };
   }
 
-  if (!space.passableAt(target)) {
+  // 能过不能过由「物种 × 地形」的对接表决定（宿主提供）；没有就退回地形自己的 passable
+  const allowed = context.tools?.canEnter?.(handle, spaceId, target) ?? space.passableAt(target);
+  if (!allowed) {
     return { ok: false, reason: "那里过不去" };
   }
 

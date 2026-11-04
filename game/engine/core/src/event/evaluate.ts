@@ -47,6 +47,8 @@ export interface Frame {
 export interface RuleTools {
   /** 命名形状 → 偏移。 */
   offsets?(shape: string): readonly { readonly dx: number; readonly dy: number }[] | undefined;
+  /** 这个实体能不能进那一格（宿主用「物种 × 地形」对接表算）。 */
+  canEnter?(handle: number, space: number, cell: { readonly x: number; readonly y: number }): boolean;
   /** 在给定格子里按命名过滤挑目标。 */
   select?(
     cells: readonly { readonly x: number; readonly y: number }[],

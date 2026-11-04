@@ -34,6 +34,7 @@
 | 让 AI 读写世界 | [systems/agent.md](systems/agent.md) |
 | 做战斗/对话/商店等玩法状态 | [systems/scenes.md](systems/scenes.md) |
 | 做地图/建筑/群系生成 | [systems/worldgen.md](systems/worldgen.md) |
+| 管「谁能过什么地形」 | [systems/movement.md](systems/movement.md) |
 
 ## 阅读约定
 
