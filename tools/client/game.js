@@ -940,9 +940,42 @@ window.addEventListener('keydown', (event) => {
     beginSelection('base.talk', '交谈');
     return;
   }
-  if (parsed.kind === 'move') act(parsed.value);
-  else if (parsed.kind === 'skill') useSkill(parsed.value);
+  if (parsed.kind === 'move') {
+    act(parsed.value);
+    // 按住方向键 = 固定节奏地再走（松手停）。节奏由我们定，不受系统重复率影响。
+    held = { code: event.code, dir: parsed.value };
+    startHoldRepeat();
+  } else if (parsed.kind === 'skill') {
+    useSkill(parsed.value);
+  }
 });
+
+/** 按住方向键时的重复间隔（毫秒）。 */
+const HOLD_REPEAT_MS = 140;
+
+let held = null;
+let holdTimer = null;
+
+function startHoldRepeat() {
+  if (holdTimer !== null) return;
+  holdTimer = setInterval(() => {
+    if (held === null) return;
+    act(held.dir);
+  }, HOLD_REPEAT_MS);
+}
+
+function stopHoldRepeat(code) {
+  // code 为空 = 失焦/切页面，无条件停
+  if (code !== '' && held !== null && held.code !== code) return;
+  held = null;
+  if (holdTimer !== null) {
+    clearInterval(holdTimer);
+    holdTimer = null;
+  }
+}
+
+window.addEventListener('keyup', (event) => stopHoldRepeat(event.code));
+window.addEventListener('blur', () => stopHoldRepeat(''));
 
 (async () => {
   if (!worldId) {

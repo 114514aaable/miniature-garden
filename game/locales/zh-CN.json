@@ -114,6 +114,5 @@
   "component.core.locomotion.name": "行动方式",
   "component.core.locomotion.desc": "能贴哪些面：ground（地面）、liquid（水里）、solid、air。",
   "world.official.dungeon.name": "元胞地牢",
-  "world.official.dungeon.desc": "元胞自动机挖出来的洞穴。",
-  "menu.dungeon": "地牢（元胞）"
+  "world.official.dungeon.desc": "元胞自动机挖出来的洞穴。"
 }

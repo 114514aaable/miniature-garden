@@ -138,7 +138,6 @@ export const LAUNCHER_PAGE = `<!doctype html>
 
   <div class="menu" id="menu">
     <button id="m-start">{{menu.start}}</button>
-    <button id="m-dungeon">{{menu.dungeon}}</button>
     <button id="m-load">{{menu.load}}</button>
     <button id="m-settings">{{menu.settings}}</button>
     <button id="m-packs">{{menu.packs}}</button>
