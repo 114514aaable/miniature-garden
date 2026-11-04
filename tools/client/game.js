@@ -7,6 +7,7 @@ import { mount, render as renderNode } from '/web/game/systems/ui/dom.js';
 import { closePolicy, renderQuickbar } from '/client/hud/quickbar.js';
 import { renderStatus } from '/client/hud/status.js';
 import { renderMinimap } from '/client/hud/minimap.js';
+import { createAimTracker } from '/client/hud/aim.js';
 
 
 // 游戏页面不该有浏览器的默认权力：拖拽不要导航、右键不要菜单、文字不要选中
@@ -74,8 +75,13 @@ let uiFocus = null;
  */
 let selection = null;
 
-/** 最后一次鼠标所在的格子：状态变了也要按它重算高亮。 */
-let hoverCell = null;
+/** 瞄准高亮：外部模块负责「记住了什么、什么时候重算」。 */
+const aim = createAimTracker({
+  request: (tag, x, y) => api('/api/aim', { tag, x, y }),
+  apply: (cells) => {
+    if (renderer !== null) renderer.setAim(cells);
+  },
+});
 
 /** 这个技能要不要先选目标？ */
 function needsTarget(skill) {
@@ -84,7 +90,7 @@ function needsTarget(skill) {
 
 function beginSelection(tag, label) {
   selection = { tag, label };
-  refreshAim();
+  aim.setTag(tag);
   const box = document.getElementById('message');
   if (box) box.textContent = '选择目标：' + label + '（Esc 取消）';
 }
@@ -92,7 +98,7 @@ function beginSelection(tag, label) {
 function cancelSelection() {
   if (selection === null) return false;
   selection = null;
-  refreshAim();
+  aim.setTag(null);
   const box = document.getElementById('message');
   if (box) box.textContent = '取消';
   return true;
@@ -127,7 +133,7 @@ function render(state) {
   const plate = document.getElementById('nameplate');
   if (plate) plate.textContent = state.playerName || '你';
 
-  refreshAim();
+  aim.refresh();
 
   renderMinimap(state);
   renderDialog(state);
@@ -523,18 +529,6 @@ function refreshHud() {
   renderEquip();
 }
 
-/** 按当前鼠标格重算高亮（鼠标没动也可能因为选择/场景变化而要重画）。 */
-function refreshAim() {
-  if (renderer === null || hoverCell === null) return;
-  api('/api/aim', {
-    tag: selection === null ? 'base.attack' : selection.tag,
-    x: hoverCell.x,
-    y: hoverCell.y,
-  }).then((result) => {
-    renderer.setAim(result.ok ? result.cells : []);
-  });
-}
-
 function showDeath() {
   const box = document.getElementById('death');
   if (!box.hidden) return;
@@ -590,11 +584,8 @@ document.getElementById('map').addEventListener('mousemove', (event) => {
   aimTimer = now;
 
   const cell = cellAt(event);
-  hoverCell = cell;
   renderer.setCursor(cell);
-  api('/api/aim', { tag: selection === null ? 'base.attack' : selection.tag, x: cell.x, y: cell.y }).then((result) => {
-    renderer.setAim(result.ok ? result.cells : []);
-  });
+  aim.setHover(cell);
   api('/api/inspect', { x: cell.x, y: cell.y }).then((info) => {
     showTooltip(info, event.clientX, event.clientY);
   });
@@ -626,7 +617,7 @@ function showTooltip(info, clientX, clientY) {
 document.getElementById('map').addEventListener('mouseleave', () => {
   document.getElementById('tooltip').hidden = true;
   if (renderer !== null) {
-    renderer.setAim([]);
+    aim.clear();
     renderer.setCursor(null);
   }
 });
@@ -639,7 +630,7 @@ document.getElementById('map').addEventListener('click', (event) => {
   if (selection !== null) {
     const tag = selection.tag;
     selection = null;
-    hoverCell = cell;
+    aim.setHover(cell);
     useSkill(tag, cell.x, cell.y);
     return;
   }
