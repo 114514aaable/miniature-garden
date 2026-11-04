@@ -11,6 +11,15 @@ import { canvasNode } from '/web/game/systems/ui/spec.js';
 import { mount } from '/web/game/systems/ui/dom.js';
 import { drawMinimap, minimapSize } from '/web/game/systems/ui/minimap.js';
 
+/** 小地图最大边长（CSS 像素）。 */
+const MAX_SIDE = 180;
+
+/** 按地图尺寸选格子大小：大地图自动缩小，最小 1px。 */
+function cellFor(space) {
+  const longest = Math.max(space.width, space.height);
+  return Math.max(1, Math.min(4, Math.floor(MAX_SIDE / longest)));
+}
+
 export function renderMinimap(state) {
   const box = document.getElementById('minimap');
   if (box === null) return;
@@ -18,7 +27,8 @@ export function renderMinimap(state) {
   const space = (state.snapshot.spaces || [])[0];
   if (space === undefined) return;
 
-  const cell = 4;
+  // 小地图有上限：200×200 的地图不能画成 800px
+  const cell = cellFor(space);
   const size = minimapSize(space, cell);
   const marks = (state.snapshot.entities || [])
     .filter((entity) => entity.x !== undefined && entity.y !== undefined)
