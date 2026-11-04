@@ -34,6 +34,7 @@ const KIND_BY_FOLDER = {
   components: "component",
   groups: "group",
   traversal: "traversal",
+  biomes: "biome",
   world: "world",
 };
 
@@ -84,7 +85,7 @@ function toDefinition(kind, item, where) {
   }
 
   // entity / terrain / component 的 id 只用于合并与补丁定位，不进运行时数据。
-  if (kind === "entity" || kind === "terrain" || kind === "component" || kind === "group") {
+  if (kind === "entity" || kind === "terrain" || kind === "component" || kind === "group" || kind === "biome") {
     const { id: _ignored, ...data } = item;
     return { kind, id, data };
   }

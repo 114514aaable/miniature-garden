@@ -25,5 +25,6 @@
 - [`game/engine/core/src/pack/graph.ts`](game/engine/core/src/pack/graph.md)
 - [`game/engine/core/src/pack/load.ts`](game/engine/core/src/pack/load.md)
 - [`tools/gen-pack-graph.mjs`](tools/gen-pack-graph.md)
+- [`tools/gen-world.mjs`](tools/gen-world.md)
 - [`tools/play.mjs`](tools/play.md)
 - [`tools/serve.mjs`](tools/serve.md)

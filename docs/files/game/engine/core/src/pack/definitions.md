@@ -4,6 +4,7 @@
 
 ## 导出
 
+- `BiomeDef`
 - `ComponentDef`
 - `ConflictPolicy`
 - `EntityDef`
@@ -13,6 +14,7 @@
 - `TerrainDef`
 - `WorldDef`
 - `isPassable`
+- `parseBiomeDef`
 - `parseComponentDef`
 - `parseEntityDef`
 - `parseGroupDef`

@@ -22,5 +22,6 @@
 ## 被引用
 
 - [`game/engine/core/src/pack/init.ts`](game/engine/core/src/pack/init.md)
+- [`tools/gen-world.mjs`](tools/gen-world.md)
 - [`tools/play.mjs`](tools/play.md)
 - [`tools/serve.mjs`](tools/serve.md)

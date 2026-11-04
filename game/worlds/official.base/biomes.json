@@ -1,0 +1,61 @@
+[
+  {
+    "id": "temperate",
+    "ranges": {
+      "height": [
+        0.35,
+        1
+      ],
+      "moisture": [
+        0.45,
+        1
+      ]
+    },
+    "terrain": {
+      "base": "floor",
+      "hill": "wall",
+      "water": "water"
+    },
+    "structures": [
+      "camp"
+    ],
+    "tags": [
+      "settled"
+    ],
+    "color": "#4a7a3a"
+  },
+  {
+    "id": "swamp",
+    "ranges": {
+      "height": [
+        0,
+        0.35
+      ],
+      "moisture": [
+        0.55,
+        1
+      ]
+    },
+    "terrain": {
+      "base": "floor",
+      "water": "water"
+    },
+    "tags": [
+      "wet"
+    ],
+    "color": "#3f6b4a"
+  },
+  {
+    "id": "dry",
+    "ranges": {},
+    "terrain": {
+      "base": "floor",
+      "hill": "wall",
+      "water": "water"
+    },
+    "tags": [
+      "fallback"
+    ],
+    "color": "#7a6a3a"
+  }
+]

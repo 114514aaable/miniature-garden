@@ -26,6 +26,8 @@ export interface TerrainDef {
   readonly name: string;
   /** 能不能走上去。规则查这个，不查数字。 */
   readonly passable: boolean;
+  /** 稳定的英文代号：给生成器/脚本用，不受语言影响。 */
+  readonly code?: string;
 }
 
 export interface SpaceDef {
@@ -66,6 +68,8 @@ export interface WorldDef {
    * 存在感策略：离得远的实体怎么处理。
    * 现在只用到「别的空间不模拟」；半径与扫描间隔是给下一版留的。
    */
+  /** 生成参数（离线工具读，运行时不用）。 */
+  readonly generation?: JsonValue;
   readonly persistence?: {
     readonly activeRadius?: number;
     readonly sweepEvery?: number;
@@ -102,7 +106,8 @@ const ENTITY_SCHEMA: Schema = {
 
 const TERRAIN_SCHEMA: Schema = {
   t: "object",
-  fields: { name: STR, passable: { t: "bool" } },
+  fields: { name: STR, passable: { t: "bool" }, code: STR },
+  optional: ["code"],
 };
 
 /** 预制件：一组实体 + 相对偏移。 */
@@ -136,12 +141,35 @@ const GROUP_SCHEMA: Schema = {
   },
 };
 
+/** 群系：气候区间 → 地形调色板 + 允许的结构。 */
+export interface BiomeDef {
+  readonly id: string;
+  readonly ranges: Readonly<Record<string, readonly [number, number]>>;
+  readonly terrain: Readonly<Record<string, string>>;
+  readonly structures?: readonly string[];
+  readonly tags?: readonly string[];
+  readonly color?: string;
+}
+
+const BIOME_SCHEMA: Schema = {
+  t: "object",
+  fields: {
+    ranges: { t: "record", of: { t: "any" } },
+    terrain: { t: "record", of: { t: "str" } },
+    structures: { t: "array", of: { t: "str" }, max: 64 },
+    tags: { t: "array", of: { t: "str" }, max: 32 },
+    color: { t: "str" },
+  },
+  optional: ["structures", "tags", "color"],
+};
+
 const WORLD_SCHEMA: Schema = {
   t: "object",
   fields: {
     start: { t: "object", fields: { space: STR, x: INT, y: INT } },
     rules: { t: "array", of: STR, max: 64 },
     init: { t: "array", of: { t: "any" }, max: 64 },
+    generation: { t: "any" },
     persistence: {
       t: "object",
       fields: { activeRadius: INT, sweepEvery: INT },
@@ -149,7 +177,7 @@ const WORLD_SCHEMA: Schema = {
     },
     onConflict: { t: "enum", values: ["error", "warn", "override"] },
   },
-  optional: ["rules", "init", "persistence", "onConflict"],
+  optional: ["rules", "init", "generation", "persistence", "onConflict"],
 };
 
 export function parseSpaceDef(raw: unknown, path = "$space"): SpaceDef {
@@ -206,8 +234,8 @@ export function parseTerrainDef(raw: unknown, idKey: string, path = "$terrain"):
     throw new SchemaError(`${path}.id`, `地形号不能有前导零："${idKey}"`);
   }
 
-  const def = raw as { name: string; passable: boolean };
-  return { id, name: def.name, passable: def.passable };
+  const def = raw as { name: string; passable: boolean; code?: string };
+  return { id, name: def.name, passable: def.passable, ...(def.code === undefined ? {} : { code: def.code }) };
 }
 
 export function parseGroupDef(raw: unknown, idKey: string, path = "$group"): GroupDef {
@@ -217,6 +245,34 @@ export function parseGroupDef(raw: unknown, idKey: string, path = "$group"): Gro
   validate(raw, GROUP_SCHEMA, path);
   const def = raw as { entities: GroupDef["entities"] };
   return { id: idKey, entities: def.entities };
+}
+
+export function parseBiomeDef(raw: unknown, idKey: string, path = "$biome"): BiomeDef {
+  if (!ID.test(idKey)) {
+    throw new SchemaError(`${path}.id`, `群系 id 非法：${idKey}`);
+  }
+  validate(raw, BIOME_SCHEMA, path);
+
+  const data = raw as { ranges: Record<string, unknown>; terrain: Record<string, string>; structures?: string[]; tags?: string[]; color?: string };
+  const ranges: Record<string, [number, number]> = {};
+  for (const [field, value] of Object.entries(data.ranges ?? {})) {
+    if (!Array.isArray(value) || value.length !== 2 || typeof value[0] !== "number" || typeof value[1] !== "number") {
+      throw new SchemaError(`${path}.ranges.${field}`, "区间必须是 [min, max] 两个数字");
+    }
+    if (value[0] > value[1]) {
+      throw new SchemaError(`${path}.ranges.${field}`, `区间反了：${value[0]} > ${value[1]}`);
+    }
+    ranges[field] = [value[0], value[1]];
+  }
+
+  return {
+    id: idKey,
+    ranges,
+    terrain: data.terrain ?? {},
+    ...(data.structures === undefined ? {} : { structures: data.structures }),
+    ...(data.tags === undefined ? {} : { tags: data.tags }),
+    ...(data.color === undefined ? {} : { color: data.color }),
+  };
 }
 
 export function parseWorldDef(raw: unknown, path = "$world"): WorldDef {

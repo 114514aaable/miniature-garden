@@ -32,5 +32,25 @@
   "persistence": {
     "activeRadius": 25,
     "sweepEvery": 50
+  },
+  "generation": {
+    "fields": {
+      "height": {
+        "noise": "fbm",
+        "scale": 7,
+        "octaves": 4,
+        "seedOffset": 0
+      },
+      "moisture": {
+        "noise": "fbm",
+        "scale": 13,
+        "octaves": 3,
+        "seedOffset": 1000
+      }
+    },
+    "levels": {
+      "water": 0.4,
+      "hill": 0.65
+    }
   }
 }

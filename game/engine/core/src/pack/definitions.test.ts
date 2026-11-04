@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 
 import {
   isPassable,
+  parseBiomeDef,
   parseEntityDef,
   parseSpaceDef,
   parseTemplateDef,
@@ -111,4 +112,38 @@ test("地形语义：能查，未声明就报错", () => {
   assert.equal(isPassable(terrains, 0), true);
   assert.equal(isPassable(terrains, 1), false);
   assert.throws(() => isPassable(terrains, 9), /没有声明地形 9/);
+});
+
+test("群系：区间与调色板都保留", () => {
+  const biome = parseBiomeDef(
+    {
+      ranges: { height: [0, 0.5] },
+      terrain: { base: "floor", water: "water" },
+      structures: ["hut"],
+    },
+    "temperate",
+  );
+
+  assert.equal(biome.id, "temperate");
+  assert.deepEqual(biome.ranges.height, [0, 0.5]);
+  assert.equal(biome.terrain.base, "floor");
+});
+
+test("群系：区间反了要报错", () => {
+  assert.throws(
+    () => parseBiomeDef({ ranges: { height: [0.8, 0.2] }, terrain: {} }, "bad"),
+    /区间反了/,
+  );
+});
+
+test("群系：区间不是两个数字要报错", () => {
+  assert.throws(
+    () => parseBiomeDef({ ranges: { height: [0] }, terrain: {} }, "bad"),
+    /两个数字/,
+  );
+});
+
+test("地形可以带 code（生成器按它找号）", () => {
+  const terrain = parseTerrainDef({ name: "水", passable: false, code: "water" }, "2");
+  assert.equal(terrain.code, "water");
 });

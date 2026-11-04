@@ -13,5 +13,6 @@
 ## 被引用
 
 - [`tools/gen-pack-graph.mjs`](tools/gen-pack-graph.md)
+- [`tools/gen-world.mjs`](tools/gen-world.md)
 - [`tools/play.mjs`](tools/play.md)
 - [`tools/serve.mjs`](tools/serve.md)

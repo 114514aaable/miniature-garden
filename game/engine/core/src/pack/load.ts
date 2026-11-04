@@ -36,6 +36,7 @@ import {
 } from "./definitions.ts";
 import { type MergedWorld } from "./merge.ts";
 import { parseTraversal, type TraversalSpec } from "../traversal/shapes.ts";
+import { parseBiomeDef, type BiomeDef } from "./definitions.ts";
 
 /** 引擎额外提供的组件。组件现在由包定义，这里一般是空的。 */
 export interface ComponentSpec {
@@ -66,6 +67,8 @@ export interface LoadedWorld {
   readonly persistence: { readonly activeRadius: number; readonly sweepEvery: number };
   /** 命名形状与条件（来自 base 的 traversal.json）。 */
   readonly traversal: TraversalSpec;
+  /** 群系（按声明顺序，先声明先匹配）。 */
+  readonly biomes: readonly BiomeDef[];
   /** 预制件：一组实体 + 相对偏移，供 stamp 使用。 */
   readonly groups: ReadonlyMap<string, GroupDef>;
   readonly onConflict: ConflictPolicy;
@@ -73,7 +76,7 @@ export interface LoadedWorld {
   readonly hash: string;
 }
 
-const KNOWN_KINDS = new Set(["traversal", "space", "template", "entity", "terrain", "component", "group", "world"]);
+const KNOWN_KINDS = new Set(["biome", "traversal", "space", "template", "entity", "terrain", "component", "group", "world"]);
 
 export function loadWorld(
   merged: MergedWorld,
@@ -86,6 +89,7 @@ export function loadWorld(
   const worldDefs: WorldDef[] = [];
   const componentDefs: ComponentDef[] = [];
   const groupDefs: GroupDef[] = [];
+  const biomeDefs: BiomeDef[] = [];
   let traversalSpec: TraversalSpec = { shapes: {}, filters: {} };
 
   for (const [key, def] of merged.definitions) {
@@ -107,6 +111,9 @@ export function loadWorld(
         terrains.set(terrain.id, terrain);
         break;
       }
+      case "biome":
+        biomeDefs.push(parseBiomeDef(def.data, def.id, `$biome.${def.id}`));
+        break;
       case "traversal":
         traversalSpec = parseTraversal(def.data, `$traversal.${def.id}`);
         break;
@@ -175,6 +182,7 @@ export function loadWorld(
     },
     groups: new Map(groupDefs.map((def) => [def.id, def])),
     traversal: traversalSpec,
+    biomes: biomeDefs,
     onConflict: world.onConflict ?? "error",
     world,
     hash: hashOf(merged.hash, sortedSpaces, templateDefs, [...terrains.values()], entities, start),
