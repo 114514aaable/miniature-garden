@@ -84,6 +84,16 @@ function renderWorlds() {
  *   number  数字输入
  *   select  下拉（一排按钮）
  */
+/** 绑事件：元素不存在就跳过（模板改了也不至于整页崩）。 */
+function on(id, handler) {
+  const node = document.getElementById(id);
+  if (node === null) {
+    console.warn('缺少元素：' + id);
+    return;
+  }
+  node.addEventListener('click', handler);
+}
+
 function openStartDialog(world) {
   const existing = document.getElementById('seedbox');
   if (existing) existing.remove();
@@ -327,7 +337,7 @@ document.getElementById('m-start').addEventListener('click', async () => {
   openStartDialog(world);
 });
 
-document.getElementById('m-dungeon').addEventListener('click', async () => {
+on('m-dungeon', async () => {
   // 元胞地牢：直接开它的开局弹窗（种子 + 宽高）
   if (worlds.length === 0) {
     const state = await api('/api/worlds');
@@ -341,18 +351,18 @@ document.getElementById('m-dungeon').addEventListener('click', async () => {
   openStartDialog(world);
 });
 
-document.getElementById('m-load').addEventListener('click', async () => {
+on('m-load', async () => {
   show('load');
   await renderLoad();
 });
 
 
 
-document.getElementById('m-settings').addEventListener('click', () => { show('settings'); renderSettings(); });
+on('m-settings', () => { show('settings'); renderSettings(); });
 
-document.getElementById('m-packs').addEventListener('click', () => { show('packs'); renderWorlds(); });
+on('m-packs', () => { show('packs'); renderWorlds(); });
 document.getElementById('packs-back').addEventListener('click', () => show(null));
-document.getElementById('m-quit').addEventListener('click', () => show('quit'));
+on('m-quit', () => show('quit'));
 document.getElementById('quit-back').addEventListener('click', () => show(null));
 document.getElementById('graphclose').addEventListener('click', () => { document.getElementById('graphpanel').hidden = true; });
 
