@@ -79,3 +79,29 @@ test("小尺寸也能生成（不崩）", () => {
   const result = generateCaves({ seed: 2, width: 4, height: 4 });
   assert.equal(result.walls.length, 16);
 });
+
+test("洞厅：切分后面积变小，但每个洞厅都走得通", () => {
+  const one = generateCaves({ seed: 7, width: 48, height: 24 });
+  const four = generateCaves({ seed: 7, width: 48, height: 24, chambers: 4 });
+
+  assert.ok(four.floorCount < one.floorCount, "切分后应该少一些可走格");
+
+  // 从出生点洪水填充，应该覆盖全部可走格（门把洞厅连起来了）
+  const start = Math.floor(four.height / 2) * four.width + Math.floor(four.width / 2);
+  const seen = new Set<number>([start]);
+  const stack = [start];
+  while (stack.length > 0) {
+    const index = stack.pop() as number;
+    const x = index % four.width;
+    const y = Math.floor(index / four.width);
+    for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
+      if (nx < 0 || ny < 0 || nx >= four.width || ny >= four.height) continue;
+      const next = ny * four.width + nx;
+      if (four.walls[next] || seen.has(next)) continue;
+      seen.add(next);
+      stack.push(next);
+    }
+  }
+
+  assert.equal(seen.size, four.floorCount, "洞厅之间应该有门");
+});

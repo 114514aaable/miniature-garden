@@ -23,9 +23,10 @@
   },
   "generation": {
     "generator": "caves",
-    "fill": 0.46,
+    "fill": 0.5,
     "iterations": 5,
-    "spawnClear": 2
+    "spawnClear": 2,
+    "chambers": 4
   },
   "startMenu": {
     "fields": [

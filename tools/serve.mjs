@@ -266,6 +266,8 @@ function cavesToTerrain(generation, seed, width, height, ids) {
     fill: generation.fill ?? 0.46,
     iterations: generation.iterations ?? 5,
     spawnClear: generation.spawnClear ?? 2,
+    regions: generation.regions ?? 1,
+    chambers: generation.chambers ?? 1,
   });
 
   const wall = ids.get("wall");
