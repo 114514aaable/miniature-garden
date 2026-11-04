@@ -102,7 +102,7 @@
   "component.core.pending.name": "挂起",
   "component.core.pending.desc": "过几回合才结算的动作（蓄力、延迟陷阱）。",
   "world.official.normal.name": "盐港",
-  "world.official.normal.desc": "示例世界：一个港口、一个盐商、一盏灯。",
+  "world.official.normal.desc": "示例世界：一张生成的地图（40×20），一个盐商，一盏灯。",
   "biome.temperate.name": "温带",
   "biome.temperate.desc": "草多、树多、适合住人。",
   "biome.swamp.name": "湿地",
