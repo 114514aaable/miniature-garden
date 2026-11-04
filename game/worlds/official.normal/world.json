@@ -1,7 +1,7 @@
 {
   "start": {
-    "space": "harbor",
-    "x": 1,
+    "space": "field",
+    "x": 9,
     "y": 1
   },
   "rules": [
@@ -24,9 +24,9 @@
     {
       "kind": "stamp",
       "group": "camp",
-      "space": "harbor",
-      "x": 4,
-      "y": 4
+      "space": "field",
+      "x": 10,
+      "y": 0
     }
   ],
   "persistence": {
