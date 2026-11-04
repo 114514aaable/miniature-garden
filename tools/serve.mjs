@@ -327,8 +327,6 @@ function readNumberArray(component, key) {
 }
 
 function snapshot(message = "") {
-  // 每次出快照前先保证玩家站得住；提示优先用调用方给的
-  ensurePlayerOnWalkable();
   const notice = session.notice ?? null;
   session.notice = null;
 
@@ -1168,6 +1166,9 @@ function loadGame(slot = "quick") {
     session.store.now(),
   );
 
+  // 读档后检查玩家站得住（存档的位置可能落在新地图的水里）
+  ensurePlayerOnWalkable();
+
   // 场景：按层重建（对话要重新读脚本），再让每层恢复内部状态
   if (Array.isArray(data.scene) && data.scene.length > 0) {
     const layers = [];
@@ -1343,6 +1344,7 @@ const server = createServer(async (request, response) => {
         session.world = String(id);
         // 出生点被挪过（生成地图里正好是水）就在这里说一句
         if (session.loaded.startWarning !== undefined) session.notice = session.loaded.startWarning;
+        ensurePlayerOnWalkable();
         session.options = typeof options === "object" && options !== null ? options : {};
         session.dead = false;
         session.disabled = [...disabled];

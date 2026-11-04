@@ -143,6 +143,16 @@ function formatDebug(debug) {
 }
 
 function render(state) {
+  // 读档失败时后端返回的是 { ok:false, error }，没有 snapshot——别硬画
+  if (state === null || state === undefined || state.snapshot === undefined) {
+    const box = document.getElementById('errbar');
+    if (box) {
+      box.hidden = false;
+      box.textContent = (state && state.error) ? String(state.error) : '没有拿到世界状态';
+    }
+    return;
+  }
+
   lastState = state;
   if (renderer === null) {
     renderer = attach(document.getElementById('map'), { tile: state.tile });
@@ -793,7 +803,16 @@ async function openSettings(page = 'root') {
     body = col({ gap: 8 },
       row({ gap: 8 },
         button('存档', async () => { render(await api('/api/save', {})); openSettings('saves'); }),
-        button('读档', async () => { render(await api('/api/load', {})); openSettings('saves'); }),
+        button('读档', async () => {
+      const result = await api('/api/load', {});
+      if (result && result.ok === false) {
+        const box = document.getElementById('errbar');
+        if (box) { box.hidden = false; box.textContent = '读档失败：' + (result.error || '未知'); }
+        return;
+      }
+      render(result);
+      openSettings('saves');
+    }),
       ),
       back,
     );
