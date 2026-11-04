@@ -327,6 +327,20 @@ document.getElementById('m-start').addEventListener('click', async () => {
   openStartDialog(world);
 });
 
+document.getElementById('m-dungeon').addEventListener('click', async () => {
+  // 元胞地牢：直接开它的开局弹窗（种子 + 宽高）
+  if (worlds.length === 0) {
+    const state = await api('/api/worlds');
+    worlds = state.worlds || [];
+  }
+  const world = worlds.find((item) => item.id === 'official.dungeon') || {
+    id: 'official.dungeon',
+    name: '元胞地牢',
+    startMenu: { fields: [{ key: 'seed', label: '种子', type: 'number', default: 0 }] },
+  };
+  openStartDialog(world);
+});
+
 document.getElementById('m-load').addEventListener('click', async () => {
   show('load');
   await renderLoad();

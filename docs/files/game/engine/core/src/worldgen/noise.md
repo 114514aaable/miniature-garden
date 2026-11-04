@@ -7,6 +7,7 @@
 - `FbmOptions`
 - `NOISE_KINDS`
 - `NoiseKind`
+- `cellRandom`
 - `fbm`
 - `noiseOf`
 - `ridged`
@@ -18,5 +19,6 @@
 
 ## 被引用
 
+- [`game/engine/core/src/worldgen/caves.ts`](game/engine/core/src/worldgen/caves.md)
 - [`game/engine/core/src/worldgen/generate.ts`](game/engine/core/src/worldgen/generate.md)
 - [`tools/gen-world.mjs`](tools/gen-world.md)

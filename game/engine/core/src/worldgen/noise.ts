@@ -20,6 +20,11 @@ function mix(value: number): number {
   return (x ^ (x >>> 15)) >>> 0;
 }
 
+/** 每格一个独立的伪随机值（元胞撒点用，不插值）。 */
+export function cellRandom(seed: number, x: number, y: number): number {
+  return lattice(seed, x, y);
+}
+
 /** 格点上的伪随机值（0..1）。 */
 function lattice(seed: number, x: number, y: number): number {
   const h = mix((seed ^ Math.imul(x, 0x27d4eb2d) ^ Math.imul(y, 0x165667b1)) >>> 0);

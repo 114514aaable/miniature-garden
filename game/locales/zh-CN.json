@@ -112,5 +112,8 @@
   "component.core.melee.name": "近战",
   "component.core.melee.desc": "伤害与起手回合数：写在模板里，规则读它。",
   "component.core.locomotion.name": "行动方式",
-  "component.core.locomotion.desc": "能贴哪些面：ground（地面）、liquid（水里）、solid、air。"
+  "component.core.locomotion.desc": "能贴哪些面：ground（地面）、liquid（水里）、solid、air。",
+  "world.official.dungeon.name": "元胞地牢",
+  "world.official.dungeon.desc": "元胞自动机挖出来的洞穴。",
+  "menu.dungeon": "地牢（元胞）"
 }

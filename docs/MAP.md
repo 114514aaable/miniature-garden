@@ -324,6 +324,11 @@ game/systems/render/*（投影成画面数据）
   - `mirror(offsets: readonly Offset[], axis: "x" | "y" | "both" = "x") → Offset[]`
   - `translate(offsets: readonly Offset[], dx: number, dy: number) → Offset[]`
   - `keep(offsets: readonly Offset[], predicate: (offset: Offset) => boolean) → Offset[]`
+- **`game/engine/core/src/worldgen/caves.ts`**（134 行）
+  元胞地牢：元胞自动机（cellular automata）挖洞穴。
+  - `generateCaves(options: CavesOptions) → CavesResult`
+  - `interface CavesOptions`
+  - `interface CavesResult`
 - **`game/engine/core/src/worldgen/generate.ts`**（106 行）
   生成一片地形：种子 + 尺寸 + 场参数 + 群系 → 地形号数组。
   - `clampSize(value: number) → number`
@@ -333,8 +338,9 @@ game/systems/render/*（投影成画面数据）
   - `interface GenerateResult`
   - `const MAX_SIZE`
   - `const MIN_SIZE`
-- **`game/engine/core/src/worldgen/noise.ts`**（107 行）
+- **`game/engine/core/src/worldgen/noise.ts`**（112 行）
   噪声：把「种子 + 坐标」变成 0..1 的值。
+  - `cellRandom(seed: number, x: number, y: number) → number`
   - `valueNoise(seed: number, x: number, y: number, scale: number) → number`
   - `fbm(seed: number, x: number, y: number, options: FbmOptions) → number`
   - `ridged(seed: number, x: number, y: number, options: FbmOptions) → number`
@@ -554,7 +560,7 @@ game/systems/render/*（投影成画面数据）
 - **`tools/client/hud/aim.js`**（62 行）
   瞄准高亮：记住「鼠标在哪、当前选了什么技能」，随时可以重算。
   - `createAimTracker({ request, apply, fallbackTag = 'base.attack' })`
-- **`tools/client/hud/minimap.js`**（35 行）
+- **`tools/client/hud/minimap.js`**（45 行）
   右上区域：小地图。
   - `renderMinimap(state)`
 - **`tools/client/hud/quickbar.js`**（210 行）
@@ -570,7 +576,7 @@ game/systems/render/*（投影成画面数据）
 - **`tools/client/hud/status.js`**（32 行）
   左下区域：状态（血量条 + 计数 + 可否行动）。
   - `renderStatus(state)`
-- **`tools/client/launcher.js`**（423 行）
+- **`tools/client/launcher.js`**（437 行）
   import { modal, col, row, text, button, input, field } from '/web/game/systems/ui/spec.js';
 - **`tools/client/shared.js`**（35 行）
   页面共用：错误提示 + API 调用。
@@ -611,7 +617,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（1604 行）
+- **`tools/serve.mjs`**（1632 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。

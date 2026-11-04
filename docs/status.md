@@ -7,6 +7,7 @@
 
 ```
 启动器：选世界 → 开始菜单（种子 + 尺寸，由包声明）→ 进游戏
+（菜单里还有「地牢（元胞）」快捷入口）
 地图：8×6 港口，玩家 / 盐商 / 木箱 / 油灯 / 药水
 动作：走路、劈砍、蓄力劈砍、捡起、放下、使用、等待、交谈
 敌人：起手（红格预警 + 倒计时）→ 两回合后结算；走出去就落空
@@ -25,6 +26,7 @@ game/
 tools/
 ├─ serve.mjs        本地服务 + 全部接口
 ├─ client/          页面脚本：game.js（调度）+ hud/（区域）+ launcher + shared
+official.dungeon     元胞自动机地牢（第二个世界）
 ├─ pages.mjs        HTML/CSS 骨架
 ├─ play.mjs         无头跑世界
 ├─ gen-docs / gen-tree / gen-pack-graph / gen-file-docs   文档生成
