@@ -261,6 +261,7 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
 
   return {
     loaded,
+    passage,
     store,
     link,
     handlers,
@@ -662,6 +663,8 @@ function ruleTools() {
 function ensurePlayerOnWalkable() {
   if (session === null) return;
 
+  if (session.playerHandle === null) return;
+
   const player = session.store.entity(session.playerHandle);
   if (player.pos === null || player.space === null) return;
 
@@ -671,7 +674,8 @@ function ensurePlayerOnWalkable() {
     return (
       terrain !== undefined &&
       session.passage.canEnter(player.template, space.terrainAt(cell)) &&
-      space.occupantsAt(cell).length === 0
+      // 自己站在这里不算「有人占着」
+      space.occupantsAt(cell).every((handle) => handle === session.playerHandle)
     );
   };
 

@@ -20,7 +20,9 @@
     "templates": [
       "templates/people.json"
     ],
-    "entities": [],
+    "entities": [
+      "entities/player.json"
+    ],
     "groups": [
       "groups/camp.json"
     ]
