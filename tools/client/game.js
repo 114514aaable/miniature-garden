@@ -133,7 +133,11 @@ function render(state) {
   const plate = document.getElementById('nameplate');
   if (plate) plate.textContent = state.playerName || '你';
 
-  aim.refresh();
+  if (uiFocus !== null || state.dead) {
+    aim.clear();
+  } else {
+    aim.refresh();
+  }
 
   renderMinimap(state);
   renderDialog(state);
@@ -296,6 +300,7 @@ async function dropSelected() {
 function closeInventory() {
   const box = document.getElementById('inventory');
   uiFocus = null;
+  aim.refresh();
   box.hidden = true;
   box.textContent = '';
 }
@@ -630,8 +635,10 @@ document.getElementById('map').addEventListener('click', (event) => {
   if (selection !== null) {
     const tag = selection.tag;
     selection = null;
-    aim.setHover(cell);
     useSkill(tag, cell.x, cell.y);
+    // 用完了就把高亮恢复到「默认攻击」，否则范围框会一直留着
+    aim.setTag(null);
+    aim.setHover(cell);
     return;
   }
 
@@ -777,6 +784,7 @@ async function openSettings(page = 'root') {
 function closeSettings() {
   const box = document.getElementById('settings');
   uiFocus = null;
+  aim.refresh();
   box.hidden = true;
   box.textContent = '';
 }
