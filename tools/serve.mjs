@@ -557,13 +557,19 @@ function summarizeIntent(intent, entity) {
 
 // ── 动作 ────────────────────────────────────────────────
 
-/** 回合闸：上一步还没结算完，就不接受新的动作。 */
-function notReady() {
-  return session.store.now() < session.playerReadyAt;
+/** 动作最小间隔（毫秒）：防长按 / 连点把世界一口气推进很远。 */
+const ACTION_INTERVAL = 60;
+
+/** 太快就拒绝；同时更新最后一次动作时间。 */
+function tooFast() {
+  const now = Date.now();
+  if (now - (session.lastActionAt ?? 0) < ACTION_INTERVAL) return true;
+  session.lastActionAt = now;
+  return false;
 }
 
 function act(command) {
-  if (notReady()) return snapshot("还没恢复，等一下");
+  if (tooFast()) return snapshot("慢一点");
   if (session.playerHandle === null) {
     return snapshot("这个世界没有玩家角色");
   }
@@ -915,7 +921,7 @@ function resolveTarget(x, y, filterName) {
 }
 
 function useSkill(tag, x, y, extra = {}) {
-  if (notReady()) return snapshot("还没恢复，等一下");
+  if (tooFast()) return snapshot("慢一点");
 
   const sym = session.link.tags.get(tag);
   const signature = sym === undefined ? undefined : session.link.signatures[sym];

@@ -97,6 +97,9 @@ let uiFocus = null;
  */
 let selection = null;
 
+/** 有没有动作请求在途：在途时忽略新的移动，避免连点叠太多。 */
+let acting = false;
+
 /** 瞄准高亮：外部模块负责「记住了什么、什么时候重算」。 */
 const aim = createAimTracker({
   request: (tag, x, y) => api('/api/aim', { tag, x, y }),
@@ -590,12 +593,25 @@ function playerCell(state) {
 }
 
 async function act(dir) {
-  render(await api('/api/act', { dir }));
+  // 一次只发一个动作：连着发会让世界跳着推进
+  if (acting) return;
+  acting = true;
+  try {
+    render(await api('/api/act', { dir }));
+  } finally {
+    acting = false;
+  }
 }
 async function useSkill(tag, x, y, extra = {}) {
   const body = x === undefined ? { tag } : { tag, x, y };
   if (extra.item !== undefined) body.item = extra.item;
-  render(await api('/api/skill', body));
+  if (acting) return;
+  acting = true;
+  try {
+    render(await api('/api/skill', body));
+  } finally {
+    acting = false;
+  }
 }
 
 function cellAt(event) {
