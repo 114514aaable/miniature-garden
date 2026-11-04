@@ -11,6 +11,19 @@ import { createAimTracker } from '/client/hud/aim.js';
 
 
 // 游戏页面不该有浏览器的默认权力：拖拽不要导航、右键不要菜单、文字不要选中
+// 右键取消：优先关弱窗口，其次取消选目标（场景/背包仍走 Esc）
+document.addEventListener('contextmenu', (event) => {
+  const policy = document.getElementById('policy');
+  if (policy !== null && !policy.hidden) {
+    event.preventDefault();
+    closePolicy();
+    return;
+  }
+  if (cancelSelection()) {
+    event.preventDefault();
+  }
+});
+
 document.addEventListener('dragover', (event) => event.preventDefault());
 document.addEventListener('drop', (event) => event.preventDefault());
 document.addEventListener('contextmenu', (event) => event.preventDefault());
@@ -823,6 +836,17 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
+  // Esc：从最内层开始收——先取消选目标，再退场景，再关窗口，最后才开设置
+  if (event.code === 'Escape') {
+    if (cancelSelection()) return;
+    if (lastState !== null && lastState.scene && lastState.scene.id !== 'explore') {
+      sceneCommand('close');
+      return;
+    }
+    if (uiFocus === 'inventory') { closeInventory(); return; }
+    if (uiFocus === 'settings') { closeSettings(); return; }
+  }
+
   const command = commandFor(bindings(), event.code);
   if (command === undefined) return;
 
@@ -840,11 +864,8 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
-  if (event.code === 'Escape' && cancelSelection()) return;
-
   // 场景在跑（对话）：数字键选选项、Esc 离开
   if (lastState !== null && lastState.scene && lastState.scene.id !== 'explore') {
-    if (event.code === 'Escape') { sceneCommand('close'); return; }
     const pick = event.code.match(/^Digit([1-9])$/);
     if (pick !== null) { sceneCommand('choice' + pick[1]); return; }
     return;
