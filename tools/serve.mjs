@@ -140,6 +140,9 @@ function scanWorlds() {
       return {
         id: root.pack.id,
         version: root.pack.version,
+        // 启动器直接显示中文名，不用再查语言包
+        name: MESSAGES["world." + root.pack.id + ".name"] ?? root.pack.id,
+        description: MESSAGES["world." + root.pack.id + ".desc"] ?? "",
         packs: ordered.map((content) => `${content.pack.id}@${content.pack.version}`),
         ok: true,
       };
