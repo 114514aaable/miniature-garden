@@ -428,6 +428,7 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
     packs: ordered.map((content) => `${content.pack.id}@${content.pack.version}`),
     seed,
     lastEvents: [],
+    frames: [],
     scenes,
     devlog: new DevLog(),
   };
@@ -1062,6 +1063,7 @@ function run(tag, params, costKey) {
   }
   session.playerReadyAt = session.store.now() + cost;
   session.lastEvents = [];
+  session.frames = [];
   advanceTo(session.playerReadyAt);
 
   // 死亡入口：玩家实体不在了，就停下来（以后可以发 core.death 让世界包接管）
@@ -1072,6 +1074,9 @@ function run(tag, params, costKey) {
 
   const rounds = cost === 0 ? "（零帧）" : `（${cost} 回合）`;
   const snap = snapshot(`${skillName(tag)}${rounds}`);
+
+  // 这一动作推进过程中的每 tick 增量（客户端按帧播放）
+  if (session.frames.length > 0) snap.frames = session.frames;
 
   if (time?.mode === "sequence") {
     snap.sequence = {
@@ -1111,6 +1116,59 @@ function tickPhases() {
   ];
 }
 
+/** 一帧的数据上限：防止超长动作把响应撑爆。 */
+const MAX_FRAMES = 200;
+
+/** 把当前实体状态抓成 map：handle → { x, y, hp }（帧 diff 用）。 */
+function captureSnapshotOfEntities(view) {
+  const map = new Map();
+  for (const raw of session.store.allEntities()) {
+    const entity = view.entity(raw.handle);
+    const health = entity.components["core.health"];
+    const hp =
+      typeof health === "object" && health !== null && typeof health.hp === "number" ? health.hp : null;
+    map.set(entity.handle, {
+      x: entity.pos === null ? null : entity.pos.x,
+      y: entity.pos === null ? null : entity.pos.y,
+      hp,
+    });
+  }
+  return map;
+}
+
+/** 对比前后两拍，产出这一帧的增量。 */
+function diffFrame(view, prev, tick, events) {
+  const moves = [];
+  const hp = [];
+
+  for (const raw of session.store.allEntities()) {
+    const entity = view.entity(raw.handle);
+    const before = prev.get(raw.handle);
+    const health = entity.components["core.health"];
+    const nowHp =
+      typeof health === "object" && health !== null && typeof health.hp === "number" ? health.hp : null;
+    const now = { x: entity.pos === null ? null : entity.pos.x, y: entity.pos === null ? null : entity.pos.y };
+
+    if (before === undefined) {
+      moves.push({ handle: raw.handle, x: now.x, y: now.y, spawned: true });
+      continue;
+    }
+    if (before.x !== now.x || before.y !== now.y) moves.push({ handle: raw.handle, x: now.x, y: now.y });
+    if (before.hp !== nowHp && nowHp !== null) hp.push({ handle: raw.handle, hp: nowHp });
+  }
+
+  const alive = new Set(session.store.allEntities().map((entity) => entity.handle));
+  for (const handle of prev.keys()) {
+    if (!alive.has(handle)) moves.push({ handle, removed: true });
+  }
+
+  return {
+    tick,
+    moves,
+    hp,
+    events: events.map((entry) => `#${entry.id} ${entry.kind} ${JSON.stringify(entry.data)}`),
+  };
+}
 function advanceTo(target) {
   if (!Number.isFinite(target)) {
     session.devlog.action(session.store.now(), "调度器", { error: "target 不是数字" });
@@ -1120,6 +1178,9 @@ function advanceTo(target) {
   const phases = tickPhases();
   let guard = 0;
   while (session.store.now() < target) {
+    const view = currentView();
+    const before = captureSnapshotOfEntities(view);
+    const eventsBefore = session.lastEvents.length;
     if (guard++ > 512) {
       session.devlog.action(session.store.now(), "调度器", { error: "推进次数超限" });
       // 没推到目标就把“下次能行动”拉回当前时刻，否则玩家会永远卡在“恢复中”
@@ -1128,6 +1189,12 @@ function advanceTo(target) {
       break;
     }
     runPhases(phases, session.store.now());
+
+    // 这一 tick 新产生的事件（step 阶段会往 lastEvents 里追加）
+    const events = session.lastEvents.slice(eventsBefore);
+    if (session.frames.length < MAX_FRAMES) {
+      session.frames.push(diffFrame(view, before, session.store.now(), events));
+    }
   }
   applyPending();
 }
