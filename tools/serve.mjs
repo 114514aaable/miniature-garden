@@ -484,6 +484,23 @@ function readNumberArray(component, key) {
   return Array.isArray(value) ? value.filter((item) => typeof item === "number") : [];
 }
 
+/** 玩家身上的挂起动作摘要（进度条用）；没有就 null。 */
+function playerPending() {
+  if (session.playerHandle === null) return null;
+  const pending = currentView().entity(session.playerHandle).components["core.pending"];
+  if (!isActive(pending)) return null;
+
+  const now = session.store.now();
+  const total = typeof pending.totalTicks === "number" ? pending.totalTicks : 1;
+  const startedAt = typeof pending.startedAt === "number" ? pending.startedAt : now;
+  return {
+    tag: String(pending.tag),
+    resolveAt: pending.resolveAt,
+    total,
+    elapsed: Math.max(0, now - startedAt),
+    remaining: Math.max(0, pending.resolveAt - now),
+  };
+}
 function snapshot(message = "") {
   const notice = session.notice ?? null;
   session.notice = null;
@@ -500,6 +517,7 @@ function snapshot(message = "") {
     tile: TILE,
     playerHandle: session.playerHandle,
     seed: session.seed,
+    pending: playerPending(),
     options: session.options ?? {},
     dead: session.dead === true,
     scene: sceneView(),
@@ -908,7 +926,16 @@ function aimAt(tag, x, y) {
 }
 
 /** 给「目标为实体」的技能找目标：有坐标取那格，没坐标取相邻。 */
-function resolveTarget(x, y, filterName) {
+function resolveTarget(x, y, filterName, range) {
+  // 先查射程：够不着就不该被接受（以前能隔空起手，到点再打空）
+  if (typeof range === "number" && x !== undefined && y !== undefined) {
+    const self = session.store.entity(session.playerHandle).pos;
+    if (self !== null) {
+      const distance = Math.abs(x - self.x) + Math.abs(y - self.y);
+      if (distance > range) return undefined;
+    }
+  }
+
   if (typeof filterName === "string" && x !== undefined && y !== undefined) {
     const found = selectIn([{ x, y }], filterName, { exclude: session.playerHandle, limit: 1 });
     return found[0];
@@ -985,12 +1012,21 @@ function useSkill(tag, x, y, extra = {}) {
     return run(tag, { actor: session.playerHandle, ...extra }, signature.skill.cost);
   }
 
+  // 射程：目标不在范围内直接拒绝（不管参数走 target 还是 x/y）
+  if (signature.skill.target.kind === "entity" && x !== undefined && y !== undefined) {
+    const self = session.store.entity(session.playerHandle).pos;
+    if (self !== null) {
+      const distance = Math.abs(x - self.x) + Math.abs(y - self.y);
+      if (distance > signature.skill.target.range) return snapshot("够不着");
+    }
+  }
+
   if (signature.skill.target.kind === "entity") {
     // 按签名声明的字段组参数：有的技能要 target（交谈），有的要 x/y（劈砍）
     const fields = signature.params.fields ?? {};
     const params = { actor: session.playerHandle };
     if (fields.target !== undefined) {
-      const handle = resolveTarget(x, y, signature.skill.target.filter);
+      const handle = resolveTarget(x, y, signature.skill.target.filter, signature.skill.target.range);
       if (handle === undefined) {
         return snapshot("没有可以指向的目标");
       }

@@ -75,6 +75,8 @@ export function castHandler(params: JsonValue, context: EvaluateContext): JsonVa
           tag: payloadTag,
           params: { actor, x: Number(p.x), y: Number(p.y) },
           resolveAt: context.view.tick + ticks,
+          startedAt: context.view.tick,
+          totalTicks: ticks,
         },
       },
     ],

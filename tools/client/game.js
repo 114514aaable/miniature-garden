@@ -174,6 +174,9 @@ function render(state) {
     aim.refresh();
   }
 
+  renderCharge(state);
+  scheduleChargeTick();
+
   renderMinimap(state);
   renderDialog(state);
 
@@ -694,6 +697,46 @@ document.getElementById('map').addEventListener('mousemove', (event) => {
 });
 
 /** 鼠标位置 → 格子（扣掉画布偏移，再交给渲染器换算相机）。 */
+/** 蓄力进度条：没有挂起就藏起来。 */
+function renderCharge(state) {
+  const bar = document.getElementById('chargebar');
+  const fill = document.getElementById('chargefill');
+  const label = document.getElementById('chargelabel');
+  if (bar === null || fill === null || label === null) return;
+
+  const pending = state.pending;
+  if (!pending || pending.remaining <= 0) {
+    bar.hidden = true;
+    return;
+  }
+
+  const total = Math.max(1, pending.total || 1);
+  const done = Math.min(total, Math.max(0, total - pending.remaining));
+  bar.hidden = false;
+  fill.style.width = Math.round((done / total) * 100) + '%';
+  label.textContent = '蓄力 ' + done + '/' + total;
+}
+
+/** 蓄力期间自动推进：每 200ms 点一次等待，让人看得见。 */
+const CHARGE_TICK_MS = 200;
+let chargeTimer = null;
+
+function scheduleChargeTick() {
+  clearTimeout(chargeTimer);
+  chargeTimer = null;
+
+  const pending = lastState === null ? null : lastState.pending;
+  if (!pending || pending.remaining <= 0) return;
+  if (uiFocus !== null || selection !== null) return;
+
+  chargeTimer = setTimeout(() => {
+    if (acting) {
+      scheduleChargeTick();
+      return;
+    }
+    useSkill('core.wait');
+  }, CHARGE_TICK_MS);
+}
 function cellAt(event) {
   const map = document.getElementById('map');
   const rect = map.getBoundingClientRect();
