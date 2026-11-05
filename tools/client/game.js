@@ -604,33 +604,36 @@ async function act(dir) {
     acting = false;
   }
 }
-/** 把一帧增量套到当前状态上（浅拷贝，不动 lastState 本体）。 */
+/** 把一帧按 handle 合并进状态（整条记录覆盖，不挑字段）。 */
 function applyFrame(state, frame) {
   const entities = (state.snapshot.entities || []).map((entity) => ({ ...entity }));
-  const byHandle = new Map(entities.map((entity) => [entity.handle, entity]));
+  const at = new Map(entities.map((entity, index) => [entity.handle, index]));
 
-  for (const move of frame.moves || []) {
-    const entity = byHandle.get(move.handle);
-    if (entity === undefined) continue;
-    if (move.removed) {
-      const index = entities.indexOf(entity);
-      if (index >= 0) entities.splice(index, 1);
-      continue;
+  for (const record of frame.entities || []) {
+    const index = at.get(record.handle);
+    if (index === undefined) {
+      at.set(record.handle, entities.length);
+      entities.push(record);
+    } else {
+      entities[index] = record;
     }
-    entity.x = move.x;
-    entity.y = move.y;
   }
 
-  for (const change of frame.hp || []) {
-    const entity = byHandle.get(change.handle);
-    if (entity === undefined) continue;
-    const health = entity.components ? entity.components['core.health'] : undefined;
-    entity.components = { ...(entity.components || {}), 'core.health': { ...(health || {}), hp: change.hp } };
+  for (const handle of frame.removed || []) {
+    const index = at.get(handle);
+    if (index !== undefined) entities.splice(index, 1);
   }
 
-  return { ...state, snapshot: { ...state.snapshot, entities } };
+  // 血条/名字从玩家实体上取，不依赖 state.hud 的旧值
+  const player = entities.find((entity) => entity.handle === state.playerHandle);
+  const health = player && player.components ? player.components['core.health'] : undefined;
+  const hud =
+    health === undefined
+      ? state.hud
+      : { ...state.hud, hp: health.hp, hpMax: health.max };
+
+  return { ...state, tick: frame.tick, hud, snapshot: { ...state.snapshot, entities } };
 }
-
 /** 有帧就逐帧播，没有就直接画。 */
 async function playFrames(result) {
   const frames = result && result.frames;

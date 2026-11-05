@@ -1,0 +1,22 @@
+[
+  {
+    "id": "nest",
+    "entities": [
+      {
+        "template": "rat",
+        "dx": 0,
+        "dy": 0
+      },
+      {
+        "template": "rat",
+        "dx": 2,
+        "dy": 0
+      },
+      {
+        "template": "prop_crate",
+        "dx": 1,
+        "dy": 1
+      }
+    ]
+  }
+]

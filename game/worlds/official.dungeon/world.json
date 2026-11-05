@@ -1,8 +1,8 @@
 {
   "start": {
     "space": "cave",
-    "x": 2,
-    "y": 2
+    "x": 6,
+    "y": 6
   },
   "rules": [
     "core.move",
@@ -14,7 +14,9 @@
     "core.enemy_turn",
     "core.enemy_windup",
     "core.enemy_strike",
-    "core.use"
+    "core.use",
+    "base.rest",
+    "base.rest_finish"
   ],
   "onConflict": "error",
   "persistence": {
@@ -49,5 +51,14 @@
         "default": 26
       }
     ]
-  }
+  },
+  "init": [
+    {
+      "kind": "stamp",
+      "group": "nest",
+      "space": "cave",
+      "x": 10,
+      "y": 8
+    }
+  ]
 }

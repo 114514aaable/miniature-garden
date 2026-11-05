@@ -1183,53 +1183,41 @@ function tickPhases() {
 /** 一帧的数据上限：防止超长动作把响应撑爆。 */
 const MAX_FRAMES = 200;
 
-/** 把当前实体状态抓成 map：handle → { x, y, hp }（帧 diff 用）。 */
-function captureSnapshotOfEntities(view) {
+/** 这一 tick 的投影实体：handle → 完整记录（渲染用的那一份）。 */
+function captureSnapshotOfEntities() {
+  const projected = session.projector.snapshot({
+    tick: session.store.now(),
+    spaces: session.loaded.spaces,
+    templates: session.loaded.templates,
+    entities: session.store.allEntities(),
+  });
+
   const map = new Map();
-  for (const raw of session.store.allEntities()) {
-    const entity = view.entity(raw.handle);
-    const health = entity.components["core.health"];
-    const hp =
-      typeof health === "object" && health !== null && typeof health.hp === "number" ? health.hp : null;
-    map.set(entity.handle, {
-      x: entity.pos === null ? null : entity.pos.x,
-      y: entity.pos === null ? null : entity.pos.y,
-      hp,
-    });
-  }
+  for (const entity of projected.entities) map.set(entity.handle, entity);
   return map;
 }
 
-/** 对比前后两拍，产出这一帧的增量。 */
-function diffFrame(view, prev, tick, events) {
-  const moves = [];
-  const hp = [];
+/** 对比前后两拍：变化的实体整条发，消失的只发 handle。 */
+function diffFrame(prev, tick, events) {
+  const now = captureSnapshotOfEntities();
+  const entities = [];
+  const removed = [];
 
-  for (const raw of session.store.allEntities()) {
-    const entity = view.entity(raw.handle);
-    const before = prev.get(raw.handle);
-    const health = entity.components["core.health"];
-    const nowHp =
-      typeof health === "object" && health !== null && typeof health.hp === "number" ? health.hp : null;
-    const now = { x: entity.pos === null ? null : entity.pos.x, y: entity.pos === null ? null : entity.pos.y };
-
-    if (before === undefined) {
-      moves.push({ handle: raw.handle, x: now.x, y: now.y, spawned: true });
-      continue;
+  for (const [handle, record] of now) {
+    const before = prev.get(handle);
+    if (before === undefined || JSON.stringify(before) !== JSON.stringify(record)) {
+      entities.push(record);
     }
-    if (before.x !== now.x || before.y !== now.y) moves.push({ handle: raw.handle, x: now.x, y: now.y });
-    if (before.hp !== nowHp && nowHp !== null) hp.push({ handle: raw.handle, hp: nowHp });
   }
 
-  const alive = new Set(session.store.allEntities().map((entity) => entity.handle));
   for (const handle of prev.keys()) {
-    if (!alive.has(handle)) moves.push({ handle, removed: true });
+    if (!now.has(handle)) removed.push(handle);
   }
 
   return {
     tick,
-    moves,
-    hp,
+    entities,
+    removed,
     events: events.map((entry) => `#${entry.id} ${entry.kind} ${JSON.stringify(entry.data)}`),
   };
 }
@@ -1242,8 +1230,7 @@ function advanceTo(target) {
   const phases = tickPhases();
   let guard = 0;
   while (session.store.now() < target) {
-    const view = currentView();
-    const before = captureSnapshotOfEntities(view);
+    const before = captureSnapshotOfEntities();
     const eventsBefore = session.lastEvents.length;
     if (guard++ > 512) {
       session.devlog.action(session.store.now(), "调度器", { error: "推进次数超限" });
@@ -1257,19 +1244,18 @@ function advanceTo(target) {
     // 这一 tick 新产生的事件（step 阶段会往 lastEvents 里追加）
     const events = session.lastEvents.slice(eventsBefore);
     if (session.frames.length < MAX_FRAMES) {
-      session.frames.push(diffFrame(view, before, session.store.now(), events));
+      session.frames.push(diffFrame(before, session.store.now(), events));
     }
   }
 
   // 循环末尾的挂起效果也要成一帧，否则最后一下会直接跳到最终状态
-  const tailView = currentView();
-  const tailBefore = captureSnapshotOfEntities(tailView);
+  const tailBefore = captureSnapshotOfEntities();
   const tailEvents = session.lastEvents.length;
   applyPending();
   if (session.frames.length < MAX_FRAMES) {
     const tail = session.lastEvents.slice(tailEvents);
     if (tail.length > 0 || session.frames.length === 0) {
-      session.frames.push(diffFrame(tailView, tailBefore, session.store.now(), tail));
+      session.frames.push(diffFrame(tailBefore, session.store.now(), tail));
     }
   }
 }

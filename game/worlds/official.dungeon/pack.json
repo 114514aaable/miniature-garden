@@ -16,6 +16,12 @@
     ],
     "spaces": [
       "spaces/cave.json"
+    ],
+    "templates": [
+      "templates/monsters.json"
+    ],
+    "groups": [
+      "groups/nest.json"
     ]
   }
 }
