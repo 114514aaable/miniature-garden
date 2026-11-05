@@ -642,6 +642,9 @@ async function playFrames(result) {
   const box = document.getElementById('message');
   let working = result;
 
+  // 短动作压短间隔：移动这种一帧一帧慢慢播会显得「卡手」
+  const perFrame = frames.length <= 3 ? Math.min(config.frameMs, 55) : config.frameMs;
+
   for (const frame of frames) {
     working = applyFrame(working, frame);
 
@@ -651,7 +654,7 @@ async function playFrames(result) {
     renderStatus(working); // tick 与血量跟着帧走，不然状态栏会落后
 
     if (box && Array.isArray(frame.events) && frame.events.length > 0) box.textContent = frame.events[0];
-    await new Promise((resolve) => setTimeout(resolve, config.frameMs));
+    await new Promise((resolve) => setTimeout(resolve, perFrame));
   }
 
   render(result);
@@ -1055,7 +1058,7 @@ window.addEventListener('keydown', (event) => {
 });
 
 /** 按住方向键时的重复间隔（毫秒）。 */
-const HOLD_REPEAT_MS = 140;
+const HOLD_REPEAT_MS = 110;
 
 let held = null;
 let holdTimer = null;
