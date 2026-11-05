@@ -9,6 +9,7 @@ import { renderStatus } from '/client/hud/status.js';
 import { renderMinimap } from '/client/hud/minimap.js';
 import { createAimTracker } from '/client/hud/aim.js';
 import { createSettingsWindow } from '/client/windows/settings.js';
+import { createInventoryWindow } from '/client/windows/inventory.js';
 
 
 // 游戏页面不该有浏览器的默认权力：拖拽不要导航、右键不要菜单、文字不要选中
@@ -224,163 +225,39 @@ function render(state) {
   renderHotbar(state);
 }
 
-let inventoryItems = [];
-let stateSkills = [];
-let selectedCell = null;
-let inventoryPage = 0;
 let lastState = null;
-let INVENTORY_COLUMNS = config.inventoryColumns;
-const INVENTORY_ROWS = config.inventoryRows;
-const INVENTORY_PER_PAGE = 40;
-let INVENTORY_CELL = config.inventoryCell;
-let HOTBAR_CELL = config.hotbarCell;
 
-/** 技能也当成「物品」：统一成 {kind, ref, name, desc}。 */
-function allEntries() {
-  const skills = stateSkills
-    .filter((skill) => skill.tag !== 'core.move')
-    .map((skill) => ({ kind: 'skill', ref: skill.tag, name: skill.name, desc: '技能' }));
-  const items = inventoryItems.map((item) => ({
-    kind: 'item', ref: item.handle, name: item.name, desc: item.description,
-  }));
-  return [...skills, ...items];
-}
+/** 背包窗口：实现搬到了 windows/inventory.js。 */
+let inventoryWindow = null;
 
-async function openInventory() {
-  if (uiFocus === 'settings') closeSettings();
-  if (lastState !== null) hotbarSkills = lastState.skills.filter((skill) => skill.tag !== 'core.move');
-  const box = document.getElementById('inventory');
-  uiFocus = 'inventory';
-  box.hidden = false;
-  const data = await api('/api/inventory');
-  inventoryItems = (data && data.items) || [];
-  selectedCell = null;
-  inventoryPage = 0;
-  drawInventory();
-}
-
-/** 方格纸风格：直角、细线、无间隙。 */
-function cellStyle(node, size, picked) {
-  node.style.width = size + 'px';
-  node.style.height = size + 'px';
-  node.style.flex = '0 0 auto';
-  node.style['border-radius'] = '0';
-  node.style.border = '1px solid #2a303c';
-  node.style.background = picked ? '#26303f' : 'transparent';
-  node.style['font-size'] = '10px';
-  node.style.padding = '0';
-  return node;
-}
-
-function entryCell(entry, index) {
-  if (entry === undefined) {
-    const empty = text('', { policy: 'fixed', width: INVENTORY_CELL, height: INVENTORY_CELL });
-    cellStyle(empty, INVENTORY_CELL, false);
-    return empty;
-  }
-
-  const picked = selectedCell !== null && selectedCell.kind === entry.kind && selectedCell.ref === entry.ref;
-  const node = button(entry.name, () => { selectedCell = entry; drawInventory(); });
-  cellStyle(node, INVENTORY_CELL, picked);
-  return withEvents(node, {
-    dragstart: (event) => {
-      event.dataTransfer.effectAllowed = 'move';
-      event.dataTransfer.setData('text/plain', JSON.stringify({ kind: entry.kind, ref: entry.ref }));
-    },
-  }, { draggable: 'true' });
-}
-
-function hotbarMiniCell(index) {
-  const entry = hotbarSlots[index];
-  const node = button(entry === null ? String(index + 1) : hotbarLabel(entry), () => {});
-  cellStyle(node, HOTBAR_CELL, false);
-  node.style['font-size'] = '8px';
-  return withEvents(node, {
-    dragover: (event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; },
-    drop: (event) => {
-      event.preventDefault();
-      const data = JSON.parse(event.dataTransfer.getData('text/plain'));
-      hotbarSlots[index] = { kind: data.kind, ref: data.ref };
+function inventoryContext() {
+  return {
+    api,
+    getConfig: () => config,
+    getFocus: () => uiFocus,
+    setFocus: (name) => { uiFocus = name; },
+    closeSettings: () => closeSettings(),
+    refreshAim: () => aim.refresh(),
+    getLastState: () => lastState,
+    getHotbarSlots: () => hotbarSlots,
+    hotbarColumns: () => HOTBAR_COLUMNS,
+    hotbarLabel: (entry) => hotbarLabel(entry),
+    setHotbarSlot: (index, entry) => {
+      hotbarSlots[index] = entry;
       saveHotbar(hotbarSlots);
       if (lastState !== null) renderHotbar(lastState);
-      drawInventory();
     },
-    contextmenu: (event) => {
-      event.preventDefault();
-      hotbarSlots[index] = null;
-      saveHotbar(hotbarSlots);
-      if (lastState !== null) renderHotbar(lastState);
-      drawInventory();
-    },
-  });
+  };
 }
 
-function drawInventory() {
-  const box = document.getElementById('inventory');
-  const entries = allEntries();
-  const pages = Math.max(1, Math.ceil(entries.length / INVENTORY_PER_PAGE));
-  inventoryPage = Math.min(inventoryPage, pages - 1);
-
-  const start = inventoryPage * INVENTORY_PER_PAGE;
-  const cells = [];
-  for (let i = 0; i < INVENTORY_PER_PAGE; i += 1) {
-    cells.push(entryCell(entries[start + i], i));
-  }
-
-  const detail = selectedCell === null
-    ? col({ gap: 4 }, text('没有选中格子', { policy: 'fixed' }))
-    : col({ gap: 4 },
-        text(selectedCell.name, { policy: 'fixed' }),
-        text(selectedCell.desc, { policy: 'fixed' }),
-      );
-
-  const pager = row({ gap: 6, align: 'center' },
-    button('‹', () => { inventoryPage = Math.max(0, inventoryPage - 1); drawInventory(); }),
-    text('第 ' + (inventoryPage + 1) + ' / ' + pages + ' 页', { policy: 'fixed' }),
-    button('›', () => { inventoryPage = Math.min(pages - 1, inventoryPage + 1); drawInventory(); }),
-  );
-
-  const miniHotbar = grid({ columns: HOTBAR_COLUMNS, cell: HOTBAR_CELL, gap: 0 },
-    ...hotbarSlots.map((_, index) => hotbarMiniCell(index)),
-  );
-
-  const body = row({ gap: 12, align: 'flex-start' },
-    col({ gap: 6, width: 110 }, detail),
-    col({ gap: 8 },
-      text('背包（拖到下面的快捷栏）', { policy: 'fixed' }),
-      grid({ columns: INVENTORY_COLUMNS, cell: INVENTORY_CELL, gap: 0 }, ...cells),
-      pager,
-      text('快捷栏 1–9（右键清空）', { policy: 'fixed' }),
-      miniHotbar,
-    ),
-  );
-
-  box.textContent = '';
-  box.appendChild(renderNode(modal(col({ gap: 10 },
-    body,
-    row({ gap: 8, justify: 'end' }, button('关闭 I', () => closeInventory())),
-  ), { title: '背包' })));
+function inventoryUI() {
+  inventoryWindow ??= createInventoryWindow(inventoryContext());
+  return inventoryWindow;
 }
 
-async function dropSelected() {
-  if (selectedItem === null) return;
-  await api('/api/skill', { tag: 'core.drop' });
-  await openInventory();
-}
-
-function closeInventory() {
-  const box = document.getElementById('inventory');
-  uiFocus = null;
-  aim.refresh();
-  box.hidden = true;
-  box.textContent = '';
-}
-
-function toggleInventory() {
-  const box = document.getElementById('inventory');
-  if (box.hidden) openInventory(); else closeInventory();
-}
-
+function openInventory() { return inventoryUI().open(); }
+function closeInventory() { inventoryUI().close(); }
+function toggleInventory() { inventoryUI().toggle(); }
 function applyPortraitCollapsed() {
   const box = document.getElementById('portrait');
   const stored = localStorage.getItem('nw.portrait');
@@ -854,9 +731,7 @@ document.getElementById('map').addEventListener('click', (event) => {
 });
 
 function refreshSizes() {
-  INVENTORY_CELL = config.inventoryCell;
-  HOTBAR_CELL = config.hotbarCell;
-  INVENTORY_COLUMNS = config.inventoryColumns;
+  // 格子尺寸都在 config 里，画的时候现取；这里只需要重画一次快捷栏
   if (lastState !== null) renderHotbar(lastState);
 }
 

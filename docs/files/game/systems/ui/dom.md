@@ -18,4 +18,5 @@
 - [`tools/client/hud/quickbar.js`](tools/client/hud/quickbar.md)
 - [`tools/client/hud/status.js`](tools/client/hud/status.md)
 - [`tools/client/launcher.js`](tools/client/launcher.md)
+- [`tools/client/windows/inventory.js`](tools/client/windows/inventory.md)
 - [`tools/client/windows/settings.js`](tools/client/windows/settings.md)
