@@ -29,6 +29,7 @@ import { Registry } from "../game/engine/core/src/event/registry.ts";
 import { createWorldView } from "../game/engine/core/src/event/view.ts";
 import { Store } from "../game/engine/core/src/store.ts";
 import { clampCost, costOf, DEFAULT_CLOCK, MAX_ACTION_COST } from "../game/engine/core/src/rules/clock.ts";
+import { MAX_SEQUENCE_TICKS } from "../game/engine/core/src/event/registry.ts";
 import { Scheduler } from "../game/engine/core/src/rules/scheduler.ts";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
@@ -1037,6 +1038,10 @@ function run(tag, params, costKey) {
 
   // 动作生效，然后世界推进到玩家下次能行动为止（敌人会在这段里行动）。
   // 注意：成本不看「有没有效果」——等待就是不产生效果但照样花时间。
+  const skillSym = session.link.tags.get(tag);
+  const skillSignature = skillSym === undefined ? undefined : session.link.signatures[skillSym];
+  const time = skillSignature?.time;
+
   let rawCost;
   try {
     rawCost = costOf(DEFAULT_CLOCK, costKey, speedOfPlayer());
@@ -1044,7 +1049,10 @@ function run(tag, params, costKey) {
     session.devlog.action(session.store.now(), tag + " 成本未定义", { cost: costKey });
     return snapshot("这个技能的成本没定义：" + costKey);
   }
-  const cost = clampCost(rawCost);
+  const cost =
+    time?.mode === "sequence"
+      ? Math.min(MAX_SEQUENCE_TICKS, Math.max(1, Math.floor(time.ticks ?? 1)))
+      : clampCost(rawCost);
   if (cost !== rawCost) {
     session.devlog.action(session.store.now(), tag + " 成本超限", {
       raw: rawCost,
@@ -1063,7 +1071,16 @@ function run(tag, params, costKey) {
 
 
   const rounds = cost === 0 ? "（零帧）" : `（${cost} 回合）`;
-  return snapshot(`${skillName(tag)}${rounds}`);
+  const snap = snapshot(`${skillName(tag)}${rounds}`);
+
+  if (time?.mode === "sequence") {
+    snap.sequence = {
+      ticks: cost,
+      events: session.lastEvents.map((entry) => `#${entry.id} ${entry.kind} ${JSON.stringify(entry.data)}`),
+    };
+  }
+
+  return snap;
 }
 
 /**

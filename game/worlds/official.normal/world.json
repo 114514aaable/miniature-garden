@@ -17,7 +17,8 @@
     "base.cast",
     "core.use",
     "base.talk",
-    "base.sweep"
+    "base.sweep",
+    "base.rest"
   ],
   "onConflict": "error",
   "init": [

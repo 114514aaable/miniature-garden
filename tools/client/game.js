@@ -608,10 +608,33 @@ async function useSkill(tag, x, y, extra = {}) {
   if (acting) return;
   acting = true;
   try {
-    render(await api('/api/skill', body));
+    const result = await api('/api/skill', body);
+    if (result && result.sequence) {
+      // 一次演练：世界已经结算完，这里只是按回合把过程演出来
+      await playSequence(result);
+    } else {
+      render(result);
+    }
   } finally {
     acting = false;
   }
+}
+
+/** 每回合停多久（毫秒）。 */
+const SEQUENCE_FRAME_MS = 90;
+
+/** 把 result.sequence 按回合播一遍，播完再画最终状态。 */
+async function playSequence(result) {
+  const total = Math.max(1, result.sequence.ticks || 1);
+  const label = result.message || '';
+  const box = document.getElementById('message');
+
+  for (let tick = 1; tick <= total; tick += 1) {
+    if (box) box.textContent = label + ' · ' + tick + '/' + total;
+    await new Promise((resolve) => setTimeout(resolve, SEQUENCE_FRAME_MS));
+  }
+
+  render(result);
 }
 
 function cellAt(event) {

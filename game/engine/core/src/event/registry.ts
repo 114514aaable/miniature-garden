@@ -18,6 +18,20 @@ import { type Schema } from "./schema.ts";
 import { type JsonValue, canonicalize, hashText } from "../time.ts";
 
 /** 技能的「接口那一半」：UI 和 AI 只读它，不认识实现。 */
+/** 一个动作占时间的方式。 */
+export type TimeMode = "instant" | "staged" | "sequence";
+
+export interface SkillTime {
+  readonly mode: TimeMode;
+  /** 占几个回合（sequence 必填；staged 可省略）。 */
+  readonly ticks?: number;
+  /** staged 用：中途能不能取消。 */
+  readonly cancelable?: boolean;
+}
+
+/** 一次 sequence 最多几回合（比普通成本宽，但不能无限）。 */
+export const MAX_SEQUENCE_TICKS = 200;
+
 export interface SkillMeta {
   readonly name: string;
   /** 引用 clock.costs 的键，不写死数字。 */
@@ -48,6 +62,8 @@ export interface Signature {
   /** 函数自己声明需不需要时间戳，不由包声明。 */
   readonly needsTimestamp: boolean;
   /** 可选：这份签名同时是一个「技能」，带上界面需要的信息。 */
+  /** 时间模式（缺省 = instant）。 */
+  readonly time?: SkillTime;
   readonly skill?: SkillMeta;
 }
 
@@ -76,6 +92,7 @@ export class Registry {
     if (this.pending.has(signature.tag)) {
       throw new Error(`标签重复登记："${signature.tag}"`);
     }
+    checkTime(signature);
     if (signature.skill !== undefined) {
       checkSkill(signature.skill, signature.tag);
     }
@@ -111,11 +128,35 @@ export class Registry {
   }
 }
 
+
+/** 时间模式校验：mode 合法、ticks 合理。 */
+function checkTime(signature: Signature): void {
+  const time = signature.time;
+  if (time === undefined) return;
+  if (time.mode !== "instant" && time.mode !== "staged" && time.mode !== "sequence") {
+    throw new Error(`技能 ${signature.tag} 的时间模式非法：${String(time.mode)}`);
+  }
+  if (time.mode === "sequence") {
+    if (!Number.isInteger(time.ticks) || (time.ticks as number) < 1) {
+      throw new Error(`技能 ${signature.tag} 的 sequence 必须给出正整数 ticks`);
+    }
+    if ((time.ticks as number) > MAX_SEQUENCE_TICKS) {
+      throw new Error(`技能 ${signature.tag} 的 sequence 太长：${time.ticks}（上限 ${MAX_SEQUENCE_TICKS}）`);
+    }
+  }
+  if (time.mode === "staged" && time.ticks !== undefined) {
+    if (!Number.isInteger(time.ticks) || (time.ticks as number) < 1) {
+      throw new Error(`技能 ${signature.tag} 的 staged ticks 必须是正整数`);
+    }
+  }
+}
 /** 技能接口的校验：名字、成本键、目标形状。 */
 function checkSkill(skill: SkillMeta, tag: string): void {
   if (typeof skill.name !== "string" || skill.name.trim().length === 0) {
     throw new Error(`技能 ${tag} 缺少名字`);
   }
+
+
   if (typeof skill.cost !== "string" || skill.cost.trim().length === 0) {
     throw new Error(`技能 ${tag} 缺少成本键（clock.costs 里的名字）`);
   }

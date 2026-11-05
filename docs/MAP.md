@@ -85,11 +85,14 @@ game/systems/render/*（投影成画面数据）
   - `type EvaluateResult`
   - `const DEFAULT_MAX_DEPTH`
   - `const HARD_MAX_DEPTH`
-- **`game/engine/core/src/event/registry.ts`**（130 行）
+- **`game/engine/core/src/event/registry.ts`**（171 行）
   注册表：标签 → 签名，以及加载期的「链接」。
+  - `interface SkillTime`
   - `interface SkillMeta`
   - `interface Signature`
   - `interface LinkTable`
+  - `type TimeMode`
+  - `const MAX_SEQUENCE_TICKS`
 - **`game/engine/core/src/event/schema.ts`**（209 行）
   极小类型语言：校验数据包里的参数和返回值。
   - `validate(value: unknown, schema: Schema, path = "$") → void`
@@ -222,6 +225,10 @@ game/systems/render/*（投影成画面数据）
   - `const PENDING`
   - `const EMPTY_PENDING`
   - `const castSignature`
+- **`game/engine/core/src/rules/rest.ts`**（60 行）
+  休息：一次演练（sequence）的样板技能。
+  - `restHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
+  - `const restSignature`
 - **`game/engine/core/src/rules/rng.ts`**（75 行）
   随机数：无状态派发。
   - `hashTag(tag: string) → number`
@@ -488,7 +495,7 @@ game/systems/render/*（投影成画面数据）
   - `resolveTag(tag: string) → string`
   - `resolveTags(tags: readonly string[]) → string[]`
   - `const LEGACY_TAGS`
-- **`game/systems/rules/base.ts`**（38 行）
+- **`game/systems/rules/base.ts`**（40 行）
   base 包的规则：劈砍、蓄力劈砍。
   - `interface RuleEntry`
   - `const BASE_RULES`
@@ -565,7 +572,7 @@ game/systems/render/*（投影成画面数据）
 
 ### 页面脚本 tools/client
 
-- **`tools/client/game.js`**（1004 行）
+- **`tools/client/game.js`**（1027 行）
   import { api } from '/client/shared.js';
 - **`tools/client/hud/aim.js`**（62 行）
   瞄准高亮：记住「鼠标在哪、当前选了什么技能」，随时可以重算。
@@ -627,7 +634,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（1684 行）
+- **`tools/serve.mjs`**（1701 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。

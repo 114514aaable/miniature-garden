@@ -11,7 +11,8 @@
     "core.wait",
     "core.aim",
     "base.attack",
-    "core.use"
+    "core.use",
+    "base.rest"
   ],
   "onConflict": "error",
   "generation": {

@@ -117,5 +117,7 @@
   "world.official.dungeon.desc": "元胞自动机挖出来的洞穴。",
   "terrain.4.name": "洞底",
   "world.official.cavern.name": "洞穴地表",
-  "world.official.cavern.desc": "噪声地表 + 元胞洞穴叠加：洞里是洞底。"
+  "world.official.cavern.desc": "噪声地表 + 元胞洞穴叠加：洞里是洞底。",
+  "rule.base.rest.name": "休息",
+  "rule.base.rest.desc": "花 4 回合喘口气，恢复 2 点血。"
 }

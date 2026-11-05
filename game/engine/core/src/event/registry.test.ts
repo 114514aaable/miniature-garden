@@ -11,7 +11,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { Registry, type Signature } from "./registry.ts";
+import { MAX_SEQUENCE_TICKS, Registry, type Signature } from "./registry.ts";
 
 function sig(tag: string, overrides: Partial<Signature> = {}): Signature {
   return {
@@ -122,4 +122,39 @@ test("链接表里能按编号找回签名", () => {
   const sym = table.tags.get("core.move");
   assert.equal(sym, 0);
   assert.equal(table.signatures[0].returnsEffects, true);
+});
+
+function signature(overrides: Partial<Signature> = {}): Signature {
+  return {
+    tag: "base.demo",
+    params: { t: "object", fields: {} },
+    result: { t: "any" },
+    returnsEffects: true,
+    needsTimestamp: false,
+    ...overrides,
+  };
+}
+
+test("时间模式：sequence 必须给 ticks", () => {
+  const registry = new Registry();
+  assert.throws(() => registry.define(signature({ time: { mode: "sequence" } })), /正整数 ticks/);
+});
+
+test("时间模式：sequence 太长要报错", () => {
+  const registry = new Registry();
+  assert.throws(
+    () => registry.define(signature({ time: { mode: "sequence", ticks: MAX_SEQUENCE_TICKS + 1 } })),
+    /太长/,
+  );
+});
+
+test("时间模式：正常的 sequence 能登记", () => {
+  const registry = new Registry();
+  registry.define(signature({ time: { mode: "sequence", ticks: 4 } }));
+  assert.equal(registry.has("base.demo"), true);
+});
+
+test("时间模式：未知模式要报错", () => {
+  const registry = new Registry();
+  assert.throws(() => registry.define(signature({ time: { mode: "slow" } as unknown as Signature["time"] })), /时间模式非法/);
 });
