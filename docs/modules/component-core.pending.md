@@ -15,7 +15,17 @@
     },
     "resolveAt": {
       "t": "int"
+    },
+    "startedAt": {
+      "t": "int"
+    },
+    "totalTicks": {
+      "t": "int"
     }
-  }
+  },
+  "optional": [
+    "startedAt",
+    "totalTicks"
+  ]
 }
 ```

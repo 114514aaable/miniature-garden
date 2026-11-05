@@ -10,7 +10,7 @@
 | 种类 | 数量 |
 |---|---|
 | component | 16 |
-| rule | 7 |
+| rule | 9 |
 | terrain | 5 |
 | template | 3 |
 | biome | 3 |
@@ -31,7 +31,7 @@ graph LR
     terrain_4["洞底"]
     component_core_health["生命"]
     component_core_stats["属性"]
-    component_core_body["部位"]
+    component_core_body["身体"]
     component_core_item["物品"]
     component_core_container["物品栏"]
     component_core_ai["智能"]
@@ -62,6 +62,8 @@ graph LR
     rule_core_aim["指向"]
     rule_base_attack["劈砍"]
     rule_core_use["使用"]
+    rule_base_rest["休息"]
+    rule_base_rest_finish["休息结算"]
   end
   space_surface --> terrain_1
   space_surface --> terrain_3
@@ -74,6 +76,8 @@ graph LR
   template_prop_crate --> component_core_health
   template_prop_crate --> component_core_solid
   world_main --> rule_base_attack
+  world_main --> rule_base_rest
+  world_main --> rule_base_rest_finish
   world_main --> rule_core_aim
   world_main --> rule_core_drop
   world_main --> rule_core_move
@@ -111,7 +115,7 @@ graph LR
     terrain_4["洞底"]
     component_core_health["生命"]
     component_core_stats["属性"]
-    component_core_body["部位"]
+    component_core_body["身体"]
     component_core_item["物品"]
     component_core_container["物品栏"]
     component_core_ai["智能"]
@@ -176,7 +180,7 @@ graph LR
 | 种类 | 数量 |
 |---|---|
 | component | 16 |
-| rule | 13 |
+| rule | 15 |
 | template | 5 |
 | terrain | 5 |
 | biome | 3 |
@@ -198,7 +202,7 @@ graph LR
     terrain_4["洞底"]
     component_core_health["生命"]
     component_core_stats["属性"]
-    component_core_body["部位"]
+    component_core_body["身体"]
     component_core_item["物品"]
     component_core_container["物品栏"]
     component_core_ai["智能"]
@@ -238,6 +242,8 @@ graph LR
     rule_core_use["使用"]
     rule_base_talk["交谈"]
     rule_base_sweep["横扫"]
+    rule_base_rest["休息"]
+    rule_base_rest_finish["休息结算"]
   end
   space_field --> terrain_1
   space_field --> terrain_2
@@ -266,6 +272,8 @@ graph LR
   template_prop_crate --> component_core_solid
   world_main --> rule_base_attack
   world_main --> rule_base_cast
+  world_main --> rule_base_rest
+  world_main --> rule_base_rest_finish
   world_main --> rule_base_sweep
   world_main --> rule_base_talk
   world_main --> rule_core_aim

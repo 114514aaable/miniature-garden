@@ -313,6 +313,38 @@
       "returnsEffects": true
     },
     {
+      "kind": "rule",
+      "id": "base.rest",
+      "name": "休息",
+      "desc": "花 4 回合喘口气，恢复 2 点血。",
+      "file": "rule-base.rest.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "actor": {
+            "t": "int"
+          }
+        }
+      },
+      "returnsEffects": true
+    },
+    {
+      "kind": "rule",
+      "id": "base.rest_finish",
+      "name": "休息结算",
+      "desc": "休息到点：回 2 点血。",
+      "file": "rule-base.rest_finish.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "actor": {
+            "t": "int"
+          }
+        }
+      },
+      "returnsEffects": true
+    },
+    {
       "kind": "component",
       "id": "core.health",
       "name": "生命",
@@ -357,8 +389,8 @@
     {
       "kind": "component",
       "id": "core.body",
-      "name": "部位",
-      "desc": "分部位的血量与状态，供以后的部位战斗使用。",
+      "name": "身体",
+      "desc": "手的数量。默认 2；四只手就写 4。",
       "file": "component-core.body.md",
       "schema": {
         "t": "object",
@@ -562,8 +594,18 @@
           },
           "resolveAt": {
             "t": "int"
+          },
+          "startedAt": {
+            "t": "int"
+          },
+          "totalTicks": {
+            "t": "int"
           }
-        }
+        },
+        "optional": [
+          "startedAt",
+          "totalTicks"
+        ]
       }
     },
     {

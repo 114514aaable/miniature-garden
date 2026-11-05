@@ -18,5 +18,6 @@
 
 ## 被引用
 
+- [`game/engine/core/src/rules/rest.ts`](game/engine/core/src/rules/rest.md)
 - [`game/systems/rules/base.ts`](game/systems/rules/base.md)
 - [`tools/serve.mjs`](tools/serve.md)

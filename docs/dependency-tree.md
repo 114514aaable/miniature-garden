@@ -6,7 +6,7 @@
 
 | 层 | 文件数 |
 |---|---|
-| 内核 | 89 |
+| 内核 | 90 |
 | 系统 | 42 |
 | 宿主工具 | 16 |
 | 页面脚本 | 7 |
@@ -151,6 +151,11 @@ tools/serve.mjs
         └─ game/engine/core/src/event/registry.ts  (已展开)
         └─ game/engine/core/src/time.ts  (已展开)
       └─ game/engine/core/src/rules/pending.ts  (已展开)
+      └─ game/engine/core/src/rules/rest.ts
+        └─ game/engine/core/src/event/evaluate.ts  (已展开)
+        └─ game/engine/core/src/event/registry.ts  (已展开)
+        └─ game/engine/core/src/rules/pending.ts  (已展开)
+        └─ game/engine/core/src/time.ts  (已展开)
       └─ game/engine/core/src/rules/sweep.ts
         └─ game/engine/core/src/event/evaluate.ts  (已展开)
         └─ game/engine/core/src/event/registry.ts  (已展开)
@@ -247,11 +252,11 @@ tools/build-web.mjs
 
 | 文件 | 被引用 |
 |---|---|
-| `game/engine/core/src/time.ts` | 39 处：`game/engine/core/src/entity/entity.ts`, `game/engine/core/src/entity/merge.test.ts`, `game/engine/core/src/entity/merge.ts`, `game/engine/core/src/entity/template.ts` … |
+| `game/engine/core/src/time.ts` | 40 处：`game/engine/core/src/entity/entity.ts`, `game/engine/core/src/entity/merge.test.ts`, `game/engine/core/src/entity/merge.ts`, `game/engine/core/src/entity/template.ts` … |
 | `game/engine/core/src/space.ts` | 25 处：`tools/serve.mjs`, `game/engine/core/src/entity/entity.ts`, `game/engine/core/src/event/effects.test.ts`, `game/engine/core/src/event/effects.ts` … |
-| `game/engine/core/src/event/registry.ts` | 16 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/event/evaluate.ts`, `game/engine/core/src/event/registry.test.ts` … |
+| `game/engine/core/src/event/registry.ts` | 17 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/event/evaluate.ts`, `game/engine/core/src/event/registry.test.ts` … |
+| `game/engine/core/src/event/evaluate.ts` | 14 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/rules/ai.ts`, `game/engine/core/src/rules/aim.ts` … |
 | `game/engine/core/src/store.ts` | 13 处：`tools/play.mjs`, `tools/serve.mjs`, `game/engine/core/src/event/effects.test.ts`, `game/engine/core/src/event/effects.ts` … |
-| `game/engine/core/src/event/evaluate.ts` | 13 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/rules/ai.ts`, `game/engine/core/src/rules/aim.ts` … |
 | `game/engine/core/src/event/view.ts` | 11 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/event/evaluate.ts`, `game/engine/core/src/event/view.test.ts` … |
 | `game/engine/core/src/entity/entity.ts` | 11 处：`game/engine/core/src/entity/entity.test.ts`, `game/engine/core/src/entity/place.ts`, `game/engine/core/src/event/view.ts`, `game/engine/core/src/rules/ai.test.ts` … |
 | `game/engine/core/src/entity/template.ts` | 11 处：`game/engine/core/src/entity/template.test.ts`, `game/engine/core/src/event/view.ts`, `game/engine/core/src/pack/load.ts`, `game/engine/core/src/rules/ai.test.ts` … |
@@ -283,4 +288,4 @@ tools/build-web.mjs
 - `tools/typecheck.mjs`
 - `game/engine/core/types/node-shim.d.ts`
 
-> 共 96 个源文件（另有 58 个测试），333 条引用。
+> 共 97 个源文件（另有 58 个测试），339 条引用。

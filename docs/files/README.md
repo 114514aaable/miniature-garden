@@ -34,7 +34,7 @@
 | `game/engine/core/src/rules/inventory.ts` | 物品栏规则：捡起、放下。 | [md](game/engine/core/src/rules/inventory.md) |
 | `game/engine/core/src/rules/move.ts` | 第一条真规则：走一格。 | [md](game/engine/core/src/rules/move.md) |
 | `game/engine/core/src/rules/pending.ts` | 挂起动作：现在不做，过几回合再做。 | [md](game/engine/core/src/rules/pending.md) |
-| `game/engine/core/src/rules/rest.ts` | 休息：一次演练（sequence）的样板技能。 | [md](game/engine/core/src/rules/rest.md) |
+| `game/engine/core/src/rules/rest.ts` | 休息：和蓄力同一套机制——点一下挂 pending，到点结算。 | [md](game/engine/core/src/rules/rest.md) |
 | `game/engine/core/src/rules/rng.ts` | 随机数：无状态派发。 | [md](game/engine/core/src/rules/rng.md) |
 | `game/engine/core/src/rules/scheduler.ts` | 调度器：谁该动了。 | [md](game/engine/core/src/rules/scheduler.md) |
 | `game/engine/core/src/rules/sum.ts` | 第一个规则：求和。 | [md](game/engine/core/src/rules/sum.md) |

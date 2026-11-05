@@ -9,6 +9,8 @@
 - `Config`
 - `DEFAULT_CONFIG`
 - `clampCell`
+- `clampChargeMs`
+- `clampFrameMs`
 - `loadConfig`
 - `normalizeAction`
 - `saveConfig`
