@@ -849,7 +849,9 @@ window.addEventListener('blur', () => stopHoldRepeat(''));
     return;
   }
   // 读档流程已经建好会话，直接用；否则按选择开局。
-  let state = await api('/api/state');
+  // fresh=1（从启动器点开始）→ 无条件开新局；否则刷新页面时接上正在跑的那局
+  const fresh = params.get('fresh') === '1';
+  let state = fresh ? null : await api('/api/state');
   if (!state || state.launcher) {
     state = await api('/api/start', { id: worldId, off, seed, options: startOptions });
   }

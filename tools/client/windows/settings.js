@@ -65,6 +65,10 @@ export function createSettingsWindow(ctx) {
         button('按键', () => open('keys')),
         button('世界', () => open('world')),
         button('存档 / 读档', () => open('saves')),
+        button('回到启动器', async () => {
+          await ctx.api('/api/leave', {});
+          location.href = '/';
+        }),
         button('关闭 Esc', () => close()),
       );
     } else if (page === 'config') {

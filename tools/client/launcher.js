@@ -161,6 +161,7 @@ function openStartDialog(world, preset = null) {
           world: world.id,
           seed: String(values.seed ?? 0),
           options: JSON.stringify(options),
+          fresh: '1', // 新开一局：游戏页不要接管旧会话
         });
         location.href = '/game?' + params.toString();
       }),
