@@ -241,13 +241,6 @@ export const GAME_PAGE = `<!doctype html>
             background: #10131a; border: 1px solid #2a303c; border-radius: 8px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
   #policy[hidden] { display: none; }
-  #chargebar { position: absolute; left: 50%; transform: translateX(-50%); bottom: 96px;
-               width: 220px; height: 10px; background: #1a2030; border: 1px solid #2a303c;
-               border-radius: 5px; pointer-events: none; }
-  #chargebar[hidden] { display: none; }
-  #chargefill { height: 100%; width: 0%; background: #8ab4f8; border-radius: 4px; }
-  #chargelabel { position: absolute; left: 50%; top: -18px; transform: translateX(-50%);
-                 font-size: 11px; color: #9aa3b2; white-space: nowrap; }
   #dialog { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%);
             width: min(560px, 86vw); z-index: var(--z-modal); }
   #minimap { position: absolute; right: 10px; top: 54px; padding: 4px; z-index: var(--z-region);
@@ -298,10 +291,6 @@ export const GAME_PAGE = `<!doctype html>
   <div id="skills"></div>
   <div id="quick"></div>
   <div id="message"></div>
-  <div id="chargebar" hidden>
-    <div id="chargefill"></div>
-    <span id="chargelabel"></span>
-  </div>
   <div id="logbox"></div>
 
   <div id="settings" hidden></div>
