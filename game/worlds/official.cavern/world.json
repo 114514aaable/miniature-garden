@@ -12,7 +12,8 @@
     "core.aim",
     "base.attack",
     "core.use",
-    "base.rest"
+    "base.rest",
+    "base.rest_finish"
   ],
   "onConflict": "error",
   "generation": {

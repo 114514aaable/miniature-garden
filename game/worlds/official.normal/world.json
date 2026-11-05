@@ -18,7 +18,8 @@
     "core.use",
     "base.talk",
     "base.sweep",
-    "base.rest"
+    "base.rest",
+    "base.rest_finish"
   ],
   "onConflict": "error",
   "init": [

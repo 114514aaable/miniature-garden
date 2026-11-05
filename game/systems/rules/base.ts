@@ -18,7 +18,7 @@ import { attackHandler, attackSignature } from "../../engine/core/src/rules/atta
 import { castHandler, castSignature } from "../../engine/core/src/rules/pending.ts";
 import { talkHandler, talkSignature } from "../../engine/core/src/rules/talk.ts";
 import { sweepHandler, sweepSignature } from "../../engine/core/src/rules/sweep.ts";
-import { restHandler, restSignature } from "../../engine/core/src/rules/rest.ts";
+import { restFinishHandler, restFinishSignature, restHandler, restSignature } from "../../engine/core/src/rules/rest.ts";
 
 import { type Signature } from "../../engine/core/src/event/registry.ts";
 import { type EvaluateContext } from "../../engine/core/src/event/evaluate.ts";
@@ -36,4 +36,5 @@ export const BASE_RULES: readonly RuleEntry[] = [
   { signature: talkSignature, handler: talkHandler },
   { signature: sweepSignature, handler: sweepHandler },
   { signature: restSignature, handler: restHandler },
+  { signature: restFinishSignature, handler: restFinishHandler },
 ];

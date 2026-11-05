@@ -648,6 +648,7 @@ async function playFrames(result) {
     // 播放期间只重画画布：HUD / 小地图 / 提示条等播完再统一刷新，
     // 否则每帧都重建一次，数字会闪。
     if (renderer !== null) renderer.setState(working);
+    renderStatus(working); // tick 与血量跟着帧走，不然状态栏会落后
 
     if (box && Array.isArray(frame.events) && frame.events.length > 0) box.textContent = frame.events[0];
     await new Promise((resolve) => setTimeout(resolve, config.frameMs));

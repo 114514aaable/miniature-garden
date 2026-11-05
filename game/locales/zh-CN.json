@@ -119,5 +119,7 @@
   "world.official.cavern.name": "洞穴地表",
   "world.official.cavern.desc": "噪声地表 + 元胞洞穴叠加：洞里是洞底。",
   "rule.base.rest.name": "休息",
-  "rule.base.rest.desc": "花 4 回合喘口气，恢复 2 点血。"
+  "rule.base.rest.desc": "花 4 回合喘口气，恢复 2 点血。",
+  "rule.base.rest_finish.name": "休息结算",
+  "rule.base.rest_finish.desc": "休息到点：回 2 点血。"
 }
