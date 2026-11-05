@@ -92,7 +92,7 @@ export function drawOverlay(context: CanvasRenderingContext2D, options: OverlayO
     context.fillRect(x, y, filled, 3);
   }
 
-  // 3) 蓄力条：贴在头顶
+  // 3) 蓄力条：贴在脚下血条的上方（血条在 tile-6，它在再高一格）
   for (const entity of entities) {
     if (entity.pending === undefined) continue;
 
@@ -100,7 +100,7 @@ export function drawOverlay(context: CanvasRenderingContext2D, options: OverlayO
     const sy = (entity.y - camera.y) * tile;
     const width = Math.round(tile * 0.7);
     const x = sx + Math.round((tile - width) / 2);
-    const y = sy - 6;
+    const y = sy + tile - 11;
 
     context.fillStyle = "rgba(10,12,16,0.75)";
     context.fillRect(x, y, width, 3);
