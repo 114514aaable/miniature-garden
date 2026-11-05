@@ -8,7 +8,16 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { clampCell, DEFAULT_CONFIG, loadConfig, normalizeAction, saveConfig, withBinding, withConfig } from "./config.ts";
+import {
+  clampCell,
+  clampChargeMs,
+  DEFAULT_CONFIG,
+  loadConfig,
+  normalizeAction,
+  saveConfig,
+  withBinding,
+  withConfig,
+} from "./config.ts";
 
 function fakeStorage(initial: Record<string, string> = {}) {
   const data = { ...initial };
@@ -89,4 +98,15 @@ test("动作：不认识的字符串回默认", () => {
 test("动作：结构正确就原样保留", () => {
   const value = { kind: "skill", ref: "base.cast" } as const;
   assert.deepEqual(normalizeAction(value, DEFAULT_CONFIG.clickPolicy.hostile), value);
+});
+
+test("蓄力节奏：夹在 100..2000ms", () => {
+  assert.equal(clampChargeMs(10), 100);
+  assert.equal(clampChargeMs(9999), 2000);
+  assert.equal(clampChargeMs(450), 450);
+  assert.equal(clampChargeMs(Number.NaN), 400);
+});
+
+test("蓄力节奏：默认 400ms", () => {
+  assert.equal(loadConfig(fakeStorage()).chargeTickMs, 400);
 });

@@ -36,6 +36,8 @@ export function renderStatus(state) {
   const charge = chargeRow(state.pending);
 
   mount(box, col({ gap: 6 },
+    // 蓄力在血条上方：自己的状态从「正在做什么」开始，再是血量
+    ...(charge === null ? [] : [charge.node]),
     bar(state.hud.hp, state.hud.hpMax, {
       label: 'HP',
       showValue: true,
@@ -44,6 +46,5 @@ export function renderStatus(state) {
     }),
     text('背包 ' + state.hud.inventory.length + ' · tick ' + state.tick, { policy: 'fixed' }),
     text(ready, { policy: 'fixed' }),
-    ...(charge === null ? [] : [charge.node]),
   ));
 }

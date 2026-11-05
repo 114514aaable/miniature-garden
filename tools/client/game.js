@@ -1,7 +1,7 @@
 import { api } from '/client/shared.js';
 import { attach } from '/web/game/systems/render/browser.js';
 import { row, col, text, button, toggle, modal, panel, grid, bar, canvasNode, withEvents } from '/web/game/systems/ui/spec.js';
-import { clampCell, loadConfig, saveConfig, withBinding, withConfig } from '/web/game/systems/config/config.js';
+import { clampCell, clampChargeMs, loadConfig, saveConfig, withBinding, withConfig } from '/web/game/systems/config/config.js';
 import { commandFor, parseCommand } from '/web/game/systems/input/bindings.js';
 import { mount, render as renderNode } from '/web/game/systems/ui/dom.js';
 import { closePolicy, renderQuickbar } from '/client/hud/quickbar.js';
@@ -697,7 +697,7 @@ document.getElementById('map').addEventListener('mousemove', (event) => {
 
 /** 鼠标位置 → 格子（扣掉画布偏移，再交给渲染器换算相机）。 */
 /** 蓄力期间自动推进：每 200ms 点一次等待，让人看得见。 */
-const CHARGE_TICK_MS = 400;
+// 节奏来自设置（config.chargeTickMs），默认 400ms
 let chargeTimer = null;
 
 function scheduleChargeTick() {
@@ -714,7 +714,7 @@ function scheduleChargeTick() {
       return;
     }
     useSkill('core.wait');
-  }, CHARGE_TICK_MS);
+  }, config.chargeTickMs);
 }
 function cellAt(event) {
   const map = document.getElementById('map');
@@ -860,6 +860,20 @@ async function openSettings(page = 'root') {
 
     body = col({ gap: 8 },
       cellRow('快捷栏格子', 'hotbarCell'),
+      (() => {
+        const value = config.chargeTickMs;
+        const set = (next) => {
+          config = withConfig(config, { chargeTickMs: clampChargeMs(next) });
+          saveConfig(config);
+          openSettings('config');
+        };
+        return row({ gap: 6, align: 'center' },
+          text('蓄力节奏', { policy: 'fixed', width: 96 }),
+          button('-', () => set(value - 50)),
+          text(String(value) + 'ms', { policy: 'fixed', width: 64 }),
+          button('+', () => set(value + 50)),
+        );
+      })(),
       cellRow('背包格子', 'inventoryCell'),
       row({ gap: 6, align: 'center' },
         text('开发者模式', { policy: 'fixed', width: 96 }),
