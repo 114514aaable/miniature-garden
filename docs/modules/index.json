@@ -825,7 +825,7 @@
       "kind": "template",
       "id": "item_potion",
       "name": "药水",
-      "desc": "喝一口，回满血。",
+      "desc": "喝下去回点血。",
       "file": "template-item_potion.md",
       "extends": null,
       "components": [

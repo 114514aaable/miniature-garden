@@ -20,8 +20,9 @@
 
 ## 这一阶段做完的（表现 / 时间）
 
-- **步进统一成「帧」**：`advanceTo` 每 tick 产一帧（位置 / 血条 / 事件 / 生成 / 消失），
-  响应带 `frames`；客户端逐帧播放，播完回到最终状态。
+- **步进统一成「帧」**：`advanceTo` 每 tick 产一帧；响应带 `frames`，客户端逐帧播放，播完回到最终状态。
+  - 帧是**投影记录 diff**：每 tick 投影一次实体，变了的整条发、消失的发 handle。
+    意图 / 蓄力 / 血条 / 以后新增的字段**自动进帧**，不用再改帧代码。
   - 末尾的挂起结算也补一帧，不再「跳」出结果。
   - 播放时只重画画布 + 状态栏，HUD 不闪。
 - **短动作更快**：≤3 帧的动作 55ms/帧（移动约 110ms 一格），长动作按配置。
@@ -32,6 +33,8 @@
   蓄力占一只手 → 可以边跑边蓄（走开就落空），二次蓄力被拒。
 - **实体技能加射程检查**：够不着直接拒绝（以前能隔空起手）。
 - **配置**：`frameMs`（30..500）、`chargeTickMs`（100..2000），设置里可调。
+- **客户端拆层**：`windows/` 出现——`settings.js`、`inventory.js`；
+  `game.js` 从 1115 行降到 ~840 行，只剩启动 / 网络 / 输入 / 场景 / 帧播放 / 快捷栏。
 
 ## 代码结构
 
@@ -42,13 +45,18 @@ game/
 └─ worlds/          official.base（数据）· normal / dungeon / cavern（三个世界）
 tools/
 ├─ serve.mjs        本地服务 + 全部接口（advanceTo 产帧）
-├─ client/          game.js（调度 + 帧播放）+ hud/（区域）+ launcher + shared
+├─ client/
+│   ├─ game.js      调度 + 帧播放 + 输入路由
+│   ├─ hud/         区域：status / minimap / quickbar / aim
+│   ├─ windows/     窗口：settings / inventory
+│   ├─ launcher.js  启动器
+│   └─ shared.js    api + 错误条
 ├─ play.mjs         无头跑世界
 ├─ gen-*.mjs        文档生成 / 离线生成地图
-└─ check-*.mjs      client（未定义函数）/ locale（语言包）/ data（字段缺口）
+└─ check-*.mjs      client（未定义函数 / 重复声明）/ locale / data
 ```
 
-**分层规矩**：规则返回效果，宿主执行；场景返回意图，宿主执行；区域不碰 config 与网络（走 ctx）。
+**分层规矩**：规则返回效果，宿主执行；场景返回意图，宿主执行；区域/窗口不碰 config 与网络（走 ctx）。
 **改 `game/systems/**` 后要跑 `node tools/build-web.mjs`**（页面加载的是 `web/` 构建产物）。
 
 ## 生成器
@@ -76,7 +84,7 @@ pipeline     overworld → caves → blend，可叠加成「地表 + 洞穴」
 ```
 1  aim 只返回单格；多格技能的命中判定还靠规则里的 tools
 2  点击映射只有 4 行 × 单槽，未支持拖技能进槽
-3  背包 / 设置 / 对话面板仍在 game.js（未拆到 windows/）
+3  对话面板 / 快捷栏 / 死亡浮层仍在 game.js（背包与设置已拆到 windows/）
 4  感知层（视野 / 光照 / 声音）只有设计，没有实现
 5  AI 接口（/api/ability 等）只有设计
 6  世界包还不能带代码（runtime.md 的方案未实现）
@@ -84,9 +92,11 @@ pipeline     overworld → caves → blend，可叠加成「地表 + 洞穴」
 8  地牢里没有怪、没有宝箱（内容还没放）
 9  小地图是整张缩略：200×200 会挤成一团；缺视角与视野机制
 10 规则的 reason 被吞掉（敌人不动手时看不到原因）
-11 帧只覆盖位置/血条/事件；意图、场景、地形变化还没进帧
+11 场景与地形变化还没进帧（实体这一层已经是投影 diff）
 12 蓄力/休息的「进度」只在画布上，HUD 没有单独区域
 13 一次 10 回合的蓄力，敌人会走 10 步——数量级还没调平衡
+14 拆窗口时容易漏改宿主变量（applyDevMode / stateSkills 已各犯一次）；
+   静态检查只能抓函数与重复声明，变量级要靠手点
 ```
 
 ## 下一步候选

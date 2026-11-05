@@ -42,4 +42,4 @@
 | 模板 | [木箱](template-prop_crate.md) | `prop_crate` | 实心障碍，挡路。 |
 | 模板 | [油灯](template-item_lamp.md) | `item_lamp` | 一盏可以捡起来的灯。 |
 | 模板 | [盐商](template-npc_salt.md) | `npc_salt` | 会靠近并起手打人的敌人。 |
-| 模板 | [药水](template-item_potion.md) | `item_potion` | 喝一口，回满血。 |
+| 模板 | [药水](template-item_potion.md) | `item_potion` | 喝下去回点血。 |

@@ -94,12 +94,13 @@ graph LR
 | 种类 | 数量 |
 |---|---|
 | component | 16 |
-| rule | 10 |
+| rule | 12 |
 | terrain | 5 |
-| template | 3 |
+| template | 4 |
 | biome | 3 |
 | traversal | 1 |
 | space | 1 |
+| group | 1 |
 | world | 1 |
 
 ```mermaid
@@ -136,6 +137,8 @@ graph LR
   end
   subgraph "official.dungeon"
     space_cave["cave"]
+    template_rat["洞鼠"]
+    group_nest["nest"]
     world_main["main"]
   end
   subgraph "(代码)"
@@ -149,6 +152,8 @@ graph LR
     rule_core_enemy_windup["敌人起手"]
     rule_core_enemy_strike["敌人出手"]
     rule_core_use["使用"]
+    rule_base_rest["休息"]
+    rule_base_rest_finish["休息结算"]
   end
   space_cave --> terrain_1
   space_cave --> terrain_3
@@ -160,7 +165,15 @@ graph LR
   template_pc --> component_core_stats
   template_prop_crate --> component_core_health
   template_prop_crate --> component_core_solid
+  template_rat --> component_core_disposition
+  template_rat --> component_core_health
+  template_rat --> component_core_intent
+  template_rat --> component_core_locomotion
+  template_rat --> component_core_melee
+  template_rat --> component_core_solid
   world_main --> rule_base_attack
+  world_main --> rule_base_rest
+  world_main --> rule_base_rest_finish
   world_main --> rule_core_aim
   world_main --> rule_core_drop
   world_main --> rule_core_enemy_strike

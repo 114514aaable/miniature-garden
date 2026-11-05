@@ -578,7 +578,7 @@ game/systems/render/*（投影成画面数据）
 
 ### 页面脚本 tools/client
 
-- **`tools/client/game.js`**（869 行）
+- **`tools/client/game.js`**（868 行）
   import { api } from '/client/shared.js';
 - **`tools/client/hud/aim.js`**（62 行）
   瞄准高亮：记住「鼠标在哪、当前选了什么技能」，随时可以重算。

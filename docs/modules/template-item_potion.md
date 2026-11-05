@@ -1,6 +1,6 @@
 # 药水
 
-`item_potion` — 喝一口，回满血。
+`item_potion` — 喝下去回点血。
 
 继承：无
 

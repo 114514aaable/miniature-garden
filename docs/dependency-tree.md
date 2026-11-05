@@ -9,7 +9,7 @@
 | 内核 | 90 |
 | 系统 | 42 |
 | 宿主工具 | 16 |
-| 页面脚本 | 7 |
+| 页面脚本 | 9 |
 
 ## tools/serve.mjs
 
@@ -213,6 +213,13 @@ tools/client/game.js
     └─ game/systems/ui/dom.ts  (已展开)
     └─ game/systems/ui/spec.ts  (已展开)
   └─ tools/client/shared.js
+  └─ tools/client/windows/inventory.js
+    └─ game/systems/ui/dom.ts  (已展开)
+    └─ game/systems/ui/spec.ts  (已展开)
+  └─ tools/client/windows/settings.js
+    └─ game/systems/config/config.ts  (已展开)
+    └─ game/systems/ui/dom.ts  (已展开)
+    └─ game/systems/ui/spec.ts  (已展开)
 ```
 
 ## tools/client/launcher.js
@@ -261,14 +268,14 @@ tools/build-web.mjs
 | `game/engine/core/src/entity/entity.ts` | 11 处：`game/engine/core/src/entity/entity.test.ts`, `game/engine/core/src/entity/place.ts`, `game/engine/core/src/event/view.ts`, `game/engine/core/src/rules/ai.test.ts` … |
 | `game/engine/core/src/entity/template.ts` | 11 处：`game/engine/core/src/entity/template.test.ts`, `game/engine/core/src/event/view.ts`, `game/engine/core/src/pack/load.ts`, `game/engine/core/src/rules/ai.test.ts` … |
 | `game/engine/core/src/pack/merge.ts` | 10 处：`tools/check-data.mjs`, `tools/gen-pack-graph.mjs`, `tools/gen-world.mjs`, `tools/play.mjs` … |
-| `game/systems/ui/spec.ts` | 7 处：`tools/client/game.js`, `tools/client/hud/minimap.js`, `tools/client/hud/quickbar.js`, `tools/client/hud/status.js` … |
+| `game/systems/ui/spec.ts` | 9 处：`tools/client/game.js`, `tools/client/hud/minimap.js`, `tools/client/hud/quickbar.js`, `tools/client/hud/status.js` … |
+| `game/systems/ui/dom.ts` | 7 处：`tools/client/game.js`, `tools/client/hud/minimap.js`, `tools/client/hud/quickbar.js`, `tools/client/hud/status.js` … |
 | `game/engine/core/src/pack/manifest.ts` | 7 处：`tools/pack-reader.mjs`, `game/engine/core/src/pack/load.test.ts`, `game/engine/core/src/pack/manifest.test.ts`, `game/engine/core/src/pack/merge.test.ts` … |
 | `game/engine/core/src/event/schema.ts` | 7 处：`game/engine/core/src/entity/template.ts`, `game/engine/core/src/event/evaluate.ts`, `game/engine/core/src/event/registry.ts`, `game/engine/core/src/event/schema.test.ts` … |
 | `game/engine/core/src/pack/load.ts` | 6 处：`tools/check-data.mjs`, `tools/gen-world.mjs`, `tools/play.mjs`, `tools/serve.mjs` … |
 | `game/engine/core/src/pack/order.ts` | 6 处：`tools/check-data.mjs`, `tools/gen-pack-graph.mjs`, `tools/gen-world.mjs`, `tools/play.mjs` … |
 | `game/engine/core/src/worldgen/select.ts` | 6 处：`tools/gen-world.mjs`, `game/engine/core/src/worldgen/generate.test.ts`, `game/engine/core/src/worldgen/generate.ts`, `game/engine/core/src/worldgen/pipeline.test.ts` … |
 | `tools/pack-reader.mjs` | 5 处：`tools/check-data.mjs`, `tools/gen-pack-graph.mjs`, `tools/gen-world.mjs`, `tools/play.mjs` … |
-| `game/systems/ui/dom.ts` | 5 处：`tools/client/game.js`, `tools/client/hud/minimap.js`, `tools/client/hud/quickbar.js`, `tools/client/hud/status.js` … |
 | `game/systems/render/project.ts` | 5 处：`tools/serve.mjs`, `game/systems/render/browser.ts`, `game/systems/render/contract.test.ts`, `game/systems/render/draw.test.ts` … |
 | `game/engine/core/src/entity/merge.ts` | 5 处：`game/engine/core/src/entity/merge.test.ts`, `game/engine/core/src/entity/template.ts`, `game/engine/core/src/event/view.ts`, `game/engine/core/src/store.ts` … |
 | `game/systems/rules/index.ts` | 4 处：`tools/check-data.mjs`, `tools/check-locale.mjs`, `tools/gen-docs.mjs`, `tools/serve.mjs` |
@@ -288,4 +295,4 @@ tools/build-web.mjs
 - `tools/typecheck.mjs`
 - `game/engine/core/types/node-shim.d.ts`
 
-> 共 97 个源文件（另有 58 个测试），339 条引用。
+> 共 99 个源文件（另有 58 个测试），346 条引用。
