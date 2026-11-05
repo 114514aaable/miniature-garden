@@ -597,10 +597,60 @@ async function act(dir) {
   if (acting) return;
   acting = true;
   try {
-    render(await api('/api/act', { dir }));
+    await playFrames(await api('/api/act', { dir }));
   } finally {
     acting = false;
   }
+}
+/** 每帧停多久（毫秒）。 */
+const FRAME_MS = 90;
+
+/** 把一帧增量套到当前状态上（浅拷贝，不动 lastState 本体）。 */
+function applyFrame(state, frame) {
+  const entities = (state.snapshot.entities || []).map((entity) => ({ ...entity }));
+  const byHandle = new Map(entities.map((entity) => [entity.handle, entity]));
+
+  for (const move of frame.moves || []) {
+    const entity = byHandle.get(move.handle);
+    if (entity === undefined) continue;
+    if (move.removed) {
+      const index = entities.indexOf(entity);
+      if (index >= 0) entities.splice(index, 1);
+      continue;
+    }
+    entity.x = move.x;
+    entity.y = move.y;
+  }
+
+  for (const change of frame.hp || []) {
+    const entity = byHandle.get(change.handle);
+    if (entity === undefined) continue;
+    const health = entity.components ? entity.components['core.health'] : undefined;
+    entity.components = { ...(entity.components || {}), 'core.health': { ...(health || {}), hp: change.hp } };
+  }
+
+  return { ...state, snapshot: { ...state.snapshot, entities } };
+}
+
+/** 有帧就逐帧播，没有就直接画。 */
+async function playFrames(result) {
+  const frames = result && result.frames;
+  if (!Array.isArray(frames) || frames.length === 0) {
+    render(result);
+    return;
+  }
+
+  const box = document.getElementById('message');
+  let working = result;
+
+  for (const frame of frames) {
+    working = applyFrame(working, frame);
+    render(working);
+    if (box && Array.isArray(frame.events) && frame.events.length > 0) box.textContent = frame.events[0];
+    await new Promise((resolve) => setTimeout(resolve, FRAME_MS));
+  }
+
+  render(result);
 }
 async function useSkill(tag, x, y, extra = {}) {
   const body = x === undefined ? { tag } : { tag, x, y };
@@ -608,40 +658,12 @@ async function useSkill(tag, x, y, extra = {}) {
   if (acting) return;
   acting = true;
   try {
-    const result = await api('/api/skill', body);
-    if (result && result.sequence) {
-      // 一次演练：世界已经结算完，这里只是按回合把过程演出来
-      await playSequence(result);
-    } else {
-      render(result);
-    }
+    await playFrames(await api('/api/skill', body));
   } finally {
     acting = false;
   }
 }
 
-/** 每回合停多久（毫秒）。 */
-const SEQUENCE_FRAME_MS = 90;
-
-/** 把 result.sequence 按回合播一遍，播完再画最终状态。 */
-async function playSequence(result) {
-  const total = Math.max(1, result.sequence.ticks || 1);
-  const label = result.message || '';
-  const box = document.getElementById('message');
-
-  for (let tick = 1; tick <= total; tick += 1) {
-    if (box) box.textContent = label + ' · ' + tick + '/' + total;
-    await new Promise((resolve) => setTimeout(resolve, SEQUENCE_FRAME_MS));
-  }
-
-  render(result);
-}
-
-function cellAt(event) {
-  const canvas = document.getElementById('map');
-  const rect = canvas.getBoundingClientRect();
-  return renderer.cellAt(event.clientX - rect.left, event.clientY - rect.top);
-}
 
 // 点别处就关弱窗口（它不抢焦点，所以靠自己监听）
 document.addEventListener('pointerdown', (event) => {
