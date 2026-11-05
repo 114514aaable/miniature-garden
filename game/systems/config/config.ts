@@ -39,12 +39,20 @@ export interface Config {
   readonly speed: number;
   /** 蓄力自动推进的节奏（毫秒/回合）。 */
   readonly chargeTickMs: number;
+  /** 帧播放节奏（毫秒/帧）。 */
+  readonly frameMs: number;
   /** 开发者模式：显示 tick、调度、意图等调试信息。 */
   readonly devMode: boolean;
   /** 点击默认行为：按阵营决定。 */
   readonly clickPolicy: ClickPolicy;
   /** 按键映射：物理键 → 命令。 */
   readonly bindings: Readonly<Record<string, string>>;
+}
+
+/** 帧节奏夹在 30..500ms（太快看不见，太慢像卡）。 */
+export function clampFrameMs(value: number): number {
+  if (!Number.isFinite(value)) return 90;
+  return Math.min(500, Math.max(30, Math.round(value)));
 }
 
 /** 蓄力节奏夹在 100..2000ms（太小看不清，太大像卡住）。 */
@@ -66,6 +74,7 @@ export const DEFAULT_CONFIG: Config = {
   inventoryRows: 5,
   speed: 10,
   chargeTickMs: 400,
+  frameMs: 90,
   devMode: false,
   bindings: {
     KeyW: "move:w",

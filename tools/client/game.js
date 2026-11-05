@@ -1,7 +1,7 @@
 import { api } from '/client/shared.js';
 import { attach } from '/web/game/systems/render/browser.js';
 import { row, col, text, button, toggle, modal, panel, grid, bar, canvasNode, withEvents } from '/web/game/systems/ui/spec.js';
-import { clampCell, clampChargeMs, loadConfig, saveConfig, withBinding, withConfig } from '/web/game/systems/config/config.js';
+import { clampCell, clampChargeMs, clampFrameMs, loadConfig, saveConfig, withBinding, withConfig } from '/web/game/systems/config/config.js';
 import { commandFor, parseCommand } from '/web/game/systems/input/bindings.js';
 import { mount, render as renderNode } from '/web/game/systems/ui/dom.js';
 import { closePolicy, renderQuickbar } from '/client/hud/quickbar.js';
@@ -604,9 +604,6 @@ async function act(dir) {
     acting = false;
   }
 }
-/** 每帧停多久（毫秒）。 */
-const FRAME_MS = 90;
-
 /** 把一帧增量套到当前状态上（浅拷贝，不动 lastState 本体）。 */
 function applyFrame(state, frame) {
   const entities = (state.snapshot.entities || []).map((entity) => ({ ...entity }));
@@ -653,7 +650,7 @@ async function playFrames(result) {
     if (renderer !== null) renderer.setState(working);
 
     if (box && Array.isArray(frame.events) && frame.events.length > 0) box.textContent = frame.events[0];
-    await new Promise((resolve) => setTimeout(resolve, FRAME_MS));
+    await new Promise((resolve) => setTimeout(resolve, config.frameMs));
   }
 
   render(result);
@@ -875,6 +872,20 @@ async function openSettings(page = 'root') {
         );
       })(),
       cellRow('背包格子', 'inventoryCell'),
+      (() => {
+        const value = config.frameMs;
+        const set = (next) => {
+          config = withConfig(config, { frameMs: clampFrameMs(next) });
+          saveConfig(config);
+          openSettings('config');
+        };
+        return row({ gap: 6, align: 'center' },
+          text('帧节奏', { policy: 'fixed', width: 96 }),
+          button('-', () => set(value - 10)),
+          text(String(value) + 'ms', { policy: 'fixed', width: 64 }),
+          button('+', () => set(value + 10)),
+        );
+      })(),
       row({ gap: 6, align: 'center' },
         text('开发者模式', { policy: 'fixed', width: 96 }),
         button(config.devMode ? '开' : '关', () => {

@@ -1148,12 +1148,6 @@ function run(tag, params, costKey) {
   // 这一动作推进过程中的每 tick 增量（客户端按帧播放）
   if (session.frames.length > 0) snap.frames = session.frames;
 
-  if (time?.mode === "sequence") {
-    snap.sequence = {
-      ticks: cost,
-      events: session.lastEvents.map((entry) => `#${entry.id} ${entry.kind} ${JSON.stringify(entry.data)}`),
-    };
-  }
 
   return snap;
 }
@@ -1266,7 +1260,18 @@ function advanceTo(target) {
       session.frames.push(diffFrame(view, before, session.store.now(), events));
     }
   }
+
+  // 循环末尾的挂起效果也要成一帧，否则最后一下会直接跳到最终状态
+  const tailView = currentView();
+  const tailBefore = captureSnapshotOfEntities(tailView);
+  const tailEvents = session.lastEvents.length;
   applyPending();
+  if (session.frames.length < MAX_FRAMES) {
+    const tail = session.lastEvents.slice(tailEvents);
+    if (tail.length > 0 || session.frames.length === 0) {
+      session.frames.push(diffFrame(tailView, tailBefore, session.store.now(), tail));
+    }
+  }
 }
 
 /** 到点的挂起动作：求值它记下的信封，然后清空。 */

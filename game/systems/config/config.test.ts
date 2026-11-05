@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import {
   clampCell,
   clampChargeMs,
+  clampFrameMs,
   DEFAULT_CONFIG,
   loadConfig,
   normalizeAction,
@@ -109,4 +110,11 @@ test("蓄力节奏：夹在 100..2000ms", () => {
 
 test("蓄力节奏：默认 400ms", () => {
   assert.equal(loadConfig(fakeStorage()).chargeTickMs, 400);
+});
+
+test("帧节奏：夹在 30..500ms", () => {
+  assert.equal(clampFrameMs(1), 30);
+  assert.equal(clampFrameMs(9999), 500);
+  assert.equal(clampFrameMs(120), 120);
+  assert.equal(clampFrameMs(Number.NaN), 90);
 });
