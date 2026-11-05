@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 97 个文件。
+共 98 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -93,6 +93,7 @@
 | `tools/client/hud/status.js` | 左下区域：状态（血量条 + 计数 + 可否行动）。 | [md](tools/client/hud/status.md) |
 | `tools/client/launcher.js` |  | [md](tools/client/launcher.md) |
 | `tools/client/shared.js` | 页面共用：错误提示 + API 调用。 | [md](tools/client/shared.md) |
+| `tools/client/windows/settings.js` | 设置窗口（窗口层）。 | [md](tools/client/windows/settings.md) |
 | `tools/gen-docs.mjs` | 从代码与语言包生成模块文档（docs/modules/）。 | [md](tools/gen-docs.md) |
 | `tools/gen-file-docs.mjs` | 每个源文件生成一篇 md（docs/files/...）。 | [md](tools/gen-file-docs.md) |
 | `tools/gen-map.mjs` | 生成「代码地图」：docs/MAP.md。 | [md](tools/gen-map.md) |

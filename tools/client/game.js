@@ -8,6 +8,7 @@ import { closePolicy, renderQuickbar } from '/client/hud/quickbar.js';
 import { renderStatus } from '/client/hud/status.js';
 import { renderMinimap } from '/client/hud/minimap.js';
 import { createAimTracker } from '/client/hud/aim.js';
+import { createSettingsWindow } from '/client/windows/settings.js';
 
 
 // 游戏页面不该有浏览器的默认权力：拖拽不要导航、右键不要菜单、文字不要选中
@@ -88,6 +89,39 @@ migrateLocalState();
 
 /** 当前独占输入的窗口：null = 游戏本体。 */
 let uiFocus = null;
+
+/** 设置窗口：实现搬到了 windows/settings.js，宿主只给上下文。 */
+let settingsWindow = null;
+
+function settingsContext() {
+  return {
+    api,
+    renderState: (state) => render(state),
+    getConfig: () => config,
+    setConfig: (next) => { config = next; },
+    getLastState: () => lastState,
+    getFocus: () => uiFocus,
+    setFocus: (name) => { uiFocus = name; },
+    closeInventory: () => closeInventory(),
+    refreshAim: () => aim.refresh(),
+    refreshSizes: () => refreshSizes(),
+    getRenderer: () => renderer,
+    showError: (text) => {
+      const box = document.getElementById('errbar');
+      if (box) { box.hidden = false; box.textContent = text; }
+    },
+  };
+}
+
+function settingsUI() {
+  settingsWindow ??= createSettingsWindow(settingsContext());
+  return settingsWindow;
+}
+
+function openSettings(page = 'root') { settingsUI().open(page); }
+function closeSettings() { settingsUI().close(); }
+function applySettings() { settingsUI().apply(); }
+function applyDevMode() { settingsUI().applyDevMode(); }
 
 
 /**
@@ -819,145 +853,6 @@ document.getElementById('map').addEventListener('click', (event) => {
   useSkill('base.attack', cell.x, cell.y);
 });
 
-const settings = {
-  speed: Number(localStorage.getItem('nw.speed') || '10'),
-  devlog: localStorage.getItem('nw.devlog') !== '0',
-};
-
-function applySettings() {
-  if (renderer !== null) renderer.setVisualSpeed(settings.speed);
-  document.getElementById('devpanel').style.display = settings.devlog ? '' : 'none';
-  localStorage.setItem('nw.speed', String(settings.speed));
-  localStorage.setItem('nw.devlog', settings.devlog ? '1' : '0');
-}
-
-let capturingBinding = false;
-let settingsPage = 'root';
-
-async function openSettings(page = 'root') {
-  settingsPage = page;
-  if (uiFocus === 'inventory') closeInventory();
-  const box = document.getElementById('settings');
-  uiFocus = 'settings';
-  box.hidden = false;
-  box.textContent = '';
-
-  const back = button('← 返回', () => openSettings('root'));
-  let body;
-
-  if (page === 'root') {
-    body = col({ gap: 8, width: 220 },
-      button('配置', () => openSettings('config')),
-      button('按键', () => openSettings('keys')),
-      button('世界', () => openSettings('world')),
-      button('存档 / 读档', () => openSettings('saves')),
-      button('关闭 Esc', () => closeSettings()),
-    );
-  } else if (page === 'config') {
-    const cellRow = (label, key) => {
-      const value = config[key];
-      return row({ gap: 6, align: 'center' },
-        text(label, { policy: 'fixed', width: 96 }),
-        button('−', () => { config = withConfig(config, { [key]: clampCell(value - 4) }); saveConfig(config); refreshSizes(); openSettings('config'); }),
-        text(String(value), { policy: 'fixed', width: 40 }),
-        button('+', () => { config = withConfig(config, { [key]: clampCell(value + 4) }); saveConfig(config); refreshSizes(); openSettings('config'); }),
-      );
-    };
-
-    body = col({ gap: 8 },
-      cellRow('快捷栏格子', 'hotbarCell'),
-      (() => {
-        const value = config.chargeTickMs;
-        const set = (next) => {
-          config = withConfig(config, { chargeTickMs: clampChargeMs(next) });
-          saveConfig(config);
-          openSettings('config');
-        };
-        return row({ gap: 6, align: 'center' },
-          text('蓄力节奏', { policy: 'fixed', width: 96 }),
-          button('-', () => set(value - 50)),
-          text(String(value) + 'ms', { policy: 'fixed', width: 64 }),
-          button('+', () => set(value + 50)),
-        );
-      })(),
-      cellRow('背包格子', 'inventoryCell'),
-      (() => {
-        const value = config.frameMs;
-        const set = (next) => {
-          config = withConfig(config, { frameMs: clampFrameMs(next) });
-          saveConfig(config);
-          openSettings('config');
-        };
-        return row({ gap: 6, align: 'center' },
-          text('帧节奏', { policy: 'fixed', width: 96 }),
-          button('-', () => set(value - 10)),
-          text(String(value) + 'ms', { policy: 'fixed', width: 64 }),
-          button('+', () => set(value + 10)),
-        );
-      })(),
-      row({ gap: 6, align: 'center' },
-        text('开发者模式', { policy: 'fixed', width: 96 }),
-        button(config.devMode ? '开' : '关', () => {
-          config = withConfig(config, { devMode: !config.devMode });
-          saveConfig(config);
-          applyDevMode();
-          openSettings('config');
-        }),
-      ),
-      back,
-    );
-  } else if (page === 'keys') {
-    const rows = Object.entries(config.bindings).map(([code, command]) =>
-      row({ gap: 6, align: 'center' },
-        text(code, { policy: 'fixed', width: 96 }),
-        text(command, { policy: 'fixed' }),
-        button('改', () => { capturingBinding = code; openSettings('keys'); }),
-      ),
-    );
-
-    body = col({ gap: 6 },
-      text(capturingBinding ? '按下新的键…（Esc 取消）' : '点「改」再按一个键', { policy: 'fixed' }),
-      ...rows,
-      back,
-    );
-  } else if (page === 'world') {
-    const info = lastState === null ? '（未开局）'
-      : '世界 ' + (lastState.world || '?') + ' · 种子 ' + lastState.seed + ' · tick ' + lastState.tick;
-    body = col({ gap: 8 },
-      text(info, { policy: 'fixed' }),
-      back,
-    );
-  } else {
-    body = col({ gap: 8 },
-      row({ gap: 8 },
-        button('存档', async () => { render(await api('/api/save', {})); openSettings('saves'); }),
-        button('读档', async () => {
-      const result = await api('/api/load', {});
-      if (result && result.ok === false) {
-        const box = document.getElementById('errbar');
-        if (box) { box.hidden = false; box.textContent = '读档失败：' + (result.error || '未知'); }
-        return;
-      }
-      render(result);
-      openSettings('saves');
-    }),
-      ),
-      back,
-    );
-  }
-
-  const titles = { root: '设置', config: '配置', keys: '按键', world: '世界', saves: '存档 / 读档' };
-  box.appendChild(renderNode(modal(body, { title: titles[page] ?? '设置' })));
-}
-
-function closeSettings() {
-  const box = document.getElementById('settings');
-  uiFocus = null;
-  aim.refresh();
-  box.hidden = true;
-  box.textContent = '';
-}
-
 function refreshSizes() {
   INVENTORY_CELL = config.inventoryCell;
   HOTBAR_CELL = config.hotbarCell;
@@ -979,21 +874,8 @@ window.addEventListener('keydown', (event) => {
   // 长按的重复事件一律丢掉：一次按键 = 一次动作
   if (event.repeat) return;
 
-  if (capturingBinding !== false) {
-    const oldCode = capturingBinding;
-    capturingBinding = false;
-    if (event.code !== 'Escape') {
-      const command = config.bindings[oldCode];
-      if (command !== undefined) {
-        // 把旧键的命令搬到新键上（旧键解绑）
-        const without = withBinding(config, oldCode, null);
-        config = withConfig(without, { bindings: { ...without.bindings, [event.code]: command } });
-        saveConfig(config);
-      }
-    }
-    openSettings();
-    return;
-  }
+  // 设置窗口正在等按键：交给它处理
+  if (settingsWindow !== null && settingsWindow.handleKeyCapture(event.code)) return;
 
   // Esc：从最内层开始收——先取消选目标，再退场景，再关窗口，最后才开设置
   if (event.code === 'Escape') {

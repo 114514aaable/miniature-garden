@@ -23,6 +23,7 @@ const FILES = [
   "tools/client/hud/status.js",
   "tools/client/hud/minimap.js",
   "tools/client/hud/aim.js",
+  "tools/client/windows/settings.js",
 ];
 
 const GLOBALS = new Set([

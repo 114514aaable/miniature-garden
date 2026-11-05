@@ -578,7 +578,7 @@ game/systems/render/*（投影成画面数据）
 
 ### 页面脚本 tools/client
 
-- **`tools/client/game.js`**（1113 行）
+- **`tools/client/game.js`**（998 行）
   import { api } from '/client/shared.js';
 - **`tools/client/hud/aim.js`**（62 行）
   瞄准高亮：记住「鼠标在哪、当前选了什么技能」，随时可以重算。
@@ -604,12 +604,15 @@ game/systems/render/*（投影成画面数据）
 - **`tools/client/shared.js`**（35 行）
   页面共用：错误提示 + API 调用。
   - `api(path, body)`
+- **`tools/client/windows/settings.js`**（207 行）
+  设置窗口（窗口层）。
+  - `createSettingsWindow(ctx)`
 
 ### 工具 tools
 
 - **`tools/build-web.mjs`**（87 行）
   把 TS 转成浏览器能跑的 JS（构建产物放 web/）。
-- **`tools/check-client.mjs`**（90 行）
+- **`tools/check-client.mjs`**（91 行）
   页面脚本的「有没有调用不存在的函数」检查。
 - **`tools/check-data.mjs`**（147 行）
   数据体检：数据化之后，规则要的字段，包里到底有没有。
@@ -640,7 +643,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（1843 行）
+- **`tools/serve.mjs`**（1829 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。

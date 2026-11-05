@@ -24,3 +24,4 @@
 ## 被引用
 
 - [`tools/client/game.js`](tools/client/game.md)
+- [`tools/client/windows/settings.js`](tools/client/windows/settings.md)
