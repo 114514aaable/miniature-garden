@@ -46,7 +46,8 @@ export const castSignature: Signature = {
 export function castHandler(params: JsonValue, context: EvaluateContext): JsonValue {
   const p = params as Record<string, number | string>;
   const actor = Number(p.actor);
-  const ticks = p.ticks === undefined ? 2 : Number(p.ticks);
+  // 默认起手 10 回合（想看手感可以改这里；以后会挪到技能数据里）
+  const ticks = p.ticks === undefined ? 10 : Number(p.ticks);
   const payloadTag = p.tag === undefined ? "base.attack" : String(p.tag);
 
   if (!Number.isInteger(ticks) || ticks < 1) {
