@@ -85,13 +85,15 @@ game/systems/render/*（投影成画面数据）
   - `type EvaluateResult`
   - `const DEFAULT_MAX_DEPTH`
   - `const HARD_MAX_DEPTH`
-- **`game/engine/core/src/event/registry.ts`**（171 行）
+- **`game/engine/core/src/event/registry.ts`**（194 行）
   注册表：标签 → 签名，以及加载期的「链接」。
   - `interface SkillTime`
   - `interface SkillMeta`
   - `interface Signature`
   - `interface LinkTable`
+  - `type ChannelCost`
   - `type TimeMode`
+  - `const CHANNELS`
   - `const MAX_SEQUENCE_TICKS`
 - **`game/engine/core/src/event/schema.ts`**（209 行）
   极小类型语言：校验数据包里的参数和返回值。
@@ -218,7 +220,7 @@ game/systems/render/*（投影成画面数据）
   第一条真规则：走一格。
   - `moveHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
   - `const moveSignature`
-- **`game/engine/core/src/rules/pending.ts`**（90 行）
+- **`game/engine/core/src/rules/pending.ts`**（91 行）
   挂起动作：现在不做，过几回合再做。
   - `castHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
   - `isActive(pending: JsonValue | undefined) → boolean`
@@ -572,7 +574,7 @@ game/systems/render/*（投影成画面数据）
 
 ### 页面脚本 tools/client
 
-- **`tools/client/game.js`**（1027 行）
+- **`tools/client/game.js`**（1060 行）
   import { api } from '/client/shared.js';
 - **`tools/client/hud/aim.js`**（62 行）
   瞄准高亮：记住「鼠标在哪、当前选了什么技能」，随时可以重算。
@@ -634,7 +636,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（1701 行）
+- **`tools/serve.mjs`**（1802 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。

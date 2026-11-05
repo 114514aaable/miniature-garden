@@ -4,6 +4,8 @@
 
 ## 导出
 
+- `CHANNELS`
+- `ChannelCost`
 - `LinkTable`
 - `MAX_SEQUENCE_TICKS`
 - `Registry`

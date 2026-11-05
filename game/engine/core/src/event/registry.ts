@@ -18,6 +18,12 @@ import { type Schema } from "./schema.ts";
 import { type JsonValue, canonicalize, hashText } from "../time.ts";
 
 /** 技能的「接口那一半」：UI 和 AI 只读它，不认识实现。 */
+/** 一个动作占用哪些身体通道、各占几份。 */
+export type ChannelCost = Readonly<Record<string, number>>;
+
+/** 目前支持的通道（部位系统来了再扩）。 */
+export const CHANNELS = ["hand", "move"] as const;
+
 /** 一个动作占时间的方式。 */
 export type TimeMode = "instant" | "staged" | "sequence";
 
@@ -62,6 +68,8 @@ export interface Signature {
   /** 函数自己声明需不需要时间戳，不由包声明。 */
   readonly needsTimestamp: boolean;
   /** 可选：这份签名同时是一个「技能」，带上界面需要的信息。 */
+  /** 占用哪些通道（缺省 = 不占用）。 */
+  readonly uses?: ChannelCost;
   /** 时间模式（缺省 = instant）。 */
   readonly time?: SkillTime;
   readonly skill?: SkillMeta;
@@ -92,6 +100,7 @@ export class Registry {
     if (this.pending.has(signature.tag)) {
       throw new Error(`标签重复登记："${signature.tag}"`);
     }
+    checkUses(signature);
     checkTime(signature);
     if (signature.skill !== undefined) {
       checkSkill(signature.skill, signature.tag);
@@ -128,6 +137,20 @@ export class Registry {
   }
 }
 
+
+/** 通道占用校验：通道名必须在词表里、份数必须是正整数。 */
+function checkUses(signature: Signature): void {
+  const uses = signature.uses;
+  if (uses === undefined) return;
+  for (const [channel, amount] of Object.entries(uses)) {
+    if (!(CHANNELS as readonly string[]).includes(channel)) {
+      throw new Error(`动作 ${signature.tag} 用了未知通道 "${channel}"（可用：${CHANNELS.join(" / ")}）`);
+    }
+    if (!Number.isInteger(amount) || amount < 1) {
+      throw new Error(`动作 ${signature.tag} 的通道 "${channel}" 份数必须是正整数`);
+    }
+  }
+}
 
 /** 时间模式校验：mode 合法、ticks 合理。 */
 function checkTime(signature: Signature): void {

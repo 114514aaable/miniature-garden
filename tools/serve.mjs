@@ -938,6 +938,37 @@ function resolveTarget(x, y, filterName) {
   return undefined;
 }
 
+/** 玩家当前的通道占用情况：{ hand: 已用, move: 已用 }。 */
+function usedChannels() {
+  const used = { hand: 0, move: 0 };
+  if (session.playerHandle === null) return used;
+
+  const player = session.store.entity(session.playerHandle);
+  const view = currentView();
+  const pending = view.entity(session.playerHandle).components["core.pending"];
+  if (isActive(pending)) used.hand += 1; // 现在只有「蓄力」这种占手的挂起
+  void player;
+  return used;
+}
+
+/** 这个动作能不能做：容量够不够。 */
+function channelsFree(signature) {
+  const uses = signature.uses;
+  if (uses === undefined) return { ok: true };
+
+  const used = usedChannels();
+  const body = currentView().entity(session.playerHandle).components["core.body"];
+  const hands = typeof body === "object" && body !== null && typeof body.hands === "number" ? body.hands : 2;
+  const capacity = { hand: hands, move: 1 };
+
+  for (const [channel, amount] of Object.entries(uses)) {
+    const free = (capacity[channel] ?? 0) - (used[channel] ?? 0);
+    if (free < amount) {
+      return { ok: false, reason: channel === "hand" ? "双手都占满了" : "这一下动不了" };
+    }
+  }
+  return { ok: true };
+}
 function useSkill(tag, x, y, extra = {}) {
   if (tooFast()) return snapshot("慢一点");
 
@@ -946,6 +977,9 @@ function useSkill(tag, x, y, extra = {}) {
   if (signature === undefined || signature.skill === undefined) {
     return snapshot("没有这个技能");
   }
+
+  const gate = channelsFree(signature);
+  if (gate.ok === false) return snapshot(gate.reason);
 
   if (signature.skill.target.kind === "self") {
     return run(tag, { actor: session.playerHandle, ...extra }, signature.skill.cost);

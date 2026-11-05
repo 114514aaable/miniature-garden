@@ -158,3 +158,19 @@ test("时间模式：未知模式要报错", () => {
   const registry = new Registry();
   assert.throws(() => registry.define(signature({ time: { mode: "slow" } as unknown as Signature["time"] })), /时间模式非法/);
 });
+
+test("通道：正常的 uses 能登记", () => {
+  const registry = new Registry();
+  registry.define(signature({ uses: { hand: 1 } }));
+  assert.equal(registry.has("base.demo"), true);
+});
+
+test("通道：未知通道要报错", () => {
+  const registry = new Registry();
+  assert.throws(() => registry.define(signature({ uses: { foot: 1 } })), /未知通道/);
+});
+
+test("通道：份数必须是正整数", () => {
+  const registry = new Registry();
+  assert.throws(() => registry.define(signature({ uses: { hand: 0 } })), /正整数/);
+});

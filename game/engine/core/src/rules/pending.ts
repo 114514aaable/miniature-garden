@@ -39,6 +39,7 @@ export const castSignature: Signature = {
   result: { t: "any" },
   returnsEffects: true,
   needsTimestamp: false,
+  uses: { hand: 1 },
   skill: { name: "蓄力劈砍", cost: "wait", target: { kind: "entity", range: 1 } },
 };
 
