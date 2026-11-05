@@ -645,6 +645,9 @@ async function playFrames(result) {
   // 短动作压短间隔：移动这种一帧一帧慢慢播会显得「卡手」
   const perFrame = frames.length <= 3 ? Math.min(config.frameMs, 55) : config.frameMs;
 
+  // 底部文字用服务端给的说明（「走一步（2 回合）」），不要吐事件原文
+  if (box && typeof result.message === 'string' && result.message.length > 0) box.textContent = result.message;
+
   for (const frame of frames) {
     working = applyFrame(working, frame);
 
@@ -653,7 +656,6 @@ async function playFrames(result) {
     if (renderer !== null) renderer.setState(working);
     renderStatus(working); // tick 与血量跟着帧走，不然状态栏会落后
 
-    if (box && Array.isArray(frame.events) && frame.events.length > 0) box.textContent = frame.events[0];
     await new Promise((resolve) => setTimeout(resolve, perFrame));
   }
 
