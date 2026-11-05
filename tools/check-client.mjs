@@ -70,6 +70,22 @@ for (const file of FILES) {
     }
   }
 
+  // 重复声明：同一文件顶层出现两次同名（模块作用域会直接 SyntaxError）
+  const seen = new Map();
+  const duplicates = [];
+  for (const match of source.matchAll(/(?:^|\n)(?:export\s+)?(?:async\s+)?(?:function|const|let|var)\s+([A-Za-z0-9_$]+)/g)) {
+    const name = match[1];
+    const line = source.slice(0, match.index).split("\n").length;
+    if (seen.has(name)) duplicates.push(`${name}（第 ${seen.get(name)} 行与第 ${line} 行）`);
+    else seen.set(name, line);
+  }
+
+  if (duplicates.length > 0) {
+    failed += 1;
+    console.log(`${file}: 重复声明`);
+    for (const item of duplicates) console.log("  ✗ " + item);
+  }
+
   const missing = new Map();
   for (const match of source.matchAll(/(^|[^.\w$])([A-Za-z_$][A-Za-z0-9_$]*)\s*\(/g)) {
     const name = match[2];

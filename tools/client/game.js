@@ -860,10 +860,6 @@ function refreshSizes() {
   if (lastState !== null) renderHotbar(lastState);
 }
 
-function applyDevMode() {
-  const panel = document.getElementById('devpanel');
-  if (panel !== null) panel.hidden = !config.devMode;
-}
 
 document.getElementById('settingsbtn').addEventListener('click', () => {
   const box = document.getElementById('settings');
