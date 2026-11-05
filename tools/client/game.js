@@ -645,7 +645,11 @@ async function playFrames(result) {
 
   for (const frame of frames) {
     working = applyFrame(working, frame);
-    render(working);
+
+    // 播放期间只重画画布：HUD / 小地图 / 提示条等播完再统一刷新，
+    // 否则每帧都重建一次，数字会闪。
+    if (renderer !== null) renderer.setState(working);
+
     if (box && Array.isArray(frame.events) && frame.events.length > 0) box.textContent = frame.events[0];
     await new Promise((resolve) => setTimeout(resolve, FRAME_MS));
   }
@@ -688,6 +692,13 @@ document.getElementById('map').addEventListener('mousemove', (event) => {
     showTooltip(info, event.clientX, event.clientY);
   });
 });
+
+/** 鼠标位置 → 格子（扣掉画布偏移，再交给渲染器换算相机）。 */
+function cellAt(event) {
+  const map = document.getElementById('map');
+  const rect = map.getBoundingClientRect();
+  return renderer.cellAt(event.clientX - rect.left, event.clientY - rect.top);
+}
 
 /** 信息槽：鼠标附近显示这一格有什么。以后加字段只改这里。 */
 function showTooltip(info, clientX, clientY) {
