@@ -858,7 +858,6 @@ window.addEventListener('blur', () => stopHoldRepeat(''));
     document.getElementById('errbar').textContent = '世界载入失败：' + (state && state.errors && state.errors[0] ? state.errors[0].error : '未知');
     return;
   }
-  stateSkills = state.skills;
   hotbarItems = (await api('/api/inventory')).items || [];
   refreshHud();
   render(state);
