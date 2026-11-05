@@ -361,7 +361,7 @@ game/systems/render/*（投影成画面数据）
   - `interface FbmOptions`
   - `type NoiseKind`
   - `const NOISE_KINDS`
-- **`game/engine/core/src/worldgen/pipeline.ts`**（148 行）
+- **`game/engine/core/src/worldgen/pipeline.ts`**（189 行）
   生成流水线：把生成算法拆成「一步一个算子」，串起来跑。
   - `createSandbox(seed: number, width: number, height: number, fill: number) → Sandbox`
   - `runPipeline(sandbox: Sandbox, steps: readonly Step[], deps: PipelineDeps,) → Sandbox`
@@ -378,6 +378,14 @@ game/systems/render/*（投影成画面数据）
   - `interface Biome`
   - `interface TerrainLevels`
   - `type Sample`
+- **`game/engine/core/src/worldgen/structures.ts`**（225 行）
+  结构：带图例的字符画，摆进生成出来的地图里。
+  - `parseStructure(raw: unknown, idKey: string) → StructureDef`
+  - `stampStructure(terrain: number[], mapWidth: number, mapHeight: number, structure: StructureDef, originX: number, originY: number, terrainIdByCode: ReadonlyMap<string, number>,) → void`
+  - `placeStructures(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, spec: PlaceSpec, seed: number, terrainIdByCode: ReadonlyMap<string, number>, codeOfTerrain: (terrainId: number) => string | undefined,) → Placement[]`
+  - `interface StructureDef`
+  - `interface PlaceSpec`
+  - `interface Placement`
 
 ### 系统 game/systems
 
@@ -646,10 +654,14 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（1829 行）
+- **`tools/serve.mjs`**（1835 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。
+- **`tools/worldgen-structures.mjs`**（68 行）
+  读一个世界的「结构」定义（生成期数据，不进运行时加载）。
+  - `loadStructures(worldId)`
+  - `previewStructure(def)`
 
 ### 其它
 

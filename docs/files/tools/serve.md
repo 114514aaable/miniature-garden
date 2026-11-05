@@ -38,6 +38,7 @@
 - [`game/systems/tick/phases.ts`](game/systems/tick/phases.md)
 - [`tools/pack-reader.mjs`](tools/pack-reader.md)
 - [`tools/pages.mjs`](tools/pages.md)
+- [`tools/worldgen-structures.mjs`](tools/worldgen-structures.md)
 
 ## 被引用
 

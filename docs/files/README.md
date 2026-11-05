@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 99 个文件。
+共 101 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -57,6 +57,7 @@
 | `game/engine/core/src/worldgen/noise.ts` | 噪声：把「种子 + 坐标」变成 0..1 的值。 | [md](game/engine/core/src/worldgen/noise.md) |
 | `game/engine/core/src/worldgen/pipeline.ts` | 生成流水线：把生成算法拆成「一步一个算子」，串起来跑。 | [md](game/engine/core/src/worldgen/pipeline.md) |
 | `game/engine/core/src/worldgen/select.ts` | 选：把「若干场」翻译成「群系」，再把群系翻译成「地形」。 | [md](game/engine/core/src/worldgen/select.md) |
+| `game/engine/core/src/worldgen/structures.ts` | 结构：带图例的字符画，摆进生成出来的地图里。 | [md](game/engine/core/src/worldgen/structures.md) |
 | `game/engine/core/types/node-shim.d.ts` | 临时的 node 类型声明。 | [md](game/engine/core/types/node-shim.d.md) |
 | `game/systems/camera/camera.ts` | 相机：把「看哪儿」从渲染里拆出来。 | [md](game/systems/camera/camera.md) |
 | `game/systems/config/config.ts` | 界面配置：所有「可能想调」的东西集中在这里。 | [md](game/systems/config/config.md) |
@@ -107,3 +108,4 @@
 | `tools/play.mjs` | 从文件夹加载一个世界并画出来（宿主侧）。 | [md](tools/play.md) |
 | `tools/serve.mjs` | 调试台 / 启动器（宿主侧）。 | [md](tools/serve.md) |
 | `tools/typecheck.mjs` | 离线类型检查。 | [md](tools/typecheck.md) |
+| `tools/worldgen-structures.mjs` | 读一个世界的「结构」定义（生成期数据，不进运行时加载）。 | [md](tools/worldgen-structures.md) |

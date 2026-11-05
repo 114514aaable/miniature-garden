@@ -250,6 +250,19 @@ mask             无随机
 
 **顺序有意义，后写的覆盖先写的。** 示例世界 `official.cavern` 就是三层叠加。
 
+### 结构已经可以摆了（第一批）
+
+```json
+{ "op": "place", "structures": ["ruin", "hut"], "count": 4, "spacing": 6,
+  "on": ["floor", "cave_floor"], "inset": 2 }
+```
+
+- 结构定义在包的 `worldgen/structures.json`（图例 + 字符画）；
+- 摆放只改**地形**，实体/子结构/锚点还没做；
+- 规则：只落在 `on` 列举的地形上、彼此至少隔 `spacing` 格、不出边界、确定性；
+- 实现：`worldgen/structures.ts`（解析 / 盖章 / 摆放），
+  流水线 `place` 阶段，宿主从包目录读 `worldgen/structures.json`。
+
 ## 校验
 
 ```

@@ -15,6 +15,7 @@
  */
 
 import { generateCaves } from "./caves.ts";
+import { placeStructures, type StructureDef } from "./structures.ts";
 import { generateTerrain, type FieldConfig } from "./generate.ts";
 import type { Biome } from "./select.ts";
 
@@ -33,6 +34,8 @@ export interface Sandbox {
 export interface PipelineDeps {
   readonly biomes: readonly Biome[];
   readonly terrainIdByCode: ReadonlyMap<string, number>;
+  /** 结构定义（place 阶段用；不摆结构可以不传）。 */
+  readonly structures?: ReadonlyMap<string, StructureDef>;
 }
 
 export type Step =
@@ -46,6 +49,15 @@ export type Step =
       readonly chambers?: number;
       /** 图层名，默认 "cave"。 */
       readonly as?: string;
+    }
+  | {
+      readonly op: "place";
+      readonly structures: readonly string[];
+      readonly count?: number;
+      readonly spacing?: number;
+      readonly on?: readonly string[];
+      readonly inset?: number;
+      readonly tries?: number;
     }
   | {
       readonly op: "blend";
@@ -78,7 +90,7 @@ export function runPipeline(
   steps: readonly Step[],
   deps: PipelineDeps,
 ): Sandbox {
-  for (const step of steps) {
+  for (const [stepIndex, step] of steps.entries()) {
     switch (step.op) {
       case "overworld": {
         const result = generateTerrain({
@@ -107,6 +119,35 @@ export function runPipeline(
         });
         // 1 = 洞，0 = 石
         sandbox.layers.set(step.as ?? CAVE_LAYER, caves.walls.map((wall) => (wall ? 0 : 1)));
+        break;
+      }
+
+      case "place": {
+        const structures = deps.structures;
+        if (structures === undefined) throw new Error("place 需要 structures（结构定义）");
+
+        const codeOf = (terrainId: number): string | undefined => {
+          for (const [code, id] of deps.terrainIdByCode) if (id === terrainId) return code;
+          return undefined;
+        };
+
+        placeStructures(
+          sandbox.terrain,
+          sandbox.width,
+          sandbox.height,
+          structures,
+          {
+            structures: step.structures,
+            count: step.count,
+            spacing: step.spacing,
+            on: step.on,
+            inset: step.inset,
+            tries: step.tries,
+          },
+          sandbox.seed + stepIndex * 7919,
+          deps.terrainIdByCode,
+          codeOf,
+        );
         break;
       }
 

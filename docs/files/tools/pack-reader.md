@@ -17,3 +17,4 @@
 - [`tools/gen-world.mjs`](tools/gen-world.md)
 - [`tools/play.mjs`](tools/play.md)
 - [`tools/serve.mjs`](tools/serve.md)
+- [`tools/worldgen-structures.mjs`](tools/worldgen-structures.md)

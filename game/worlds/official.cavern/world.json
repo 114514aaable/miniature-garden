@@ -50,6 +50,20 @@
         "op": "blend",
         "floor": "cave_floor",
         "wall": "keep"
+      },
+      {
+        "op": "place",
+        "structures": [
+          "ruin",
+          "hut"
+        ],
+        "count": 4,
+        "spacing": 6,
+        "on": [
+          "floor",
+          "cave_floor"
+        ],
+        "inset": 2
       }
     ]
   },

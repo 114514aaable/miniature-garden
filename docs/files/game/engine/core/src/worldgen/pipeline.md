@@ -16,6 +16,7 @@
 - [`game/engine/core/src/worldgen/caves.ts`](game/engine/core/src/worldgen/caves.md)
 - [`game/engine/core/src/worldgen/generate.ts`](game/engine/core/src/worldgen/generate.md)
 - [`game/engine/core/src/worldgen/select.ts`](game/engine/core/src/worldgen/select.md)
+- [`game/engine/core/src/worldgen/structures.ts`](game/engine/core/src/worldgen/structures.md)
 
 ## 被引用
 

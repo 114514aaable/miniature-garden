@@ -48,6 +48,7 @@ import { buildPassage } from "../game/systems/rules/passage.ts";
 import { clampSize, generateTerrain } from "../game/engine/core/src/worldgen/generate.ts";
 import { generateCaves } from "../game/engine/core/src/worldgen/caves.ts";
 import { createSandbox, runPipeline } from "../game/engine/core/src/worldgen/pipeline.ts";
+import { loadStructures } from "./worldgen-structures.mjs";
 import { offsetsOf } from "../game/engine/core/src/traversal/shapes.ts";
 import { cellsOf } from "../game/engine/core/src/traversal/resolve.ts";
 
@@ -168,7 +169,7 @@ let session = null;
 /** 规则表：签名 + 处理器。关掉一条规则就是把它从这里跳过。 */
 
 /** 把生成的图换进包的定义里（这样还是走 loadWorld 那一道校验）。 */
-function withGeneratedSpace(merged, loaded, seed, options) {
+function withGeneratedSpace(merged, loaded, seed, options, worldId) {
   const none = { merged, note: null };
   const generation = loaded.world.generation;
   if (generation === undefined) return none;
@@ -206,7 +207,7 @@ function withGeneratedSpace(merged, loaded, seed, options) {
   let generated;
   try {
     generated = Array.isArray(generation.pipeline)
-      ? runPipelineToTerrain(generation.pipeline, seed, clampSize(Math.max(width, needWidth)), clampSize(Math.max(height, needHeight)), loaded, ids)
+      ? runPipelineToTerrain(generation.pipeline, seed, clampSize(Math.max(width, needWidth)), clampSize(Math.max(height, needHeight)), loaded, ids, worldId)
       : generation.generator === "caves"
       ? cavesToTerrain(generation, seed, clampSize(Math.max(width, needWidth)), clampSize(Math.max(height, needHeight)), ids)
       : generateTerrain({
@@ -262,12 +263,16 @@ function withGeneratedSpace(merged, loaded, seed, options) {
 }
 
 /** 流水线 → 地形数组（地表、洞穴、混合都可以）。 */
-function runPipelineToTerrain(steps, seed, width, height, loaded, ids) {
+function runPipelineToTerrain(steps, seed, width, height, loaded, ids, worldId) {
   const fallback = ids.get("floor");
   if (fallback === undefined) throw new Error("流水线需要一个 floor 地形");
 
   const sandbox = createSandbox(seed, width, height, fallback);
-  runPipeline(sandbox, steps, { biomes: loaded.biomes, terrainIdByCode: ids });
+  runPipeline(sandbox, steps, {
+    biomes: loaded.biomes,
+    terrainIdByCode: ids,
+    structures: loadStructures(worldId),
+  });
 
   return { width: sandbox.width, height: sandbox.height, terrain: sandbox.terrain, stats: {} };
 }
@@ -302,7 +307,8 @@ function cavesToTerrain(generation, seed, width, height, ids) {
 function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, offTemplates = new Set(), options = {}) {
   const merged0 = mergePacks(ordered);
   const base = loadWorld(merged0);
-  const generated = withGeneratedSpace(merged0, base, seed, options);
+  const worldId = ordered.length > 0 ? ordered[ordered.length - 1].pack.id : "";
+  const generated = withGeneratedSpace(merged0, base, seed, options, worldId);
   const merged = generated.merged;
 
   let loaded = base;
