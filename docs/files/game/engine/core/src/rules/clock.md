@@ -6,9 +6,11 @@
 
 - `ClockConfig`
 - `DEFAULT_CLOCK`
+- `MAX_ACTION_COST`
 - `Round`
 - `SpeedBonus`
 - `TICKS_PER_ROUND`
+- `clampCost`
 - `costOf`
 - `isFree`
 - `roundOf`
@@ -20,4 +22,5 @@
 
 ## 被引用
 
+- [`tools/check-data.mjs`](tools/check-data.md)
 - [`tools/serve.mjs`](tools/serve.md)

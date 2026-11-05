@@ -11,6 +11,7 @@
 - [`game/engine/core/src/pack/load.ts`](game/engine/core/src/pack/load.md)
 - [`game/engine/core/src/pack/merge.ts`](game/engine/core/src/pack/merge.md)
 - [`game/engine/core/src/pack/order.ts`](game/engine/core/src/pack/order.md)
+- [`game/engine/core/src/rules/clock.ts`](game/engine/core/src/rules/clock.md)
 - [`game/systems/rules/index.ts`](game/systems/rules/index.md)
 - [`tools/pack-reader.mjs`](tools/pack-reader.md)
 

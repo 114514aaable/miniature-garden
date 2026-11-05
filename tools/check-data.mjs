@@ -18,6 +18,7 @@ import { loadWorld } from "../game/engine/core/src/pack/load.ts";
 import { mergePacks } from "../game/engine/core/src/pack/merge.ts";
 import { orderPacks } from "../game/engine/core/src/pack/order.ts";
 import { RULE_TABLE } from "../game/systems/rules/index.ts";
+import { DEFAULT_CLOCK } from "../game/engine/core/src/rules/clock.ts";
 
 const worldId = process.argv[2] ?? "official.normal";
 
@@ -78,6 +79,15 @@ for (const id of templateIds) {
       const known = [...loaded.terrains.values()].some((terrain) => terrain.surface === surface);
       if (!known) problems.push(`${id}：行动方式用了 surface "${surface}"，但没有任何地形是这个面`);
     }
+  }
+}
+
+// 技能：成本键必须在时钟表里（写错会 500）
+for (const rule of RULE_TABLE) {
+  const skill = rule.signature.skill;
+  if (skill === undefined) continue;
+  if (DEFAULT_CLOCK.costs[skill.cost] === undefined) {
+    problems.push(`技能 ${rule.signature.tag}：成本键 "${skill.cost}" 不在时钟表里`);
   }
 }
 

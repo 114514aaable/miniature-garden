@@ -50,6 +50,20 @@ export interface ClockConfig {
   readonly speedBonus: readonly SpeedBonus[];
 }
 
+/**
+ * 单个动作最多占多少回合。
+ *
+ * 为什么要上限：动作成本是数据，写错一个 0 就是 999 回合。
+ * 那样玩家会被冻住，敌人却在行动——看起来像时间穿越。
+ */
+export const MAX_ACTION_COST = 32;
+
+/** 把成本夹到 0..MAX_ACTION_COST 的整数；非数字当 0。 */
+export function clampCost(rounds: number): number {
+  if (!Number.isFinite(rounds)) return 0;
+  return Math.min(MAX_ACTION_COST, Math.max(0, Math.round(rounds)));
+}
+
 export const DEFAULT_CLOCK: ClockConfig = {
   costs: { move: 2, attack: 3, heavy: 7, cast: 4, look: 0, wait: 1, take: 1, drop: 1, talk: 0 },
   speedBonus: [

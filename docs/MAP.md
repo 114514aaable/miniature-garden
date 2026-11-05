@@ -180,16 +180,18 @@ game/systems/render/*（投影成画面数据）
   攻击：相邻 → 扣血 → 血尽则倒。
   - `attackHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
   - `const attackSignature`
-- **`game/engine/core/src/rules/clock.ts`**（88 行）
+- **`game/engine/core/src/rules/clock.ts`**（102 行）
   游戏时钟：引擎的 tick 和游戏里的「回合」之间的唯一换算处。
   - `roundOf(tick: number) → Round`
   - `ticksFor(rounds: number) → number`
+  - `clampCost(rounds: number) → number`
   - `costOf(config: ClockConfig, verb: string, speed: number) → number`
   - `isFree(config: ClockConfig, verb: string, speed: number) → boolean`
   - `interface SpeedBonus`
   - `interface ClockConfig`
   - `type Round`
   - `const TICKS_PER_ROUND`
+  - `const MAX_ACTION_COST`
   - `const DEFAULT_CLOCK`
 - **`game/engine/core/src/rules/collision.ts`**（41 行）
   碰撞规则：谁能挡路。
@@ -596,7 +598,7 @@ game/systems/render/*（投影成画面数据）
   把 TS 转成浏览器能跑的 JS（构建产物放 web/）。
 - **`tools/check-client.mjs`**（90 行）
   页面脚本的「有没有调用不存在的函数」检查。
-- **`tools/check-data.mjs`**（137 行）
+- **`tools/check-data.mjs`**（147 行）
   数据体检：数据化之后，规则要的字段，包里到底有没有。
 - **`tools/check-locale.mjs`**（99 行）
   语言包体检：包里每个 id 都应该有名字。
@@ -625,7 +627,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（1662 行）
+- **`tools/serve.mjs`**（1684 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。

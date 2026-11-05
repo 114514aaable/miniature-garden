@@ -28,7 +28,7 @@ import { collectEffects } from "../game/engine/core/src/event/effects.ts";
 import { Registry } from "../game/engine/core/src/event/registry.ts";
 import { createWorldView } from "../game/engine/core/src/event/view.ts";
 import { Store } from "../game/engine/core/src/store.ts";
-import { costOf, DEFAULT_CLOCK } from "../game/engine/core/src/rules/clock.ts";
+import { clampCost, costOf, DEFAULT_CLOCK, MAX_ACTION_COST } from "../game/engine/core/src/rules/clock.ts";
 import { Scheduler } from "../game/engine/core/src/rules/scheduler.ts";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
@@ -1037,7 +1037,21 @@ function run(tag, params, costKey) {
 
   // 动作生效，然后世界推进到玩家下次能行动为止（敌人会在这段里行动）。
   // 注意：成本不看「有没有效果」——等待就是不产生效果但照样花时间。
-  const cost = costOf(DEFAULT_CLOCK, costKey, speedOfPlayer());
+  let rawCost;
+  try {
+    rawCost = costOf(DEFAULT_CLOCK, costKey, speedOfPlayer());
+  } catch (error) {
+    session.devlog.action(session.store.now(), tag + " 成本未定义", { cost: costKey });
+    return snapshot("这个技能的成本没定义：" + costKey);
+  }
+  const cost = clampCost(rawCost);
+  if (cost !== rawCost) {
+    session.devlog.action(session.store.now(), tag + " 成本超限", {
+      raw: rawCost,
+      capped: cost,
+      max: MAX_ACTION_COST,
+    });
+  }
   session.playerReadyAt = session.store.now() + cost;
   session.lastEvents = [];
   advanceTo(session.playerReadyAt);
@@ -1081,11 +1095,19 @@ function tickPhases() {
 }
 
 function advanceTo(target) {
+  if (!Number.isFinite(target)) {
+    session.devlog.action(session.store.now(), "调度器", { error: "target 不是数字" });
+    return;
+  }
+
   const phases = tickPhases();
   let guard = 0;
   while (session.store.now() < target) {
     if (guard++ > 512) {
       session.devlog.action(session.store.now(), "调度器", { error: "推进次数超限" });
+      // 没推到目标就把“下次能行动”拉回当前时刻，否则玩家会永远卡在“恢复中”
+      session.playerReadyAt = session.store.now();
+      session.notice = "动作太长，被截断在 " + session.store.now() + " 回合";
       break;
     }
     runPhases(phases, session.store.now());

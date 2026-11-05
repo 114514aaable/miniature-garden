@@ -8,7 +8,16 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { DEFAULT_CLOCK, TICKS_PER_ROUND, costOf, isFree, roundOf, ticksFor } from "./clock.ts";
+import {
+  clampCost,
+  costOf,
+  DEFAULT_CLOCK,
+  isFree,
+  MAX_ACTION_COST,
+  roundOf,
+  TICKS_PER_ROUND,
+  ticksFor,
+} from "./clock.ts";
 
 test("tick 与回合互转（v0 是 1:1）", () => {
   assert.equal(TICKS_PER_ROUND, 1);
@@ -46,4 +55,17 @@ test("零帧动作可以判定", () => {
 
 test("未知动作直接报错", () => {
   assert.throws(() => costOf(DEFAULT_CLOCK, "teleport", 5), /未知的动作类型/);
+});
+
+test("成本上限：超过就夹到 MAX_ACTION_COST", () => {
+  assert.equal(clampCost(999), MAX_ACTION_COST);
+  assert.equal(clampCost(-5), 0);
+  assert.equal(clampCost(Number.NaN), 0);
+  assert.equal(clampCost(Infinity), 0);
+  assert.equal(clampCost(3.6), 4);
+});
+
+test("成本上限：正常值原样返回", () => {
+  assert.equal(clampCost(2), 2);
+  assert.equal(clampCost(0), 0);
 });
