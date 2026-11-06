@@ -607,7 +607,7 @@ game/systems/render/*（投影成画面数据）
 - **`tools/client/hud/status.js`**（32 行）
   左下区域：状态（血量条 + 计数 + 可否行动）。
   - `renderStatus(state)`
-- **`tools/client/launcher.js`**（457 行）
+- **`tools/client/launcher.js`**（469 行）
   import { modal, col, row, text, button, input, field } from '/web/game/systems/ui/spec.js';
 - **`tools/client/shared.js`**（35 行）
   页面共用：错误提示 + API 调用。
@@ -615,7 +615,7 @@ game/systems/render/*（投影成画面数据）
 - **`tools/client/windows/inventory.js`**（168 行）
   背包窗口。
   - `createInventoryWindow(ctx)`
-- **`tools/client/windows/settings.js`**（217 行）
+- **`tools/client/windows/settings.js`**（283 行）
   设置窗口（窗口层）。
   - `createSettingsWindow(ctx)`
 
@@ -654,7 +654,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（1918 行）
+- **`tools/serve.mjs`**（2043 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。

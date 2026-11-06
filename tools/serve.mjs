@@ -30,7 +30,7 @@ import { Store } from "../game/engine/core/src/store.ts";
 import { clampCost, costOf, DEFAULT_CLOCK, MAX_ACTION_COST } from "../game/engine/core/src/rules/clock.ts";
 import { MAX_SEQUENCE_TICKS } from "../game/engine/core/src/event/registry.ts";
 import { Scheduler } from "../game/engine/core/src/rules/scheduler.ts";
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
 import { createProjector } from "../game/systems/render/project.ts";
 import { buildGraph } from "../game/engine/core/src/pack/graph.ts";
@@ -1406,11 +1406,12 @@ function listWorlds() {
       try {
         const meta = JSON.parse(readFileSync(file, "utf8"));
         if (typeof meta.id === "string" && typeof meta.pack === "string") {
-          const stateFile = worldDir(name) + "/state.json";
+          const snapshots = listSnapshots(name);
           out.push({
             ...meta,
-            saved: existsSync(stateFile),
-            stateAt: existsSync(stateFile) ? statSync(stateFile).mtime.toISOString() : null,
+            saved: snapshots.length > 0,
+            saves: snapshots.length,
+            latestAt: snapshots.length > 0 ? snapshots[0].savedAt : null,
           });
         }
       } catch {
@@ -1472,14 +1473,67 @@ const SAVE_FILE = "saves/quicksave.json";
 
 /** 槽位名只允许字母数字下划线短横，防止路径穿越。 */
 /** 存档：把当前进度写进这个世界的 state.json。 */
-function saveGame() {
+/** 快照目录：saves/<id>/snapshots/ */
+function snapshotDir(id) {
+  return worldDir(id) + "/snapshots";
+}
+
+/** 名字 → 安全的文件名（同名覆盖就是覆盖这个文件）。 */
+function snapshotFile(name) {
+  const clean = String(name).replace(/[\\/:*?"<>|]/g, "_").trim().slice(0, 40);
+  return clean.length > 0 ? clean : "存档";
+}
+
+/** 列某个世界的快照（按时间倒序）。 */
+function listSnapshots(id) {
+  const dir = snapshotDir(id);
+  const out = [];
+  try {
+    for (const file of readdirSync(dir)) {
+      if (!file.endsWith(".json")) continue;
+      try {
+        const data = JSON.parse(readFileSync(dir + "/" + file, "utf8"));
+        out.push({
+          name: data.name ?? file.slice(0, -5),
+          savedAt: data.savedAt ?? null,
+          tick: data.engine?.tick ?? 0,
+          bytes: statSync(dir + "/" + file).size,
+        });
+      } catch {
+        out.push({ name: file.slice(0, -5), broken: true });
+      }
+    }
+  } catch {
+    return [];
+  }
+  return out.sort((a, b) => String(b.savedAt ?? "").localeCompare(String(a.savedAt ?? "")));
+}
+
+/** 找最新的一份快照文件（启动器「继续」用）。 */
+function latestSnapshot(id) {
+  const list = listSnapshots(id);
+  return list.length > 0 ? list[0].name : null;
+}
+
+/** 存档：生成一份新的阶段快照。给名字就同名覆盖，不给就自动编号。 */
+function saveGame(name) {
   if (session === null || !session.worldId) return { ok: false, error: "没有进行中的世界" };
 
-  const dir = worldDir(session.worldId);
+  const dir = snapshotDir(session.worldId);
   mkdirSync(dir, { recursive: true });
 
+  let label = typeof name === "string" ? name.trim() : "";
+  if (label.length === 0) {
+    const existing = new Set(listSnapshots(session.worldId).map((item) => item.name));
+    let index = existing.size + 1;
+    while (existing.has("存档 " + index)) index += 1;
+    label = "存档 " + index;
+  }
+
+  const file = snapshotFile(label);
   const data = {
-    version: 2,
+    version: 3,
+    name: label,
     savedAt: new Date().toISOString(),
     engine: session.store.exportState(),
     playerHandle: session.playerHandle,
@@ -1490,7 +1544,7 @@ function saveGame() {
     scene: session.scenes.export(),
   };
 
-  writeFileSync(dir + "/state.json", JSON.stringify(data), "utf8");
+  writeFileSync(dir + "/" + file + ".json", JSON.stringify(data), "utf8");
 
   const meta = readWorld(session.worldId);
   if (meta !== null) {
@@ -1498,20 +1552,23 @@ function saveGame() {
     writeWorld(meta);
   }
 
-  return { ok: true, message: "已存档（" + session.store.now() + "）" };
+  return { ok: true, message: "已存为「" + label + "」（tick " + session.store.now() + "）" };
 }
 
-/** 读档：按存档目录里的配方重建世界，再把进度灌回去。 */
-function loadGame(id) {
+/** 读档：按存档目录里的配方重建世界，再把某份快照灌回去。 */
+function loadGame(id, name) {
   const worldId = typeof id === "string" && id.length > 0 ? id : (session === null ? null : session.worldId);
   const meta = worldId === null ? null : readWorld(worldId);
   if (meta === null) return { ok: false, error: "没有这个存档" };
 
+  const file = typeof name === "string" && name.length > 0 ? snapshotFile(name) : latestSnapshot(meta.id);
+  if (file === null) return { ok: false, error: "这个存档还没存过进度" };
+
   let data;
   try {
-    data = JSON.parse(readFileSync(worldDir(meta.id) + "/state.json", "utf8"));
+    data = JSON.parse(readFileSync(snapshotDir(meta.id) + "/" + file + ".json", "utf8"));
   } catch {
-    return { ok: false, error: "这个存档还没存过进度" };
+    return { ok: false, error: "找不到这份快照：" + file };
   }
 
   let ordered;
@@ -1579,8 +1636,8 @@ function loadGame(id) {
   }
 
   session.lastEvents = [];
-  session.devlog.action(session.store.now(), "读档", { tick: session.store.now(), world: meta.pack });
-  return { ok: true, message: "已读档（tick " + session.store.now() + "）" };
+  session.devlog.action(session.store.now(), "读档", { tick: session.store.now(), world: meta.pack, save: data.name ?? file });
+  return { ok: true, message: "已读档「" + (data.name ?? file) + "」（tick " + session.store.now() + "）" };
 }
 /** 技能显示名从链接表里取，不在代码里写死。 */
 function skillName(tag) {
@@ -1660,6 +1717,52 @@ const server = createServer(async (request, response) => {
       };
       writeSelection(all);
       sendJson(response, { ok: true, world: body.world, ...all[String(body.world)] });
+      return;
+    }
+
+    if (request.url.startsWith("/api/snapshots")) {
+      const url = new URL(request.url, "http://localhost");
+      const id = url.searchParams.get("id") ?? "";
+      const meta = readWorld(id);
+      sendJson(response, meta === null ? { ok: false, error: "没有这个存档" } : { ok: true, world: meta, snapshots: listSnapshots(id) });
+      return;
+    }
+
+    if (request.method === "POST" && request.url === "/api/snapshot/rename") {
+      const { id, name, next } = await readBody(request);
+      const meta = typeof id === "string" ? readWorld(id) : null;
+      if (meta === null) {
+        sendJson(response, { ok: false, error: "没有这个存档" });
+        return;
+      }
+      const from = snapshotFile(name ?? "");
+      const to = snapshotFile(next ?? "");
+      if (from === to) {
+        sendJson(response, { ok: true, snapshots: listSnapshots(id) });
+        return;
+      }
+      try {
+        const data = JSON.parse(readFileSync(snapshotDir(id) + "/" + from + ".json", "utf8"));
+        data.name = String(next).trim().slice(0, 40) || data.name;
+        writeFileSync(snapshotDir(id) + "/" + to + ".json", JSON.stringify(data), "utf8");
+        try { unlinkSync(snapshotDir(id) + "/" + from + ".json"); } catch { /* 已经不在了 */ }
+      } catch (error) {
+        sendJson(response, { ok: false, error: messageOf(error) });
+        return;
+      }
+      sendJson(response, { ok: true, snapshots: listSnapshots(id) });
+      return;
+    }
+
+    if (request.method === "POST" && request.url === "/api/snapshot/delete") {
+      const { id, name } = await readBody(request);
+      const meta = typeof id === "string" ? readWorld(id) : null;
+      if (meta === null) {
+        sendJson(response, { ok: false, error: "没有这个存档" });
+        return;
+      }
+      try { unlinkSync(snapshotDir(id) + "/" + snapshotFile(name ?? "") + ".json"); } catch { /* 已经不在了 */ }
+      sendJson(response, { ok: true, snapshots: listSnapshots(id) });
       return;
     }
 
@@ -1772,7 +1875,7 @@ const server = createServer(async (request, response) => {
         const reused = typeof instanceId === "string" ? readWorld(instanceId) : null;
 
         // 从「最近的世界」进来：有进度就直接读档，没进度按配方新开
-        if (reused !== null && existsSync(worldDir(reused.id) + "/state.json")) {
+        if (reused !== null && latestSnapshot(reused.id) !== null) {
           const loaded = loadGame(reused.id);
           if (loaded.ok) {
             sendJson(response, snapshot(loaded.message));
@@ -1827,14 +1930,15 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.method === "POST" && request.url === "/api/save") {
-      const result = saveGame();
+      const { name } = await readBody(request);
+      const result = saveGame(typeof name === "string" ? name : null);
       sendJson(response, result.ok ? snapshot(result.message) : { error: result.error });
       return;
     }
 
     if (request.method === "POST" && request.url === "/api/load") {
-      const { id } = await readBody(request);
-      const result = loadGame(typeof id === "string" ? id : null);
+      const { id, name } = await readBody(request);
+      const result = loadGame(typeof id === "string" ? id : null, typeof name === "string" ? name : null);
       sendJson(response, result.ok ? snapshot(result.message) : snapshot(result.error));
       return;
     }

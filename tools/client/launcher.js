@@ -418,8 +418,9 @@ async function renderRecent() {
     const info = document.createElement('div');
     info.style.flex = '1 1 auto';
     const size = world.options && world.options.width ? world.options.width + '×' + world.options.height : '默认';
-    const when = new Date(world.updatedAt || world.createdAt || Date.now()).toLocaleString();
-    info.textContent = (world.name || world.id) + '  ·  ' + world.pack + '  ·  种子 ' + world.seed + '  ·  ' + size + '  ·  ' + when;
+    const when = new Date(world.latestAt || world.updatedAt || world.createdAt || Date.now()).toLocaleString();
+    const saves = world.saves > 0 ? '  ·  ' + world.saves + ' 份进度' : '  ·  新世界';
+    info.textContent = (world.name || world.id) + '  ·  ' + world.pack + '  ·  种子 ' + world.seed + '  ·  ' + size + saves + '  ·  ' + when;
 
     const open = document.createElement('button');
     open.textContent = '继续';

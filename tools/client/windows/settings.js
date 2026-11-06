@@ -142,45 +142,102 @@ export function createSettingsWindow(ctx) {
         back,
       );
     } else {
+      // 阶段快照：每存一次多一份，同名覆盖
       const state = ctx.getLastState();
       const info = state === null
         ? '（未开局）'
         : (state.worldName || state.world || '?') + ' · 种子 ' + state.seed + ' · tick ' + state.tick;
 
-      body = col({ gap: 8 },
+      const shell = col({ gap: 8 },
         text('当前世界：' + info, { policy: 'fixed' }),
-        button('改名', async () => {
-          const state = ctx.getLastState();
-          if (state === null || !state.worldId) return;
-          const next = prompt('新的名字', state.worldName || '');
-          if (next === null || next.trim().length === 0) return;
-          await ctx.api('/api/world/rename', { id: state.worldId, name: next.trim() });
-          ctx.renderState(await ctx.api('/api/state'));
-          open('saves');
-        }),
-        row({ gap: 8 },
-          button('保存进度', async () => {
-            ctx.renderState(await ctx.api('/api/save', {}));
-            open('saves');
-          }),
-          button('读取进度', async () => {
-            const result = await ctx.api('/api/load', {});
-            if (result && result.ok === false) {
-              ctx.showError('读档失败：' + (result.error || '未知'));
-              return;
-            }
-            ctx.renderState(result);
-            open('saves');
-          }),
-        ),
+        text('读取中…', { policy: 'fixed' }),
         back,
       );
+      box.appendChild(renderNode(modal(shell, { title: '进度' })));
+      void drawSaves();
+      return;
     }
-
     const titles = { root: '设置', config: '配置', keys: '按键', world: '世界', saves: '进度' };
     box.appendChild(renderNode(modal(body, { title: titles[page] ?? '设置' })));
   }
 
+  /** 拉快照列表，整页重画（列表是异步的，不能只改节点）。 */
+  async function drawSaves() {
+    const state = ctx.getLastState();
+
+    if (state === null || !state.worldId) {
+      renderSavesPage([], '还没开局。');
+      return;
+    }
+
+    const result = await ctx.api('/api/snapshots?id=' + encodeURIComponent(state.worldId));
+    const snapshots = (result && result.snapshots) || [];
+    renderSavesPage(snapshots, snapshots.length === 0 ? '还没有进度。点「保存新进度」存一份。' : '选择一份进度读取：');
+  }
+
+  /** 画进度页：世界信息 + 保存新进度 + 每份快照一行。 */
+  function renderSavesPage(snapshots, note) {
+    const box = document.getElementById('settings');
+    if (box === null) return;
+
+    const current = ctx.getLastState();
+    const info = current === null
+      ? '（未开局）'
+      : (current.worldName || current.world || '?') + ' · 种子 ' + current.seed + ' · tick ' + current.tick;
+    const worldId = current === null ? '' : current.worldId;
+
+    const header = row({ gap: 8 },
+      button('保存新进度', async () => {
+        const saved = await ctx.api('/api/save', {});
+        ctx.renderState(saved);
+        open('saves');
+      }),
+      button('世界改名', async () => {
+        if (current === null || !current.worldId) return;
+        const next = prompt('新的世界名', current.worldName || '');
+        if (next === null || next.trim().length === 0) return;
+        await ctx.api('/api/world/rename', { id: current.worldId, name: next.trim() });
+        ctx.renderState(await ctx.api('/api/state'));
+        open('saves');
+      }),
+    );
+
+    const rows = snapshots.map((snap) => {
+      const when = snap.savedAt ? String(snap.savedAt).slice(0, 16).replace('T', ' ') : '';
+      return row({ gap: 6, align: 'center' },
+        text(snap.name + ' · tick ' + snap.tick + ' · ' + when, { policy: 'fill' }),
+        button('读取', async () => {
+          const result = await ctx.api('/api/load', { id: worldId, name: snap.name });
+          if (result && result.ok === false) {
+            ctx.showError('读档失败：' + (result.error || '未知'));
+            return;
+          }
+          ctx.renderState(result);
+          open('saves');
+        }),
+        button('改名', async () => {
+          const next = prompt('新的名字', snap.name);
+          if (next === null || next.trim().length === 0) return;
+          await ctx.api('/api/snapshot/rename', { id: worldId, name: snap.name, next: next.trim() });
+          open('saves');
+        }),
+        button('删除', async () => {
+          if (!confirm('删除「' + snap.name + '」？')) return;
+          await ctx.api('/api/snapshot/delete', { id: worldId, name: snap.name });
+          open('saves');
+        }),
+      );
+    });
+
+    box.textContent = '';
+    box.appendChild(renderNode(modal(col({ gap: 8 },
+      text('当前世界：' + info, { policy: 'fixed' }),
+      header,
+      text(note, { policy: 'fixed' }),
+      ...rows,
+      button('← 返回', () => open('root')),
+    ), { title: '进度' })));
+  }
   function close() {
     const box = document.getElementById('settings');
     ctx.setFocus(null);
