@@ -30,7 +30,7 @@ const FILES = [
 const GLOBALS = new Set([
   "Array", "Boolean", "Date", "Element", "Error", "HTMLElement", "Intl", "JSON", "Map", "Math",
   "Number", "Object", "Promise", "Set", "String", "URLSearchParams", "WeakMap",
-  "alert", "atob", "btoa", "confirm", "clearInterval", "clearTimeout", "console", "decodeURIComponent",
+  "alert", "atob", "btoa", "confirm", "prompt", "clearInterval", "clearTimeout", "console", "decodeURIComponent",
   "document", "encodeURIComponent", "fetch", "isNaN", "localStorage", "parseFloat", "parseInt",
   "requestAnimationFrame", "setInterval", "setTimeout", "structuredClone", "window",
   "if", "for", "while", "switch", "catch", "return", "typeof", "function", "await", "new",

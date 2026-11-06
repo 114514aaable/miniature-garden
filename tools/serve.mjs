@@ -1614,7 +1614,8 @@ function readBody(request) {
     });
     request.on("end", () => {
       try {
-        resolve(JSON.parse(body || "{}"));
+        // 容忍 BOM：Windows 上写文件/发请求很容易带一个
+        resolve(JSON.parse((body || "{}").replace(/^\uFEFF/, "")));
       } catch (error) {
         reject(error);
       }
@@ -1664,6 +1665,26 @@ const server = createServer(async (request, response) => {
 
     if (request.url === "/api/saves") {
       sendJson(response, { ok: true, saves: listWorlds() });
+      return;
+    }
+
+    if (request.method === "POST" && request.url === "/api/world/rename") {
+      const { id, name } = await readBody(request);
+      const meta = typeof id === "string" ? readWorld(id) : null;
+      if (meta === null) {
+        sendJson(response, { ok: false, error: "没有这个存档" });
+        return;
+      }
+      const next = typeof name === "string" ? name.trim().slice(0, 40) : "";
+      if (next.length === 0) {
+        sendJson(response, { ok: false, error: "名字不能是空的" });
+        return;
+      }
+      meta.name = next;
+      meta.updatedAt = new Date().toISOString();
+      writeWorld(meta);
+      if (session !== null && session.worldId === meta.id) session.worldName = next;
+      sendJson(response, { ok: true, worlds: listWorlds() });
       return;
     }
 

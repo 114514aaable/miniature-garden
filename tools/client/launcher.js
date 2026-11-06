@@ -13,8 +13,9 @@ let activeWorld = localStorage.getItem('nw.world') || null;
 let inspecting = null;
 
 function show(id) {
-  for (const panel of ['packs', 'settings', 'load', 'quit', 'recent']) {
-    document.getElementById(panel).hidden = panel !== id;
+  for (const panel of ['packs', 'settings', 'quit', 'recent']) {
+    const box = document.getElementById(panel);
+    if (box !== null) box.hidden = panel !== id;
   }
   // 菜单保持可见：面板是浮层，不是换页
   document.getElementById('menu').style.opacity = id === null ? '1' : '0.35';
@@ -426,6 +427,15 @@ async function renderRecent() {
       location.href = '/game?instance=' + encodeURIComponent(world.id);
     });
 
+    const rename = document.createElement('button');
+    rename.textContent = '改名';
+    rename.addEventListener('click', async () => {
+      const next = prompt('新的名字', world.name || world.id);
+      if (next === null || next.trim().length === 0) return;
+      await api('/api/world/rename', { id: world.id, name: next.trim() });
+      renderRecent();
+    });
+
     const del = document.createElement('button');
     del.textContent = '删除';
     del.addEventListener('click', async () => {
@@ -436,6 +446,7 @@ async function renderRecent() {
 
     line.appendChild(info);
     line.appendChild(open);
+    line.appendChild(rename);
     line.appendChild(del);
     list.appendChild(line);
   }

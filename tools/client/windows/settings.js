@@ -149,6 +149,15 @@ export function createSettingsWindow(ctx) {
 
       body = col({ gap: 8 },
         text('当前世界：' + info, { policy: 'fixed' }),
+        button('改名', async () => {
+          const state = ctx.getLastState();
+          if (state === null || !state.worldId) return;
+          const next = prompt('新的名字', state.worldName || '');
+          if (next === null || next.trim().length === 0) return;
+          await ctx.api('/api/world/rename', { id: state.worldId, name: next.trim() });
+          ctx.renderState(await ctx.api('/api/state'));
+          open('saves');
+        }),
         row({ gap: 8 },
           button('保存进度', async () => {
             ctx.renderState(await ctx.api('/api/save', {}));
