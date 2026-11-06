@@ -351,6 +351,12 @@ game/systems/render/*（投影成画面数据）
   - `interface GenerateResult`
   - `const MAX_SIZE`
   - `const MIN_SIZE`
+- **`game/engine/core/src/worldgen/layout.ts`**（379 行）
+  布局：在 meta 网格上摆「房间」和「走廊」，边决定门口。
+  - `placeLayout(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, spec: LayoutSpec, seed: number, terrainIdByCode: ReadonlyMap<string, number>,) → LayoutResult`
+  - `interface LayoutSpec`
+  - `interface LayoutRoom`
+  - `interface LayoutResult`
 - **`game/engine/core/src/worldgen/maze.ts`**（136 行）
   迷宫生成（迭代回溯 + 可选编织）。
   - `generateMaze(config: MazeConfig) → number[]`
@@ -365,7 +371,7 @@ game/systems/render/*（投影成画面数据）
   - `interface FbmOptions`
   - `type NoiseKind`
   - `const NOISE_KINDS`
-- **`game/engine/core/src/worldgen/pipeline.ts`**（300 行）
+- **`game/engine/core/src/worldgen/pipeline.ts`**（335 行）
   生成流水线：把生成算法拆成「一步一个算子」，串起来跑。
   - `createSandbox(seed: number, width: number, height: number, fill: number) → Sandbox`
   - `runPipeline(sandbox: Sandbox, steps: readonly Step[], deps: PipelineDeps,) → Sandbox`
@@ -407,11 +413,12 @@ game/systems/render/*（投影成画面数据）
   - `interface PlaceSpec`
   - `interface Placement`
   - `interface SpawnRequest`
-- **`game/engine/core/src/worldgen/tiles.ts`**（259 行）
+- **`game/engine/core/src/worldgen/tiles.ts`**（289 行）
   拼贴：把 7×7 的房间件按「门口」贴成一张图。
   - `rotateStructure(def: StructureDef) → StructureDef`
   - `portsOf(def: StructureDef) → Set<Side>`
   - `findRotation(def: StructureDef, required: ReadonlySet<Side>, boundary: ReadonlySet<Side> = new Set(),) → StructureDef | null`
+  - `bestRotation(def: StructureDef, required: ReadonlySet<Side>, boundary: ReadonlySet<Side> = new Set(),)`
   - `placeTiles(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, ids: readonly string[], seed: number, terrainIdByCode: ReadonlyMap<string, number>,)`
   - `interface TilePlacement`
 

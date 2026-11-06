@@ -70,6 +70,7 @@ caves        元胞自动机（fill / iterations / regions / chambers）
 maze         迭代回溯 + 编织；保证连通
 rooms        BSP 分区 + 门图（门=顶点、房间=团）+ A* 修路；可加环路
 tiles        7×7 件 + 门口 + 旋转 + 加权 + 程序化兜底
+layout       大房间（多格）+ 走廊格拼贴，图上的边决定门口
 structures   role / anchors / 实体 / 子结构（展开时查环）
 pipeline     overworld → caves → maze → place → blend，可叠加
 确定性       纯函数 + 按坐标派发；元胞是迭代算法（不可按格并行）

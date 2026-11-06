@@ -82,6 +82,36 @@ export function findRotation(
   return null;
 }
 
+/**
+ * 最优旋转：门必须覆盖 required，多出来的门按「最少」挑一个朝向。
+ * 返回带「多余门集合」的结果，方便放完砌墙。
+ */
+export function bestRotation(
+  def: StructureDef,
+  required: ReadonlySet<Side>,
+  boundary: ReadonlySet<Side> = new Set(),
+): { def: StructureDef; extras: Set<Side> } | null {
+  let best: { def: StructureDef; extras: Set<Side> } | null = null;
+  let current = def;
+
+  for (let turn = 0; turn < 4; turn += 1) {
+    const ports = portsOf(current);
+    let covers = true;
+    for (const side of required) if (!ports.has(side)) covers = false;
+
+    if (covers) {
+      const extras = new Set<Side>();
+      for (const side of ports) {
+        if (!required.has(side) && !boundary.has(side)) extras.add(side);
+      }
+      if (best === null || extras.size < best.extras.size) best = { def: current, extras };
+    }
+
+    current = rotateStructure(current);
+  }
+
+  return best;
+}
 /** 必需边必须开；多余的门只允许开在边界上（否则会开向邻格的墙）。 */
 function matches(ports: ReadonlySet<Side>, required: ReadonlySet<Side>, boundary: ReadonlySet<Side>): boolean {
   for (const side of required) if (!ports.has(side)) return false;

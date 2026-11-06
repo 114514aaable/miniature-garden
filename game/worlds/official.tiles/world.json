@@ -19,7 +19,7 @@
   "generation": {
     "pipeline": [
       {
-        "op": "tiles",
+        "op": "layout",
         "tiles": [
           "tile_cross",
           "tile_room_nw",
@@ -28,7 +28,17 @@
           "tile_three",
           "tile_hall",
           "tile_pillar"
-        ]
+        ],
+        "rooms": 2,
+        "roomMin": [
+          2,
+          2
+        ],
+        "roomMax": [
+          2,
+          2
+        ],
+        "loops": 0.2
       }
     ]
   },
@@ -44,13 +54,13 @@
         "key": "width",
         "label": "宽",
         "type": "number",
-        "default": 21
+        "default": 35
       },
       {
         "key": "height",
         "label": "高",
         "type": "number",
-        "default": 21
+        "default": 28
       }
     ]
   }

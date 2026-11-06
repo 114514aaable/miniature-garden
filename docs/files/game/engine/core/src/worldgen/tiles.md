@@ -5,6 +5,7 @@
 ## 导出
 
 - `TilePlacement`
+- `bestRotation`
 - `findRotation`
 - `placeTiles`
 - `portsOf`
@@ -17,4 +18,5 @@
 
 ## 被引用
 
+- [`game/engine/core/src/worldgen/layout.ts`](game/engine/core/src/worldgen/layout.md)
 - [`game/engine/core/src/worldgen/pipeline.ts`](game/engine/core/src/worldgen/pipeline.md)
