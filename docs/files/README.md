@@ -58,7 +58,7 @@
 | `game/engine/core/src/worldgen/noise.ts` | 噪声：把「种子 + 坐标」变成 0..1 的值。 | [md](game/engine/core/src/worldgen/noise.md) |
 | `game/engine/core/src/worldgen/pipeline.ts` | 生成流水线：把生成算法拆成「一步一个算子」，串起来跑。 | [md](game/engine/core/src/worldgen/pipeline.md) |
 | `game/engine/core/src/worldgen/random.ts` | 生成器共用的小随机：只依赖种子，不读时钟。 | [md](game/engine/core/src/worldgen/random.md) |
-| `game/engine/core/src/worldgen/rooms.ts` | 房间布局：BSP 分区 → 每个矩形里放一个 room 结构 → 走廊连起来。 | [md](game/engine/core/src/worldgen/rooms.md) |
+| `game/engine/core/src/worldgen/rooms.ts` | 房间布局：BSP 摆房间 → 门当顶点 → 修走廊把门连起来。 | [md](game/engine/core/src/worldgen/rooms.md) |
 | `game/engine/core/src/worldgen/select.ts` | 选：把「若干场」翻译成「群系」，再把群系翻译成「地形」。 | [md](game/engine/core/src/worldgen/select.md) |
 | `game/engine/core/src/worldgen/structures.ts` | 结构：带图例的字符画，摆进生成出来的地图里。 | [md](game/engine/core/src/worldgen/structures.md) |
 | `game/engine/core/types/node-shim.d.ts` | 临时的 node 类型声明。 | [md](game/engine/core/types/node-shim.d.md) |

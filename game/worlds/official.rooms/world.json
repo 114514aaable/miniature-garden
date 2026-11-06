@@ -32,7 +32,8 @@
         ],
         "corridor": "floor",
         "connect": "anchors",
-        "inset": 1
+        "inset": 1,
+        "loops": 0.25
       }
     ]
   },

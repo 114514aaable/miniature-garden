@@ -1,10 +1,11 @@
 # `game/engine/core/src/worldgen/rooms.ts`
 
-房间布局：BSP 分区 → 每个矩形里放一个 room 结构 → 走廊连起来。
+房间布局：BSP 摆房间 → 门当顶点 → 修走廊把门连起来。
 
 ## 导出
 
 - `Rect`
+- `RoomDoor`
 - `RoomPlacement`
 - `RoomSpec`
 - `partition`

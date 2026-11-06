@@ -74,6 +74,8 @@ export type Step =
       readonly connect?: "anchors" | "centers";
       readonly inset?: number;
       readonly margin?: number;
+      /** 额外环路比例（0..1）。 */
+      readonly loops?: number;
     }
   | {
       readonly op: "place";
@@ -194,6 +196,7 @@ export function runPipeline(
             connect: step.connect,
             inset: step.inset,
             margin: step.margin,
+            loops: step.loops,
           },
           sandbox.seed + stepIndex * 7919,
           deps.terrainIdByCode,

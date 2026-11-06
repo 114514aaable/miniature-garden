@@ -99,6 +99,42 @@ test("房间：都放得下，走廊连通所有房间", () => {
   }
 });
 
+test("门必须是地板，且从任意一扇门能走到所有门", () => {
+  const width = 41;
+  const height = 31;
+  const terrain = new Array<number>(width * height).fill(1);
+  const { placements } = placeRooms(terrain, width, height, defs(),
+    { structures: ["cell", "hall"], minSize: [7, 6], corridor: "floor" }, 4, IDS, codeOf);
+
+  const doors = placements.flatMap((room) => room.doors);
+  assert.ok(doors.length >= 2, "至少要两扇门");
+
+  for (const door of doors) {
+    assert.equal(terrain[door.y * width + door.x], 3, `门不是地板：(${door.x}, ${door.y})`);
+  }
+
+  // 从第一扇门洪水填充，所有门都要能走到
+  const seen = new Set<number>();
+  const queue: Array<[number, number]> = [[doors[0].x, doors[0].y]];
+  seen.add(doors[0].y * width + doors[0].x);
+  while (queue.length > 0) {
+    const [x, y] = queue.shift() as [number, number];
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+      if (terrain[ny * width + nx] !== 3) continue;
+      if (seen.has(ny * width + nx)) continue;
+      seen.add(ny * width + nx);
+      queue.push([nx, ny]);
+    }
+  }
+
+  for (const door of doors) {
+    assert.ok(seen.has(door.y * width + door.x), `门走不到：(${door.x}, ${door.y})`);
+  }
+});
+
 test("房间：role 不对要报错", () => {
   const local = resolveStructures(new Map([["ruin", parseStructure({ legend: { "#": { terrain: "wall" } }, map: ["#"] }, "ruin")]]));
   const terrain = new Array<number>(20 * 20).fill(1);

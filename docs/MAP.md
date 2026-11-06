@@ -365,7 +365,7 @@ game/systems/render/*（投影成画面数据）
   - `interface FbmOptions`
   - `type NoiseKind`
   - `const NOISE_KINDS`
-- **`game/engine/core/src/worldgen/pipeline.ts`**（273 行）
+- **`game/engine/core/src/worldgen/pipeline.ts`**（276 行）
   生成流水线：把生成算法拆成「一步一个算子」，串起来跑。
   - `createSandbox(seed: number, width: number, height: number, fill: number) → Sandbox`
   - `runPipeline(sandbox: Sandbox, steps: readonly Step[], deps: PipelineDeps,) → Sandbox`
@@ -377,11 +377,12 @@ game/systems/render/*（投影成画面数据）
   生成器共用的小随机：只依赖种子，不读时钟。
   - `makeRandom(seed: number) → () => number`
   - `randomInt(rand: () => number, min: number, max: number) → number`
-- **`game/engine/core/src/worldgen/rooms.ts`**（244 行）
-  房间布局：BSP 分区 → 每个矩形里放一个 room 结构 → 走廊连起来。
+- **`game/engine/core/src/worldgen/rooms.ts`**（413 行）
+  房间布局：BSP 摆房间 → 门当顶点 → 修走廊把门连起来。
   - `partition(width: number, height: number, minSize: readonly [number, number], seed: number, inset = 1,) → Rect[]`
   - `placeRooms(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, spec: RoomSpec, seed: number, terrainIdByCode: ReadonlyMap<string, number>, codeOfTerrain: (terrainId: number) => string | undefined,)`
   - `interface Rect`
+  - `interface RoomDoor`
   - `interface RoomSpec`
   - `interface RoomPlacement`
 - **`game/engine/core/src/worldgen/select.ts`**（74 行）
