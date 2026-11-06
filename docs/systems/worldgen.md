@@ -283,7 +283,7 @@ anchors    门：坐标 + 朝向
 
 ```json
 { "op": "sprawl", "rooms": ["cell", "hall", "vault", "chamber"],
-  "count": 10, "margin": 1, "widen": 0.35 }
+  "count": 40, "margin": 1, "widen": 0.35 }
 ```
 
 **不贴网格**：房间随机中心、随机旋转，互相不重叠。

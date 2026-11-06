@@ -70,7 +70,7 @@ export function placeSprawl(
 
   const margin = Math.max(0, Math.floor(spec.margin ?? 1));
   const count = Math.max(1, Math.floor(spec.count ?? 10));
-  const tries = Math.max(count, Math.floor(spec.tries ?? 200));
+  const tries = Math.max(count * 30, Math.floor(spec.tries ?? 200));
 
   const rooms: SprawlRoom[] = [];
   const spawns: SpawnRequest[] = [];

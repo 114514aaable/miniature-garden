@@ -27,7 +27,7 @@
           "chamber",
           "crypt"
         ],
-        "count": 10,
+        "count": 40,
         "margin": 1,
         "corridor": "floor",
         "widen": 0.35
@@ -46,13 +46,13 @@
         "key": "width",
         "label": "宽",
         "type": "number",
-        "default": 40
+        "default": 80
       },
       {
         "key": "height",
         "label": "高",
         "type": "number",
-        "default": 30
+        "default": 60
       }
     ]
   }
