@@ -68,6 +68,7 @@ overworld    噪声 → 群系 → 地形
 caves        元胞自动机（fill / iterations / regions / chambers）
 maze         迭代回溯 + 编织；保证连通
 rooms        BSP 分区 + 房间结构 + 走廊；房间是数据（role: room）
+structures   role / anchors / 实体 / 子结构（展开时查环）
 pipeline     overworld → caves → maze → place → blend，可叠加
 确定性       纯函数 + 按坐标派发；元胞是迭代算法（不可按格并行）
 ```

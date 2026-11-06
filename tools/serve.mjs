@@ -169,6 +169,7 @@ let session = null;
 
 /** 把生成的图换进包的定义里（这样还是走 loadWorld 那一道校验）。 */
 function withGeneratedSpace(merged, loaded, seed, options, worldId) {
+  let generatedSpawns = [];
   const none = { merged, note: null };
   const generation = loaded.world.generation;
   if (generation === undefined) return none;
@@ -253,12 +254,14 @@ function withGeneratedSpace(merged, loaded, seed, options, worldId) {
 
   const targetWidth = clampSize(Math.max(width, needWidth));
   const targetHeight = clampSize(Math.max(height, needHeight));
+  if (generated?.spawns !== undefined) generatedSpawns = generated.spawns;
+
   const note =
     targetWidth !== clampSize(width) || targetHeight !== clampSize(height)
       ? `这张图放不下现有内容，已放大到 ${generated.width}×${generated.height}`
       : null;
 
-  return { merged: { ...merged, definitions }, note };
+  return { merged: { ...merged, definitions }, note, spawns: generatedSpawns };
 }
 
 /** 流水线 → 地形数组（地表、洞穴、混合都可以）。 */
@@ -273,7 +276,7 @@ function runPipelineToTerrain(steps, seed, width, height, loaded, ids, worldId) 
     structures: loadStructures(worldId),
   });
 
-  return { width: sandbox.width, height: sandbox.height, terrain: sandbox.terrain, stats: {} };
+  return { width: sandbox.width, height: sandbox.height, terrain: sandbox.terrain, stats: {}, spawns: sandbox.spawns };
 }
 
 /** 元胞地牢：墙/空 → 地形号。 */
@@ -343,6 +346,20 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
   // 包里没有 pc 就在出生点放一个（玩家是宿主概念，不是世界内容）
   if (!loaded.entities.some((entity) => entity.template === "pc")) {
     store.submit({ kind: "spawn", space: loaded.start.space, cell: loaded.start.pos, template: "pc" });
+  }
+
+  // 生成器产出的实体（结构里的箱子/火把）：模板不存在就跳过
+  for (const request of generated.spawns ?? []) {
+    if (!loaded.templates.has(request.template)) {
+      console.warn("[worldgen] 结构里的模板不存在：" + request.template + "（" + request.source + "）");
+      continue;
+    }
+    store.submit({
+      kind: "spawn",
+      space: loaded.start.space,
+      cell: { x: request.x, y: request.y },
+      template: request.template,
+    });
   }
 
   const spawnEvents = store.step();

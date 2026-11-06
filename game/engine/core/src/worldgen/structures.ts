@@ -4,20 +4,37 @@
 /**
  * 结构：带图例的字符画，摆进生成出来的地图里。
  *
- * 第一批只做「地形」：
  *   图例  { "#": { terrain: "wall" }, ".": { terrain: "floor" } }
  *   地图  ["###", "#.#", "###"]
  *
- * 摆放规则（全部确定性）：
- *   - 只落在允许的地形上（on 里的代号）
- *   - 彼此至少隔 spacing 格（切比雪夫距离）
- *   - 不出边界、不重叠
+ * 图例可以指向两种东西：
+ *   地形       {"#": { "terrain": "wall" }}
+ *   子结构     {"h": { "structure": "hut", "align": "center" }}
  *
- * 以后再加：实体、子结构、锚点、旋转。
+ * 子结构在加载期展开成一份「地形矩阵 + 实体列表 + 门」——运行时只认展开后的样子。
+ * 引用不能成环（和模板 extends 同一道关）。
+ *
+ * 摆放（place / rooms）只输出：
+ *   地形改了哪些格、实体出生在哪、哪些格子被跳过（撞墙）
  */
 
 import { cellRandom } from "./noise.ts";
 
+export interface StructureEntity {
+  /** 模板 id。 */
+  readonly template: string;
+  /** 相对结构的坐标。 */
+  readonly x: number;
+  readonly y: number;
+}
+
+export interface StructureAnchor {
+  readonly x: number;
+  readonly y: number;
+  readonly facing: string;
+}
+
+/** 展开后的结构：运行期只认这个。 */
 export interface StructureDef {
   readonly id: string;
   /** prop = 随便摆的景物；room = 房间（rooms 算子的候选）。 */
@@ -26,8 +43,20 @@ export interface StructureDef {
   readonly height: number;
   /** 每格的地形代号；null = 不改这一格。 */
   readonly cells: ReadonlyArray<string | null>;
-  /** 连接点（门）：坐标 + 朝向。 */
-  readonly anchors: ReadonlyArray<{ readonly x: number; readonly y: number; readonly facing: string }>;
+  readonly entities: ReadonlyArray<StructureEntity>;
+  readonly anchors: ReadonlyArray<StructureAnchor>;
+}
+
+/** 展开前：图例里可能是地形，也可能是子结构。 */
+export interface RawStructure {
+  readonly id: string;
+  readonly role: "prop" | "room";
+  readonly width: number;
+  readonly height: number;
+  readonly terrain: ReadonlyArray<string | null>;
+  readonly subs: ReadonlyArray<{ readonly x: number; readonly y: number; readonly id: string; readonly align: "top-left" | "center" }>;
+  readonly entities: ReadonlyArray<StructureEntity>;
+  readonly anchors: ReadonlyArray<StructureAnchor>;
 }
 
 export interface PlaceSpec {
@@ -49,8 +78,19 @@ export interface Placement {
   readonly y: number;
 }
 
-/** 校验并解析一个结构定义。 */
-export function parseStructure(raw: unknown, idKey: string): StructureDef {
+/** 一次出生请求：由生成器产出，宿主负责真正放。 */
+export interface SpawnRequest {
+  readonly template: string;
+  readonly x: number;
+  readonly y: number;
+  /** 来自哪个结构（调试用）。 */
+  readonly source: string;
+}
+
+const FACINGS = new Set(["north", "south", "east", "west"]);
+
+/** 校验并解析一个结构（子结构还没展开）。 */
+export function parseStructure(raw: unknown, idKey: string): RawStructure {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
     throw new Error(`结构 ${idKey}：应该是对象`);
   }
@@ -60,6 +100,7 @@ export function parseStructure(raw: unknown, idKey: string): StructureDef {
     legend?: unknown;
     role?: unknown;
     anchors?: unknown;
+    entities?: unknown;
   };
 
   if (!Array.isArray(data.map) || data.map.length === 0) {
@@ -82,33 +123,54 @@ export function parseStructure(raw: unknown, idKey: string): StructureDef {
 
   const legend = data.legend;
   if (typeof legend !== "object" || legend === null || Array.isArray(legend)) {
-    throw new Error(`结构 ${idKey}：缺少 legend（符号 → 地形）`);
+    throw new Error(`结构 ${idKey}：缺少 legend（符号 → 地形 / 子结构）`);
   }
 
   const terrainOf = new Map<string, string>();
+  const subOf = new Map<string, { id: string; align: "top-left" | "center" }>();
   for (const [symbol, entry] of Object.entries(legend)) {
     if (typeof entry !== "object" || entry === null) {
       throw new Error(`结构 ${idKey}：legend["${symbol}"] 应该是对象`);
     }
-    const terrain = (entry as { terrain?: unknown }).terrain;
-    if (typeof terrain !== "string" || terrain.length === 0) {
-      throw new Error(`结构 ${idKey}：legend["${symbol}"] 缺少 terrain`);
+
+    const record = entry as { terrain?: unknown; structure?: unknown; align?: unknown };
+    if (typeof record.terrain === "string" && record.terrain.length > 0) {
+      terrainOf.set(symbol, record.terrain);
+      continue;
     }
-    terrainOf.set(symbol, terrain);
+    if (typeof record.structure === "string" && record.structure.length > 0) {
+      const align = record.align ?? "top-left";
+      if (align !== "top-left" && align !== "center") {
+        throw new Error(`结构 ${idKey}：legend["${symbol}"] 的 align 只能是 top-left / center`);
+      }
+      subOf.set(symbol, { id: record.structure, align });
+      continue;
+    }
+    throw new Error(`结构 ${idKey}：legend["${symbol}"] 需要 terrain 或 structure`);
   }
 
-  const cells: Array<string | null> = [];
+  const terrain: Array<string | null> = [];
+  const subs: Array<{ x: number; y: number; id: string; align: "top-left" | "center" }> = [];
+
   for (const [y, row] of rows.entries()) {
     for (const [x, symbol] of [...row].entries()) {
       if (symbol === " ") {
-        cells.push(null);
+        terrain.push(null);
         continue;
       }
-      const terrain = terrainOf.get(symbol);
-      if (terrain === undefined) {
+
+      const sub = subOf.get(symbol);
+      if (sub !== undefined) {
+        terrain.push(null);
+        subs.push({ x, y, id: sub.id, align: sub.align });
+        continue;
+      }
+
+      const code = terrainOf.get(symbol);
+      if (code === undefined) {
         throw new Error(`结构 ${idKey}：(${x}, ${y}) 的符号 "${symbol}" 不在 legend 里`);
       }
-      cells.push(terrain);
+      terrain.push(code);
     }
   }
 
@@ -117,18 +179,114 @@ export function parseStructure(raw: unknown, idKey: string): StructureDef {
     role: parseRole(data),
     width,
     height: rows.length,
-    cells,
+    terrain,
+    subs,
+    entities: parseEntities(data, width, rows.length, idKey),
     anchors: parseAnchors(data, width, rows.length, idKey),
   };
 }
 
-const FACINGS = new Set(["north", "south", "east", "west"]);
+/**
+ * 把所有结构展开成「地形矩阵 + 实体 + 门」。
+ *
+ * 子结构按 legend 里的对齐方式盖上，后盖的覆盖先盖的；有环直接报错。
+ */
+export function resolveStructures(raws: ReadonlyMap<string, RawStructure>): Map<string, StructureDef> {
+  const resolved = new Map<string, StructureDef>();
+  const visiting = new Set<string>();
+
+  const resolve = (id: string): StructureDef => {
+    const done = resolved.get(id);
+    if (done !== undefined) return done;
+
+    const raw = raws.get(id);
+    if (raw === undefined) throw new Error(`结构不存在："${id}"`);
+
+    if (visiting.has(id)) {
+      throw new Error(`结构引用成环：${[...visiting].join(" → ")} → ${id}`);
+    }
+    visiting.add(id);
+
+    const cells: Array<string | null> = [...raw.terrain];
+    const entities: StructureEntity[] = [...raw.entities];
+    const anchors: StructureAnchor[] = [...raw.anchors];
+
+    for (const sub of raw.subs) {
+      const child = resolve(sub.id);
+      const originX = sub.align === "center" ? sub.x - Math.floor(child.width / 2) : sub.x;
+      const originY = sub.align === "center" ? sub.y - Math.floor(child.height / 2) : sub.y;
+
+      if (originX < 0 || originY < 0 || originX + child.width > raw.width || originY + child.height > raw.height) {
+        throw new Error(`结构 ${id}：子结构 ${sub.id} 放不下（越界）`);
+      }
+
+      for (let y = 0; y < child.height; y += 1) {
+        for (let x = 0; x < child.width; x += 1) {
+          const code = child.cells[y * child.width + x];
+          if (code !== null) cells[(originY + y) * raw.width + originX + x] = code;
+        }
+      }
+
+      for (const entity of child.entities) {
+        entities.push({ template: entity.template, x: originX + entity.x, y: originY + entity.y });
+      }
+      for (const anchor of child.anchors) {
+        anchors.push({ x: originX + anchor.x, y: originY + anchor.y, facing: anchor.facing });
+      }
+    }
+
+    visiting.delete(id);
+
+    const def: StructureDef = {
+      id: raw.id,
+      role: raw.role,
+      width: raw.width,
+      height: raw.height,
+      cells,
+      entities,
+      anchors,
+    };
+    resolved.set(id, def);
+    return def;
+  };
+
+  for (const id of raws.keys()) resolve(id);
+  return resolved;
+}
 
 /** role：默认 prop。 */
 function parseRole(data: { role?: unknown }): "prop" | "room" {
   if (data.role === undefined) return "prop";
   if (data.role === "prop" || data.role === "room") return data.role;
   throw new Error(`结构的 role 只能是 prop / room，收到 "${String(data.role)}"`);
+}
+
+/** entities：[{ template, dx, dy }]，坐标必须在图里。 */
+function parseEntities(
+  data: { entities?: unknown },
+  width: number,
+  height: number,
+  idKey: string,
+): StructureEntity[] {
+  if (data.entities === undefined) return [];
+  if (!Array.isArray(data.entities)) throw new Error(`结构 ${idKey}：entities 应该是数组`);
+
+  return data.entities.map((entry, index) => {
+    if (typeof entry !== "object" || entry === null) {
+      throw new Error(`结构 ${idKey}：entities[${index}] 应该是对象`);
+    }
+    const { template, dx, dy } = entry as { template?: unknown; dx?: unknown; dy?: unknown };
+    if (typeof template !== "string" || template.length === 0) {
+      throw new Error(`结构 ${idKey}：entities[${index}] 缺少 template`);
+    }
+    if (typeof dx !== "number" || typeof dy !== "number" || !Number.isInteger(dx) || !Number.isInteger(dy)) {
+      throw new Error(`结构 ${idKey}：entities[${index}] 的 dx / dy 应该是整数`);
+    }
+    if (dx < 0 || dy < 0 || dx >= width || dy >= height) {
+      throw new Error(`结构 ${idKey}：entities[${index}] (${dx}, ${dy}) 不在图里`);
+    }
+    return { template, x: dx, y: dy };
+  });
 }
 
 /** anchors：坐标必须在图里，朝向必须是四个方向之一。 */
@@ -159,7 +317,11 @@ function parseAnchors(
   });
 }
 
-/** 把结构盖进地形数组（越界的格子跳过）。 */
+/**
+ * 把结构盖进地形数组（越界的格子跳过）。
+ *
+ * 返回出生请求：落在墙上的实体跳过，并记一条警告。
+ */
 export function stampStructure(
   terrain: number[],
   mapWidth: number,
@@ -168,7 +330,8 @@ export function stampStructure(
   originX: number,
   originY: number,
   terrainIdByCode: ReadonlyMap<string, number>,
-): void {
+  warnings?: string[],
+): SpawnRequest[] {
   for (let y = 0; y < structure.height; y += 1) {
     for (let x = 0; x < structure.width; x += 1) {
       const code = structure.cells[y * structure.width + x];
@@ -184,6 +347,32 @@ export function stampStructure(
       terrain[targetY * mapWidth + targetX] = id;
     }
   }
+
+  const spawns: SpawnRequest[] = [];
+  for (const entity of structure.entities) {
+    const x = originX + entity.x;
+    const y = originY + entity.y;
+    if (x < 0 || y < 0 || x >= mapWidth || y >= mapHeight) {
+      warnings?.push(`${structure.id}：实体 ${entity.template} 越界（${x}, ${y}）`);
+      continue;
+    }
+
+    const cell = terrain[y * mapWidth + x];
+    const code = codeOf(terrainIdByCode, cell);
+    if (code === "wall") {
+      warnings?.push(`${structure.id}：实体 ${entity.template} 落在墙上，跳过（${x}, ${y}）`);
+      continue;
+    }
+
+    spawns.push({ template: entity.template, x, y, source: `${structure.id}@${originX},${originY}` });
+  }
+
+  return spawns;
+}
+
+function codeOf(terrainIdByCode: ReadonlyMap<string, number>, id: number): string | undefined {
+  for (const [code, value] of terrainIdByCode) if (value === id) return code;
+  return undefined;
 }
 
 /**
@@ -200,15 +389,17 @@ export function placeStructures(
   seed: number,
   terrainIdByCode: ReadonlyMap<string, number>,
   codeOfTerrain: (terrainId: number) => string | undefined,
-): Placement[] {
+  warnings?: string[],
+): { placements: Placement[]; spawns: SpawnRequest[] } {
   const count = Math.max(0, Math.floor(spec.count ?? 1));
   const spacing = Math.max(0, Math.floor(spec.spacing ?? 4));
   const inset = Math.max(0, Math.floor(spec.inset ?? 1));
   const allowed = spec.on === undefined ? null : new Set(spec.on);
   const tries = Math.max(1, Math.floor(spec.tries ?? 200));
 
-  const placed: Placement[] = [];
-  const taken: Array<{ x: number; y: number; w: number; h: number; id: string }> = [];
+  const placements: Placement[] = [];
+  const spawns: SpawnRequest[] = [];
+  const taken: Array<{ x: number; y: number; w: number; h: number }> = [];
 
   for (let index = 0; index < count; index += 1) {
     const id = spec.structures[index % spec.structures.length];
@@ -226,14 +417,14 @@ export function placeStructures(
       if (!fits(terrain, width, allowed, codeOfTerrain, def, x, y)) continue;
       if (!spaced(taken, def, x, y, spacing)) continue;
 
-      stampStructure(terrain, width, height, def, x, y, terrainIdByCode);
-      taken.push({ x, y, w: def.width, h: def.height, id });
-      placed.push({ structure: id, x, y });
+      spawns.push(...stampStructure(terrain, width, height, def, x, y, terrainIdByCode, warnings));
+      taken.push({ x, y, w: def.width, h: def.height });
+      placements.push({ structure: id, x, y });
       break;
     }
   }
 
-  return placed;
+  return { placements, spawns };
 }
 
 /** 整个 footprint 都在允许的地形上吗？ */

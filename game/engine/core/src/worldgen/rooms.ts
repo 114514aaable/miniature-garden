@@ -13,7 +13,7 @@
  */
 
 import { makeRandom, randomInt } from "./random.ts";
-import { stampStructure, type StructureDef } from "./structures.ts";
+import { stampStructure, type SpawnRequest, type StructureDef } from "./structures.ts";
 
 export interface Rect {
   readonly x: number;
@@ -118,7 +118,7 @@ export function placeRooms(
   seed: number,
   terrainIdByCode: ReadonlyMap<string, number>,
   codeOfTerrain: (terrainId: number) => string | undefined,
-): RoomPlacement[] {
+): { placements: RoomPlacement[]; spawns: SpawnRequest[] } {
   void codeOfTerrain;
 
   const inset = Math.max(1, Math.floor(spec.inset ?? 1));
@@ -139,8 +139,9 @@ export function placeRooms(
   const rects = partition(width, height, minSize, seed, inset);
   const limit = Math.max(0, Math.floor(spec.count ?? rects.length));
   const placements: RoomPlacement[] = [];
+  const spawns: SpawnRequest[] = [];
 
-  for (const rect of rects) {
+  for (const [rectIndex, rect] of rects.entries()) {
     if (placements.length >= limit) break;
 
     // 挑一个放得下的房间：优先大的（面积接近），同样大按 id 稳定排序
@@ -150,11 +151,12 @@ export function placeRooms(
 
     if (fitting.length === 0) continue;
 
-    const def = fitting[0];
+    // 轮着用：全是同一种房间会很单调
+    const def = fitting[rectIndex % fitting.length];
     const x = rect.x + Math.floor((rect.w - def.width) / 2);
     const y = rect.y + Math.floor((rect.h - def.height) / 2);
 
-    stampStructure(terrain, width, height, def, x, y, terrainIdByCode);
+    spawns.push(...stampStructure(terrain, width, height, def, x, y, terrainIdByCode));
 
     const doors = def.anchors.map((anchor) => ({
       x: x + anchor.x,
@@ -196,7 +198,7 @@ export function placeRooms(
     pending.delete(bestB);
   }
 
-  return placements;
+  return { placements, spawns };
 }
 
 function centerOf(room: RoomPlacement): { x: number; y: number } {

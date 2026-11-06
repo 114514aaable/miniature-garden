@@ -16,8 +16,8 @@
 
 import { generateCaves } from "./caves.ts";
 import { generateMaze } from "./maze.ts";
-import { placeStructures, type StructureDef } from "./structures.ts";
-import { placeRooms, type RoomPlacement } from "./rooms.ts";
+import { placeStructures, type SpawnRequest, type StructureDef } from "./structures.ts";
+import { placeRooms } from "./rooms.ts";
 import { generateTerrain, type FieldConfig } from "./generate.ts";
 import type { Biome } from "./select.ts";
 
@@ -31,6 +31,8 @@ export interface Sandbox {
   readonly layers: Map<string, readonly number[]>;
   /** 群系号（overworld 算子写）。 */
   biome: number[];
+  /** 生成期产出的出生请求（结构里的实体）。 */
+  spawns: SpawnRequest[];
 }
 
 export interface PipelineDeps {
@@ -102,6 +104,7 @@ export function createSandbox(seed: number, width: number, height: number, fill:
     terrain: new Array<number>(width * height).fill(fill),
     layers: new Map(),
     biome: new Array<number>(width * height).fill(0),
+    spawns: [],
   };
 }
 
@@ -177,7 +180,7 @@ export function runPipeline(
         if (wallId === undefined) throw new Error("rooms 需要地形：wall");
         sandbox.terrain.fill(wallId);
 
-        const placements: RoomPlacement[] = placeRooms(
+        const roomResult = placeRooms(
           sandbox.terrain,
           sandbox.width,
           sandbox.height,
@@ -197,7 +200,8 @@ export function runPipeline(
           codeOf,
         );
 
-        void placements; // 以后 fill / 传送会用到房间位置
+        sandbox.spawns.push(...roomResult.spawns);
+        void roomResult.placements; // 以后 fill / 传送会用到
         break;
       }
 
@@ -210,7 +214,7 @@ export function runPipeline(
           return undefined;
         };
 
-        placeStructures(
+        const placed = placeStructures(
           sandbox.terrain,
           sandbox.width,
           sandbox.height,
@@ -227,6 +231,7 @@ export function runPipeline(
           deps.terrainIdByCode,
           codeOf,
         );
+        sandbox.spawns.push(...placed.spawns);
         break;
       }
 

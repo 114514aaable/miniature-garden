@@ -6,9 +6,14 @@
 
 - `PlaceSpec`
 - `Placement`
+- `RawStructure`
+- `SpawnRequest`
+- `StructureAnchor`
 - `StructureDef`
+- `StructureEntity`
 - `parseStructure`
 - `placeStructures`
+- `resolveStructures`
 - `stampStructure`
 
 ## 依赖

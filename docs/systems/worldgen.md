@@ -250,6 +250,30 @@ mask             无随机
 
 **顺序有意义，后写的覆盖先写的。** 示例世界 `official.cavern` 就是三层叠加。
 
+### 结构 v2：组合、实体、门
+
+```json
+{ "id": "camp",
+  "role": "room",
+  "legend": { "#": { "terrain": "wall" }, ".": { "terrain": "floor" },
+              "h": { "structure": "hut", "align": "center" } },
+  "map": ["#########", "#.......#", "#...h...#", "#########"],
+  "entities": [{ "template": "prop_crate", "dx": 1, "dy": 1 }],
+  "anchors": [{ "kind": "door", "x": 4, "y": 3, "facing": "south" }] }
+```
+
+```
+图例条目   terrain → 铺地形
+           structure → 在那一格盖子结构（align: top-left / center）
+entities   结构里的实体（偏移写死，不带随机）
+anchors    门：坐标 + 朝向
+```
+
+**加载期展开**：子结构被展开成「地形矩阵 + 实体 + 门」，引用成环直接报错。
+
+**出生请求**：生成器只产出 `spawns`（模板 + 坐标 + 来源），
+宿主建会话时在「换地形之后、跑 init 之前」统一放；落在墙上的实体跳过并警告。
+
 ### 房间（rooms）
 
 **房间不是数据结构，是结构的角色。**

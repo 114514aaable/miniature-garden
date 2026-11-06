@@ -9,7 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { partition, placeRooms } from "./rooms.ts";
-import { parseStructure, type StructureDef } from "./structures.ts";
+import { parseStructure, resolveStructures, type StructureDef } from "./structures.ts";
 
 const IDS = new Map([
   ["wall", 1],
@@ -36,10 +36,11 @@ const HALL = {
 };
 
 function defs(): Map<string, StructureDef> {
-  return new Map([
+  const raws = new Map([
     ["cell", parseStructure(CELL, "cell")],
     ["hall", parseStructure(HALL, "hall")],
   ]);
+  return resolveStructures(raws);
 }
 
 test("BSP：切出的矩形都在里面且不小于最小值", () => {
@@ -61,7 +62,7 @@ test("房间：都放得下，走廊连通所有房间", () => {
   const width = 41;
   const height = 31;
   const terrain = new Array<number>(width * height).fill(1);
-  const placements = placeRooms(
+  const { placements } = placeRooms(
     terrain, width, height, defs(),
     { structures: ["cell", "hall"], minSize: [7, 6], corridor: "floor" },
     3, IDS, codeOf,
@@ -99,7 +100,7 @@ test("房间：都放得下，走廊连通所有房间", () => {
 });
 
 test("房间：role 不对要报错", () => {
-  const local = new Map([["ruin", parseStructure({ legend: { "#": { terrain: "wall" } }, map: ["#"] }, "ruin")]]);
+  const local = resolveStructures(new Map([["ruin", parseStructure({ legend: { "#": { terrain: "wall" } }, map: ["#"] }, "ruin")]]));
   const terrain = new Array<number>(20 * 20).fill(1);
   assert.throws(
     () => placeRooms(terrain, 20, 20, local, { structures: ["ruin"] }, 1, IDS, codeOf),
@@ -118,7 +119,7 @@ test("房间：引用不存在的结构要报错", () => {
 test("房间：确定性（同样的种子同样的图）", () => {
   const make = () => {
     const terrain = new Array<number>(41 * 31).fill(1);
-    const placements = placeRooms(terrain, 41, 31, defs(), { structures: ["cell", "hall"], corridor: "floor" }, 5, IDS, codeOf);
+    const { placements } = placeRooms(terrain, 41, 31, defs(), { structures: ["cell", "hall"], corridor: "floor" }, 5, IDS, codeOf);
     return { terrain, placements };
   };
   const a = make();

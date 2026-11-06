@@ -365,7 +365,7 @@ game/systems/render/*（投影成画面数据）
   - `interface FbmOptions`
   - `type NoiseKind`
   - `const NOISE_KINDS`
-- **`game/engine/core/src/worldgen/pipeline.ts`**（268 行）
+- **`game/engine/core/src/worldgen/pipeline.ts`**（273 行）
   生成流水线：把生成算法拆成「一步一个算子」，串起来跑。
   - `createSandbox(seed: number, width: number, height: number, fill: number) → Sandbox`
   - `runPipeline(sandbox: Sandbox, steps: readonly Step[], deps: PipelineDeps,) → Sandbox`
@@ -377,10 +377,10 @@ game/systems/render/*（投影成画面数据）
   生成器共用的小随机：只依赖种子，不读时钟。
   - `makeRandom(seed: number) → () => number`
   - `randomInt(rand: () => number, min: number, max: number) → number`
-- **`game/engine/core/src/worldgen/rooms.ts`**（242 行）
+- **`game/engine/core/src/worldgen/rooms.ts`**（244 行）
   房间布局：BSP 分区 → 每个矩形里放一个 room 结构 → 走廊连起来。
   - `partition(width: number, height: number, minSize: readonly [number, number], seed: number, inset = 1,) → Rect[]`
-  - `placeRooms(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, spec: RoomSpec, seed: number, terrainIdByCode: ReadonlyMap<string, number>, codeOfTerrain: (terrainId: number) => string | undefined,) → RoomPlacement[]`
+  - `placeRooms(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, spec: RoomSpec, seed: number, terrainIdByCode: ReadonlyMap<string, number>, codeOfTerrain: (terrainId: number) => string | undefined,)`
   - `interface Rect`
   - `interface RoomSpec`
   - `interface RoomPlacement`
@@ -393,14 +393,19 @@ game/systems/render/*（投影成画面数据）
   - `interface Biome`
   - `interface TerrainLevels`
   - `type Sample`
-- **`game/engine/core/src/worldgen/structures.ts`**（275 行）
+- **`game/engine/core/src/worldgen/structures.ts`**（466 行）
   结构：带图例的字符画，摆进生成出来的地图里。
-  - `parseStructure(raw: unknown, idKey: string) → StructureDef`
-  - `stampStructure(terrain: number[], mapWidth: number, mapHeight: number, structure: StructureDef, originX: number, originY: number, terrainIdByCode: ReadonlyMap<string, number>,) → void`
-  - `placeStructures(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, spec: PlaceSpec, seed: number, terrainIdByCode: ReadonlyMap<string, number>, codeOfTerrain: (terrainId: number) => string | undefined,) → Placement[]`
+  - `parseStructure(raw: unknown, idKey: string) → RawStructure`
+  - `resolveStructures(raws: ReadonlyMap<string, RawStructure>) → Map<string, StructureDef>`
+  - `stampStructure(terrain: number[], mapWidth: number, mapHeight: number, structure: StructureDef, originX: number, originY: number, terrainIdByCode: ReadonlyMap<string, number>, warnings?: string[],) → SpawnRequest[]`
+  - `placeStructures(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, spec: PlaceSpec, seed: number, terrainIdByCode: ReadonlyMap<string, number>, codeOfTerrain: (terrainId: number) => string | undefined, warnings?: string[],)`
+  - `interface StructureEntity`
+  - `interface StructureAnchor`
   - `interface StructureDef`
+  - `interface RawStructure`
   - `interface PlaceSpec`
   - `interface Placement`
+  - `interface SpawnRequest`
 
 ### 系统 game/systems
 
@@ -669,7 +674,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（2043 行）
+- **`tools/serve.mjs`**（2060 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。

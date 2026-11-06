@@ -3,9 +3,15 @@
     "id": "ruin",
     "role": "prop",
     "legend": {
-      "#": { "terrain": "wall" },
-      ".": { "terrain": "floor" },
-      " ": { "terrain": "floor" }
+      "#": {
+        "terrain": "wall"
+      },
+      ".": {
+        "terrain": "floor"
+      },
+      " ": {
+        "terrain": "floor"
+      }
     },
     "map": [
       "#####",
@@ -19,8 +25,12 @@
     "id": "hut",
     "role": "prop",
     "legend": {
-      "#": { "terrain": "wall" },
-      ".": { "terrain": "floor" }
+      "#": {
+        "terrain": "wall"
+      },
+      ".": {
+        "terrain": "floor"
+      }
     },
     "map": [
       "####",
@@ -33,8 +43,12 @@
     "id": "cell",
     "role": "room",
     "legend": {
-      "#": { "terrain": "wall" },
-      ".": { "terrain": "floor" }
+      "#": {
+        "terrain": "wall"
+      },
+      ".": {
+        "terrain": "floor"
+      }
     },
     "map": [
       "#####",
@@ -42,14 +56,25 @@
       "#...#",
       "##.##"
     ],
-    "anchors": [{ "kind": "door", "x": 2, "y": 3, "facing": "south" }]
+    "anchors": [
+      {
+        "kind": "door",
+        "x": 2,
+        "y": 3,
+        "facing": "south"
+      }
+    ]
   },
   {
     "id": "hall",
     "role": "room",
     "legend": {
-      "#": { "terrain": "wall" },
-      ".": { "terrain": "floor" }
+      "#": {
+        "terrain": "wall"
+      },
+      ".": {
+        "terrain": "floor"
+      }
     },
     "map": [
       "#######",
@@ -57,14 +82,25 @@
       "#.....#",
       "###.###"
     ],
-    "anchors": [{ "kind": "door", "x": 3, "y": 3, "facing": "south" }]
+    "anchors": [
+      {
+        "kind": "door",
+        "x": 3,
+        "y": 3,
+        "facing": "south"
+      }
+    ]
   },
   {
     "id": "vault",
     "role": "room",
     "legend": {
-      "#": { "terrain": "wall" },
-      ".": { "terrain": "floor" }
+      "#": {
+        "terrain": "wall"
+      },
+      ".": {
+        "terrain": "floor"
+      }
     },
     "map": [
       "#####",
@@ -73,6 +109,20 @@
       "#...#",
       "##.##"
     ],
-    "anchors": [{ "kind": "door", "x": 2, "y": 4, "facing": "south" }]
+    "anchors": [
+      {
+        "kind": "door",
+        "x": 2,
+        "y": 4,
+        "facing": "south"
+      }
+    ],
+    "entities": [
+      {
+        "template": "prop_crate",
+        "dx": 2,
+        "dy": 2
+      }
+    ]
   }
 ]

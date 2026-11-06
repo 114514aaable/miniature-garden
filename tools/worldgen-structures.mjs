@@ -5,13 +5,13 @@
  * 读一个世界的「结构」定义（生成期数据，不进运行时加载）。
  *
  * 约定：包目录下 worldgen/structures.json，可以多个包叠加，
- * 后面的包覆盖前面的同名结构。
+ * 后面的包覆盖前面的同名结构；读的时候先把子结构展开、检查引用环。
  */
 
 import { existsSync, readFileSync } from "node:fs";
 
 import { readPack } from "./pack-reader.mjs";
-import { parseStructure } from "../game/engine/core/src/worldgen/structures.ts";
+import { parseStructure, resolveStructures } from "../game/engine/core/src/worldgen/structures.ts";
 
 /** 世界 → 它依赖的包目录（按加载顺序）。 */
 function packDirsOf(worldId) {
@@ -34,22 +34,22 @@ function packDirsOf(worldId) {
 }
 
 export function loadStructures(worldId) {
-  const defs = new Map();
+  const raws = new Map();
 
   for (const dir of packDirsOf(worldId)) {
     const file = dir + "/worldgen/structures.json";
     if (!existsSync(file)) continue;
 
-    const raw = JSON.parse(readFileSync(file, "utf8"));
-    const items = Array.isArray(raw) ? raw : [];
+    const items = JSON.parse(readFileSync(file, "utf8"));
+    if (!Array.isArray(items)) continue;
 
     for (const item of items) {
       if (typeof item !== "object" || item === null || typeof item.id !== "string") continue;
-      defs.set(item.id, parseStructure(item, item.id));
+      raws.set(item.id, parseStructure(item, item.id));
     }
   }
 
-  return defs;
+  return resolveStructures(raws);
 }
 
 /** 调试用：把结构印成字符画。 */
