@@ -250,6 +250,35 @@ mask             无随机
 
 **顺序有意义，后写的覆盖先写的。** 示例世界 `official.cavern` 就是三层叠加。
 
+### 房间（rooms）
+
+**房间不是数据结构，是结构的角色。**
+
+```json
+{ "id": "hall", "role": "room",
+  "legend": { "#": { "terrain": "wall" }, ".": { "terrain": "floor" } },
+  "map": ["#######", "#.....#", "#.....#", "###.###"],
+  "anchors": [{ "kind": "door", "x": 3, "y": 3, "facing": "south" }] }
+```
+
+```json
+{ "op": "rooms", "structures": ["cell", "hall", "vault"],
+  "minSize": [7, 6], "corridor": "floor", "connect": "anchors" }
+```
+
+四步：
+
+```
+1  BSP 把地图切成矩形（每块 ≥ minSize，切法由种子决定）
+2  每块挑一个放得下的 room 结构，居中盖上
+3  相邻房间按中心距离做最小生成树，挖 L 形走廊
+4  有门（anchors）就走门，没有就中心对中心
+```
+
+- 整张图先填墙，再由房间和走廊挖出来；
+- 连通性有测试（洪水填充必须走到每个房间）；
+- 实现：`worldgen/rooms.ts`，流水线 `rooms` 阶段。
+
 ### 迷宫（maze）
 
 ```json

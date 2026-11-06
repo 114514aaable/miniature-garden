@@ -20,10 +20,14 @@ import { cellRandom } from "./noise.ts";
 
 export interface StructureDef {
   readonly id: string;
+  /** prop = 随便摆的景物；room = 房间（rooms 算子的候选）。 */
+  readonly role: "prop" | "room";
   readonly width: number;
   readonly height: number;
   /** 每格的地形代号；null = 不改这一格。 */
   readonly cells: ReadonlyArray<string | null>;
+  /** 连接点（门）：坐标 + 朝向。 */
+  readonly anchors: ReadonlyArray<{ readonly x: number; readonly y: number; readonly facing: string }>;
 }
 
 export interface PlaceSpec {
@@ -54,6 +58,8 @@ export function parseStructure(raw: unknown, idKey: string): StructureDef {
   const data = raw as {
     map?: unknown;
     legend?: unknown;
+    role?: unknown;
+    anchors?: unknown;
   };
 
   if (!Array.isArray(data.map) || data.map.length === 0) {
@@ -106,7 +112,51 @@ export function parseStructure(raw: unknown, idKey: string): StructureDef {
     }
   }
 
-  return { id: idKey, width, height: rows.length, cells };
+  return {
+    id: idKey,
+    role: parseRole(data),
+    width,
+    height: rows.length,
+    cells,
+    anchors: parseAnchors(data, width, rows.length, idKey),
+  };
+}
+
+const FACINGS = new Set(["north", "south", "east", "west"]);
+
+/** role：默认 prop。 */
+function parseRole(data: { role?: unknown }): "prop" | "room" {
+  if (data.role === undefined) return "prop";
+  if (data.role === "prop" || data.role === "room") return data.role;
+  throw new Error(`结构的 role 只能是 prop / room，收到 "${String(data.role)}"`);
+}
+
+/** anchors：坐标必须在图里，朝向必须是四个方向之一。 */
+function parseAnchors(
+  data: { anchors?: unknown },
+  width: number,
+  height: number,
+  idKey: string,
+): Array<{ x: number; y: number; facing: string }> {
+  if (data.anchors === undefined) return [];
+  if (!Array.isArray(data.anchors)) throw new Error(`结构 ${idKey}：anchors 应该是数组`);
+
+  return data.anchors.map((anchor, index) => {
+    if (typeof anchor !== "object" || anchor === null) {
+      throw new Error(`结构 ${idKey}：anchors[${index}] 应该是对象`);
+    }
+    const { x, y, facing } = anchor as { x?: unknown; y?: unknown; facing?: unknown };
+    if (typeof x !== "number" || typeof y !== "number" || !Number.isInteger(x) || !Number.isInteger(y)) {
+      throw new Error(`结构 ${idKey}：anchors[${index}] 的 x / y 应该是整数`);
+    }
+    if (x < 0 || y < 0 || x >= width || y >= height) {
+      throw new Error(`结构 ${idKey}：anchors[${index}] (${x}, ${y}) 不在图里`);
+    }
+    if (typeof facing !== "string" || !FACINGS.has(facing)) {
+      throw new Error(`结构 ${idKey}：anchors[${index}] 的 facing 必须是 north / south / east / west`);
+    }
+    return { x, y, facing };
+  });
 }
 
 /** 把结构盖进地形数组（越界的格子跳过）。 */

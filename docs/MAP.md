@@ -365,7 +365,7 @@ game/systems/render/*（投影成画面数据）
   - `interface FbmOptions`
   - `type NoiseKind`
   - `const NOISE_KINDS`
-- **`game/engine/core/src/worldgen/pipeline.ts`**（217 行）
+- **`game/engine/core/src/worldgen/pipeline.ts`**（268 行）
   生成流水线：把生成算法拆成「一步一个算子」，串起来跑。
   - `createSandbox(seed: number, width: number, height: number, fill: number) → Sandbox`
   - `runPipeline(sandbox: Sandbox, steps: readonly Step[], deps: PipelineDeps,) → Sandbox`
@@ -373,6 +373,17 @@ game/systems/render/*（投影成画面数据）
   - `interface PipelineDeps`
   - `type Step`
   - `const CAVE_LAYER`
+- **`game/engine/core/src/worldgen/random.ts`**（22 行）
+  生成器共用的小随机：只依赖种子，不读时钟。
+  - `makeRandom(seed: number) → () => number`
+  - `randomInt(rand: () => number, min: number, max: number) → number`
+- **`game/engine/core/src/worldgen/rooms.ts`**（242 行）
+  房间布局：BSP 分区 → 每个矩形里放一个 room 结构 → 走廊连起来。
+  - `partition(width: number, height: number, minSize: readonly [number, number], seed: number, inset = 1,) → Rect[]`
+  - `placeRooms(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, spec: RoomSpec, seed: number, terrainIdByCode: ReadonlyMap<string, number>, codeOfTerrain: (terrainId: number) => string | undefined,) → RoomPlacement[]`
+  - `interface Rect`
+  - `interface RoomSpec`
+  - `interface RoomPlacement`
 - **`game/engine/core/src/worldgen/select.ts`**（74 行）
   选：把「若干场」翻译成「群系」，再把群系翻译成「地形」。
   - `matchesRange(range: BiomeRange, sample: Sample) → boolean`
@@ -382,7 +393,7 @@ game/systems/render/*（投影成画面数据）
   - `interface Biome`
   - `interface TerrainLevels`
   - `type Sample`
-- **`game/engine/core/src/worldgen/structures.ts`**（225 行）
+- **`game/engine/core/src/worldgen/structures.ts`**（275 行）
   结构：带图例的字符画，摆进生成出来的地图里。
   - `parseStructure(raw: unknown, idKey: string) → StructureDef`
   - `stampStructure(terrain: number[], mapWidth: number, mapHeight: number, structure: StructureDef, originX: number, originY: number, terrainIdByCode: ReadonlyMap<string, number>,) → void`

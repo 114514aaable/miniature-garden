@@ -1,0 +1,21 @@
+{
+  "id": "official.rooms",
+  "kind": "overlay",
+  "version": "0.1.0",
+  "name": "房间地牢",
+  "description": "先切房间，再挖走廊。房间是数据，走廊是算法。",
+  "license": "CC-BY-SA-4.0",
+  "engine": ">=0.1.0",
+  "extends": "official.base@0.1.0",
+  "requires": {
+    "official.base": "^0.1.0"
+  },
+  "files": {
+    "world": [
+      "world.json"
+    ],
+    "spaces": [
+      "spaces/rooms.json"
+    ]
+  }
+}

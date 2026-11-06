@@ -125,5 +125,7 @@
   "template.rat.name": "洞鼠",
   "template.rat.desc": "会咬人的小东西。",
   "world.official.labyrinth.name": "迷宫",
-  "world.official.labyrinth.desc": "在实心岩里挖出来的一座迷宫。通道绕，但一定走得通。"
+  "world.official.labyrinth.desc": "在实心岩里挖出来的一座迷宫。通道绕，但一定走得通。",
+  "world.official.rooms.name": "房间地牢",
+  "world.official.rooms.desc": "先切房间，再挖走廊。房间是数据，走廊是算法。"
 }

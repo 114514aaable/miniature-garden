@@ -1,0 +1,61 @@
+{
+  "start": {
+    "space": "rooms",
+    "x": 2,
+    "y": 2
+  },
+  "rules": [
+    "core.move",
+    "core.take",
+    "core.drop",
+    "core.wait",
+    "core.aim",
+    "base.attack",
+    "base.cast",
+    "core.use",
+    "base.rest",
+    "base.rest_finish"
+  ],
+  "onConflict": "error",
+  "generation": {
+    "pipeline": [
+      {
+        "op": "rooms",
+        "structures": [
+          "cell",
+          "hall",
+          "vault"
+        ],
+        "minSize": [
+          7,
+          6
+        ],
+        "corridor": "floor",
+        "connect": "anchors",
+        "inset": 1
+      }
+    ]
+  },
+  "startMenu": {
+    "fields": [
+      {
+        "key": "seed",
+        "label": "种子",
+        "type": "number",
+        "default": 0
+      },
+      {
+        "key": "width",
+        "label": "宽",
+        "type": "number",
+        "default": 41
+      },
+      {
+        "key": "height",
+        "label": "高",
+        "type": "number",
+        "default": 31
+      }
+    ]
+  }
+}

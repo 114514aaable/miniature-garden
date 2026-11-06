@@ -17,6 +17,7 @@
 import { generateCaves } from "./caves.ts";
 import { generateMaze } from "./maze.ts";
 import { placeStructures, type StructureDef } from "./structures.ts";
+import { placeRooms, type RoomPlacement } from "./rooms.ts";
 import { generateTerrain, type FieldConfig } from "./generate.ts";
 import type { Biome } from "./select.ts";
 
@@ -59,6 +60,18 @@ export type Step =
       /** 0..1：死胡同打通比例。 */
       readonly braid?: number;
       readonly inset?: number;
+    }
+  | {
+      readonly op: "rooms";
+      /** 候选房间结构（role = room）。 */
+      readonly structures: readonly string[];
+      readonly count?: number;
+      readonly minSize?: readonly [number, number];
+      readonly maxSize?: readonly [number, number];
+      readonly corridor?: string;
+      readonly connect?: "anchors" | "centers";
+      readonly inset?: number;
+      readonly margin?: number;
     }
   | {
       readonly op: "place";
@@ -147,6 +160,44 @@ export function runPipeline(
           braid: step.braid,
           inset: step.inset,
         });
+        break;
+      }
+
+      case "rooms": {
+        const structures = deps.structures;
+        if (structures === undefined) throw new Error("rooms 需要 structures（结构定义）");
+
+        const codeOf = (terrainId: number): string | undefined => {
+          for (const [code, id] of deps.terrainIdByCode) if (id === terrainId) return code;
+          return undefined;
+        };
+
+        // 房间要铺在实心底上：先整张填墙
+        const wallId = deps.terrainIdByCode.get("wall");
+        if (wallId === undefined) throw new Error("rooms 需要地形：wall");
+        sandbox.terrain.fill(wallId);
+
+        const placements: RoomPlacement[] = placeRooms(
+          sandbox.terrain,
+          sandbox.width,
+          sandbox.height,
+          structures,
+          {
+            structures: step.structures,
+            count: step.count,
+            minSize: step.minSize,
+            maxSize: step.maxSize,
+            corridor: step.corridor,
+            connect: step.connect,
+            inset: step.inset,
+            margin: step.margin,
+          },
+          sandbox.seed + stepIndex * 7919,
+          deps.terrainIdByCode,
+          codeOf,
+        );
+
+        void placements; // 以后 fill / 传送会用到房间位置
         break;
       }
 

@@ -1,6 +1,7 @@
 [
   {
     "id": "ruin",
+    "role": "prop",
     "legend": {
       "#": { "terrain": "wall" },
       ".": { "terrain": "floor" },
@@ -16,6 +17,7 @@
   },
   {
     "id": "hut",
+    "role": "prop",
     "legend": {
       "#": { "terrain": "wall" },
       ".": { "terrain": "floor" }
@@ -26,5 +28,51 @@
       "#..#",
       "##.#"
     ]
+  },
+  {
+    "id": "cell",
+    "role": "room",
+    "legend": {
+      "#": { "terrain": "wall" },
+      ".": { "terrain": "floor" }
+    },
+    "map": [
+      "#####",
+      "#...#",
+      "#...#",
+      "##.##"
+    ],
+    "anchors": [{ "kind": "door", "x": 2, "y": 3, "facing": "south" }]
+  },
+  {
+    "id": "hall",
+    "role": "room",
+    "legend": {
+      "#": { "terrain": "wall" },
+      ".": { "terrain": "floor" }
+    },
+    "map": [
+      "#######",
+      "#.....#",
+      "#.....#",
+      "###.###"
+    ],
+    "anchors": [{ "kind": "door", "x": 3, "y": 3, "facing": "south" }]
+  },
+  {
+    "id": "vault",
+    "role": "room",
+    "legend": {
+      "#": { "terrain": "wall" },
+      ".": { "terrain": "floor" }
+    },
+    "map": [
+      "#####",
+      "#...#",
+      "#...#",
+      "#...#",
+      "##.##"
+    ],
+    "anchors": [{ "kind": "door", "x": 2, "y": 4, "facing": "south" }]
   }
 ]
