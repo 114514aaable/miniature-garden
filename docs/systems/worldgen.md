@@ -166,6 +166,22 @@ structure 条目   → 把另一个结构盖在这里（默认左上对齐，可
 - `anchors`：连接点（学 Minecraft 的 jigsaw）——**先只定义格式，不实现**；
 - `allow`：允许摆放时旋转/镜像——同样先留字段。
 
+## 算子总表
+
+| 算子 | 一句话 | 主要参数 |
+|---|---|---|
+| `overworld` | 噪声 → 群系 → 地形 | fields / levels |
+| `caves` | 元胞自动机洞穴（默认直接写地形） | fill / iterations / chambers / as |
+| `maze` | 完美迷宫 + 编织 | braid / inset |
+| `rooms` | BSP + 门图 + A* 走廊 | minSize / loops |
+| `tiles` | 7×7 件按门口铺满网格 | tiles |
+| `layout` | 大房间（多格）+ 走廊格拼贴 | rooms / roomMin / roomMax / loops |
+| `sprawl` | 自由摆放 + Gabriel 图 + 噪声 A* | rooms / count / margin / widen |
+| `place` | 摆结构 | structures / count / spacing / on / inset |
+| `blend` | 洞穴层盖到地表 | cave / floor / wall / inset |
+
+**只有 `pipeline` 一种写法**；缺 pipeline 会直接报错。
+
 ## 阶段：一串 op
 
 生成器执行时按固定顺序：
