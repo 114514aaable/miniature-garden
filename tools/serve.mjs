@@ -220,7 +220,13 @@ function withGeneratedSpace(merged, loaded, seed, options, worldId) {
     );
   } catch (error) {
     console.warn("[worldgen] " + messageOf(error));
-    return none;
+    return { merged, note: "生成失败（" + messageOf(error) + "），用的是默认地图" };
+  }
+
+  // 空白图体检：只有一种地形说明生成器没干活
+  const distinct = new Set(generated.terrain);
+  if (distinct.size <= 1) {
+    return { merged, note: "生成出来的是一张空白图（只有一种地形），已改用默认地图" };
   }
 
   const spaceId = loaded.world.start.space;

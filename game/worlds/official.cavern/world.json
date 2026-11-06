@@ -44,7 +44,8 @@
         "fill": 0.56,
         "iterations": 4,
         "chambers": 3,
-        "spawnClear": 3
+        "spawnClear": 3,
+        "as": "cave"
       },
       {
         "op": "blend",

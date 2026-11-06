@@ -85,3 +85,18 @@ test("blend 用了不存在的地形代号要报错", () => {
     /不在包里/,
   );
 });
+test("洞穴：默认直接写地形，as 才写图层", () => {
+  const ids = new Map([["wall", 1], ["floor", 3]]);
+  const biome = { id: "b", terrain: 3 };
+
+  const direct = createSandbox(7, 20, 12, 3);
+  runPipeline(direct, [{ op: "caves", fill: 0.5 }], { biomes: [], terrainIdByCode: ids });
+  const kinds = new Set(direct.terrain);
+  assert.ok(kinds.has(1) && kinds.has(3), "地形里应该有墙和地板");
+
+  const layered = createSandbox(7, 20, 12, 3);
+  runPipeline(layered, [{ op: "caves", fill: 0.5, as: "cave" }], { biomes: [], terrainIdByCode: ids });
+  assert.equal(new Set(layered.terrain).size, 1, "as 模式不该改地形");
+  assert.ok(layered.layers.has("cave"), "应该有洞穴图层");
+  void biome;
+});

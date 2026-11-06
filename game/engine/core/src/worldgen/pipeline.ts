@@ -48,6 +48,9 @@ export type Step =
   | { readonly op: "overworld"; readonly fields?: Record<string, FieldConfig>; readonly levels?: { water?: number; hill?: number } }
   | {
       readonly op: "caves";
+      /** 墙 / 地板的地形代号（默认 wall / floor）。 */
+      readonly wall?: string;
+      readonly floor?: string;
       readonly fill?: number;
       readonly iterations?: number;
       readonly spawnClear?: number;
@@ -163,7 +166,21 @@ export function runPipeline(
           chambers: step.chambers,
         });
         // 1 = 洞，0 = 石
-        sandbox.layers.set(step.as ?? CAVE_LAYER, caves.walls.map((wall) => (wall ? 0 : 1)));
+        const caveLayer = caves.walls.map((wall) => (wall ? 0 : 1));
+
+        if (step.as !== undefined) {
+          // 写图层：留给后面的 blend 用（地表先不动）
+          sandbox.layers.set(step.as, caveLayer);
+          break;
+        }
+
+        // 默认直接写地形：纯洞穴世界不需要 blend
+        const caveWall = deps.terrainIdByCode.get(step.wall ?? "wall");
+        const caveFloor = deps.terrainIdByCode.get(step.floor ?? "floor");
+        if (caveWall === undefined) throw new Error("洞穴缺少地形：wall");
+        if (caveFloor === undefined) throw new Error("洞穴缺少地形：floor");
+        sandbox.terrain = caves.walls.map((wall) => (wall ? caveWall : caveFloor));
+        sandbox.layers.set(step.as ?? CAVE_LAYER, caveLayer);
         break;
       }
 

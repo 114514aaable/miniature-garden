@@ -382,6 +382,17 @@ anchors    门：坐标 + 朝向
 - 实现：`worldgen/structures.ts`（解析 / 盖章 / 摆放），
   流水线 `place` 阶段，宿主从包目录读 `worldgen/structures.json`。
 
+### caves 的两种模式
+
+```json
+{ "op": "caves", "fill": 0.5 }              // 直接写地形（纯洞穴世界）
+{ "op": "caves", "as": "cave", "fill": 0.56 } // 只写图层，留给 blend 叠加
+```
+
+**没有 `as` 就是「洞穴即地形」**；有 `as` 就只存一张洞穴掩码。
+以前 caves 只写图层，纯洞穴世界会得到一张空白图——现在会在生成后
+做「只有一种地形」的体检并明确报错。
+
 ## 校验
 
 ```
