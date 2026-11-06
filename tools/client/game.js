@@ -35,6 +35,8 @@ document.addEventListener('selectstart', (event) => {
 
 const params = new URLSearchParams(location.search);
 const worldId = params.get('world');
+/** ?instance=xxx：从「最近的世界」继续，包名由服务端按实例给。 */
+const instanceId = params.get('instance');
 
 /** 开始菜单里选的选项（种子之外的东西）。 */
 const startOptions = (() => {
@@ -843,14 +845,13 @@ window.addEventListener('keyup', (event) => stopHoldRepeat(event.code));
 window.addEventListener('blur', () => stopHoldRepeat(''));
 
 (async () => {
-  if (!worldId) {
+  if (!worldId && !instanceId) {
     document.getElementById('errbar').hidden = false;
     document.getElementById('errbar').textContent = '没有指定世界：请从启动器进入。';
     return;
   }
   // 读档流程已经建好会话，直接用；否则按选择开局。
   // ?instance=xxx：沿用已有的世界实例（最近的世界 → 继续）
-  const instanceId = params.get('instance');
   if (instanceId !== null && instanceId !== '') {
     const resumed = await api('/api/start', { instanceId });
     render(resumed);
