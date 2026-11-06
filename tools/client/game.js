@@ -849,6 +849,17 @@ window.addEventListener('blur', () => stopHoldRepeat(''));
     return;
   }
   // 读档流程已经建好会话，直接用；否则按选择开局。
+  // ?instance=xxx：沿用已有的世界实例（最近的世界 → 继续）
+  const instanceId = params.get('instance');
+  if (instanceId !== null && instanceId !== '') {
+    const resumed = await api('/api/start', { instanceId });
+    render(resumed);
+    applySettings();
+    applyPortraitCollapsed();
+    applyDevMode();
+    return;
+  }
+
   // fresh=1（从启动器点开始）→ 无条件开新局；否则刷新页面时接上正在跑的那局
   const fresh = params.get('fresh') === '1';
   let state = fresh ? null : await api('/api/state');

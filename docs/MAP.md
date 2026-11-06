@@ -586,7 +586,7 @@ game/systems/render/*（投影成画面数据）
 
 ### 页面脚本 tools/client
 
-- **`tools/client/game.js`**（868 行）
+- **`tools/client/game.js`**（881 行）
   import { api } from '/client/shared.js';
 - **`tools/client/hud/aim.js`**（62 行）
   瞄准高亮：记住「鼠标在哪、当前选了什么技能」，随时可以重算。
@@ -607,7 +607,7 @@ game/systems/render/*（投影成画面数据）
 - **`tools/client/hud/status.js`**（32 行）
   左下区域：状态（血量条 + 计数 + 可否行动）。
   - `renderStatus(state)`
-- **`tools/client/launcher.js`**（448 行）
+- **`tools/client/launcher.js`**（502 行）
   import { modal, col, row, text, button, input, field } from '/web/game/systems/ui/spec.js';
 - **`tools/client/shared.js`**（35 行）
   页面共用：错误提示 + API 调用。
@@ -615,7 +615,7 @@ game/systems/render/*（投影成画面数据）
 - **`tools/client/windows/inventory.js`**（168 行）
   背包窗口。
   - `createInventoryWindow(ctx)`
-- **`tools/client/windows/settings.js`**（207 行）
+- **`tools/client/windows/settings.js`**（211 行）
   设置窗口（窗口层）。
   - `createSettingsWindow(ctx)`
 
@@ -647,14 +647,14 @@ game/systems/render/*（投影成画面数据）
 - **`tools/pack-reader.mjs`**（148 行）
   读包工具（宿主侧）：把文件夹变成 PackContent。
   - `readPack(dir)`
-- **`tools/pages.mjs`**（328 行）
+- **`tools/pages.mjs`**（335 行）
   两个页面：启动器和游戏。
   - `const LAUNCHER_PAGE`
   - `const GAME_PAGE`
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（1835 行）
+- **`tools/serve.mjs`**（1952 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。

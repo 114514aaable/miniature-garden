@@ -13,7 +13,7 @@ let activeWorld = localStorage.getItem('nw.world') || null;
 let inspecting = null;
 
 function show(id) {
-  for (const panel of ['packs', 'settings', 'load', 'quit']) {
+  for (const panel of ['packs', 'settings', 'load', 'quit', 'recent']) {
     document.getElementById(panel).hidden = panel !== id;
   }
   // 菜单保持可见：面板是浮层，不是换页
@@ -353,6 +353,11 @@ document.getElementById('m-start').addEventListener('click', async () => {
   openStartDialog(world);
 });
 
+on('m-recent', async () => {
+  show('recent');
+  await renderRecent();
+});
+
 on('m-load', async () => {
   show('load');
   await renderLoad();
@@ -364,6 +369,7 @@ on('m-settings', () => { show('settings'); renderSettings(); });
 
 on('m-packs', () => { show('packs'); renderWorlds(); });
 document.getElementById('packs-back').addEventListener('click', () => show(null));
+document.getElementById('recent-back').addEventListener('click', () => show(null));
 on('m-quit', () => show('quit'));
 document.getElementById('quit-back').addEventListener('click', () => show(null));
 document.getElementById('graphclose').addEventListener('click', () => { document.getElementById('graphpanel').hidden = true; });
@@ -391,6 +397,53 @@ function renderSettings() {
   mount(document.getElementById('settings'), modal(body, { title: '设置' }));
 }
 
+/** 最近的世界：一个世界一行（名字 / 种子 + 尺寸 / 时间），可继续或删除。 */
+async function renderRecent() {
+  const list = document.getElementById('recent-list');
+  if (list === null) return;
+
+  list.textContent = '读取中…';
+  const result = await api('/api/instances');
+  const items = (result && result.worlds) || [];
+  if (items.length === 0) {
+    list.textContent = '还没有世界。开始游戏会自动建一个。';
+    return;
+  }
+
+  list.textContent = '';
+  for (const world of items) {
+    const line = document.createElement('div');
+    line.className = 'world';
+    line.style.display = 'flex';
+    line.style.alignItems = 'center';
+    line.style.gap = '8px';
+
+    const info = document.createElement('div');
+    info.style.flex = '1 1 auto';
+    const size = world.options && world.options.width ? world.options.width + '×' + world.options.height : '默认';
+    const when = new Date(world.updatedAt || world.createdAt || Date.now()).toLocaleString();
+    info.textContent = (world.name || world.id) + '  ·  ' + world.pack + '  ·  种子 ' + world.seed + '  ·  ' + size + '  ·  ' + when;
+
+    const open = document.createElement('button');
+    open.textContent = '继续';
+    open.addEventListener('click', () => {
+      location.href = '/game?instance=' + encodeURIComponent(world.id);
+    });
+
+    const del = document.createElement('button');
+    del.textContent = '删除';
+    del.addEventListener('click', async () => {
+      if (!confirm('删除这个世界？（存档不会跟着删）')) return;
+      await api('/api/world/delete', { id: world.id });
+      renderRecent();
+    });
+
+    line.appendChild(info);
+    line.appendChild(open);
+    line.appendChild(del);
+    list.appendChild(line);
+  }
+}
 async function renderLoad() {
   const box = document.getElementById('load');
 

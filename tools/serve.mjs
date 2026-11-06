@@ -14,7 +14,6 @@
  */
 
 import { createServer } from "node:http";
-import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import { readPack } from "./pack-reader.mjs";
@@ -31,7 +30,7 @@ import { Store } from "../game/engine/core/src/store.ts";
 import { clampCost, costOf, DEFAULT_CLOCK, MAX_ACTION_COST } from "../game/engine/core/src/rules/clock.ts";
 import { MAX_SEQUENCE_TICKS } from "../game/engine/core/src/event/registry.ts";
 import { Scheduler } from "../game/engine/core/src/rules/scheduler.ts";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
 import { createProjector } from "../game/systems/render/project.ts";
 import { buildGraph } from "../game/engine/core/src/pack/graph.ts";
@@ -523,6 +522,8 @@ function snapshot(message = "") {
     tile: TILE,
     playerHandle: session.playerHandle,
     seed: session.seed,
+    worldId: session.worldId ?? null,
+    worldName: session.worldName ?? null,
     pending: playerPending(),
     options: session.options ?? {},
     dead: session.dead === true,
@@ -1382,9 +1383,64 @@ function speedOf(handle) {
 }
 
 const SAVE_DIR = "saves";
+/** 世界实例目录：一个世界一个文件夹。 */
+const WORLD_DIR = "saves/worlds";
+/** 生成器版本：算法一改就加一，旧世界读档时会提示不匹配。 */
+const GENERATOR_VERSION = 1;
 const SELECTION_FILE = "saves/selection.json";
 
 /** 每个世界「关掉了哪些规则」。给 AI 和界面共用的外置接口。 */
+/** 列世界实例（按更新时间倒序）。坏的目录跳过。 */
+function listWorlds() {
+  const out = [];
+  try {
+    for (const name of readdirSync(WORLD_DIR)) {
+      const file = WORLD_DIR + "/" + name + "/meta.json";
+      if (!existsSync(file)) continue;
+      try {
+        const meta = JSON.parse(readFileSync(file, "utf8"));
+        if (typeof meta.id === "string" && typeof meta.pack === "string") out.push(meta);
+      } catch {
+        // 坏文件跳过，不影响别的世界
+      }
+    }
+  } catch {
+    return [];
+  }
+  return out.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+}
+
+function readWorld(id) {
+  try {
+    return JSON.parse(readFileSync(WORLD_DIR + "/" + id + "/meta.json", "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function writeWorld(meta) {
+  mkdirSync(WORLD_DIR + "/" + meta.id, { recursive: true });
+  writeFileSync(WORLD_DIR + "/" + meta.id + "/meta.json", JSON.stringify(meta, null, 2), "utf8");
+}
+
+/** 新建一个世界实例。名字 = 世界名 + 序号（可改名）。 */
+function createWorld(pack, seed, options, name) {
+  const id = "w" + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36);
+  const count = listWorlds().filter((item) => item.pack === pack).length + 1;
+  const now = new Date().toISOString();
+  const meta = {
+    id,
+    pack,
+    name: typeof name === "string" && name.length > 0 ? name : pack + " #" + count,
+    seed,
+    options: options ?? {},
+    generator: GENERATOR_VERSION,
+    createdAt: now,
+    updatedAt: now,
+  };
+  writeWorld(meta);
+  return meta;
+}
 function readSelection() {
   try {
     return JSON.parse(readFileSync(SELECTION_FILE, "utf8"));
@@ -1446,6 +1502,7 @@ function saveGame(slot = "quick") {
   const data = {
     version: 1,
     world: session.world ?? null,
+    worldId: session.worldId ?? null,
     savedAt: new Date().toISOString(),
     packs: session.packs,
     engine: session.store.exportState(),
@@ -1470,6 +1527,23 @@ function loadGame(slot = "quick") {
     data = JSON.parse(readFileSync(slotPath(slot), "utf8"));
   } catch {
     return { ok: false, error: "还没有存档" };
+  }
+
+  // 有世界实例就按它的配方来（包/种子/尺寸），旧存档退回自身字段
+  const instance = typeof data.worldId === "string" ? readWorld(data.worldId) : null;
+  if (instance !== null && instance.generator !== GENERATOR_VERSION) {
+    // 生成器改过：地图可能和当年不一样，明确告诉玩家
+    session.notice = "这个世界的生成器版本是 " + instance.generator + "，现在是 " + GENERATOR_VERSION + "，地形可能和当年不同";
+  }
+
+  if (instance !== null) {
+    data = {
+      ...data,
+      world: instance.pack,
+      seed: instance.seed,
+      options: instance.options ?? {},
+      packs: data.packs ?? [],
+    };
   }
 
   if (typeof data.world !== "string" || !Array.isArray(data.packs)) {
@@ -1510,6 +1584,12 @@ function loadGame(slot = "quick") {
   session.store.importState(data.engine);
   session.playerHandle = data.playerHandle;
   session.seed = data.seed ?? 0;
+  if (instance !== null) {
+    session.worldId = instance.id;
+    session.worldName = instance.name;
+    instance.updatedAt = new Date().toISOString();
+    writeWorld(instance);
+  }
   session.options = data.options ?? {};
   session.playerReadyAt = data.playerReadyAt;
   session.scheduler = new Scheduler(
@@ -1629,6 +1709,25 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    if (request.method === "POST" && request.url === "/api/world/delete") {
+      const { id } = await readBody(request);
+      if (typeof id !== "string" || !/^[a-z0-9]+$/.test(id)) {
+        sendJson(response, { ok: false, error: "世界 id 不合法" });
+        return;
+      }
+      try { rmSync(WORLD_DIR + "/" + id, { recursive: true, force: true }); } catch (error) {
+        sendJson(response, { ok: false, error: messageOf(error) });
+        return;
+      }
+      sendJson(response, { ok: true, worlds: listWorlds() });
+      return;
+    }
+
+    if (request.url === "/api/instances") {
+      sendJson(response, { ok: true, worlds: listWorlds() });
+      return;
+    }
+
     if (request.url === "/api/worlds") {
       // 启动器专用：永远返回世界列表，不受「已有会话」影响。
       sendJson(response, scanWorlds());
@@ -1685,25 +1784,43 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.method === "POST" && request.url === "/api/start") {
-      const { id, off, seed, options } = await readBody(request);
+      const { id, off, seed, options, instanceId } = await readBody(request);
       const disabled = new Set(Array.isArray(off) ? off : []);
       try {
         const { byId } = collectPacks();
-        const entry = readSelection()[String(id)];
+
+        // 配方：沿用已有世界实例，或按请求新建一个
+        const reused = typeof instanceId === "string" ? readWorld(instanceId) : null;
+        const packId = reused !== null ? reused.pack : String(id);
+        const worldSeed = reused !== null ? Number(reused.seed) || 0 : Number(seed) || 0;
+        const worldOptions =
+          reused !== null
+            ? (reused.options ?? {})
+            : (typeof options === "object" && options !== null ? options : {});
+
+        const entry = readSelection()[packId];
         const offTemplates = new Set(Array.isArray(entry) ? [] : (entry?.offTemplates ?? []));
         session = buildSession(
-          closureOf(String(id), byId),
+          closureOf(packId, byId),
           new Set([...disabled].map(resolveTag)),
-          Number(seed) || 0,
+          worldSeed,
           true,
           offTemplates,
-          typeof options === "object" && options !== null ? options : {},
+          worldOptions,
         );
-        session.world = String(id);
+        session.world = packId;
+
+        const instance =
+          reused !== null
+            ? { ...reused, updatedAt: new Date().toISOString() }
+            : createWorld(packId, worldSeed, worldOptions);
+        if (reused !== null) writeWorld(instance);
+        session.worldId = instance.id;
+        session.worldName = instance.name;
+        session.options = worldOptions;
         // 出生点被挪过（生成地图里正好是水）就在这里说一句
         ensurePlayerOnWalkable();
         if (session.loaded.startWarning !== undefined) session.notice = session.loaded.startWarning;
-        session.options = typeof options === "object" && options !== null ? options : {};
         session.dead = false;
         session.disabled = [...disabled];
         const note =
