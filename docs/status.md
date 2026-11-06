@@ -99,15 +99,26 @@ tools/
 ## 下一步候选
 
 ```
-A  固定物：实体 id/links + fixtures 算子 + 大门/拉杆（生成侧先通）
-B  陷阱与怪：踩上去触发 / 复用 core.melee，populate 里加模板
-C  玩法闭环：地牢目标（楼梯 / 出口 / 拿满什么）
-D  视角与视野：小地图按镜头画、视距；感知层前置
-E  拆 windows/：对话面板、快捷栏、死亡浮层
-F  洞口切换（core.portal）：两张图之间通路
+下一次开工（已定好的顺序）
+A  抽宿主逻辑：game/systems/host/pipeline.ts（applyEffects + advanceTo）
+   —— 现在效果提交散在 serve 四处，宿主逻辑完全没测试
+B  共享测试工具：game/engine/core/src/testing/kit.ts
+   —— setup×7 / orphans×3 / world×5 都是重复的本地 helper
+C  damage 拦截器 + 部位模式（无 UI）
+   —— 模式关 = 原样放行；模式开 = 把 core.health 的 patch 换成部位
 ```
 
-**建议顺序：A → B → C**（先把地牢的「东西」做全：固定的、会动的、有目标的）。
+```
+之后
+D  固定物：实体 id/links + fixtures 算子 + 大门/拉杆
+E  陷阱与怪：踩上去触发 / 复用 core.melee
+F  玩法闭环：地牢目标（楼梯 / 出口 / 拿满什么）
+G  视角与视野：从部位派生（眼睛 / 耳朵），可开关
+H  拆 windows/：对话面板、快捷栏、死亡浮层
+I  洞口切换（core.portal）
+```
+
+**A → B → C 是「部位反馈」的前置**：拦截器必须有统一入口才挂得上。
 
 ## 运行
 
