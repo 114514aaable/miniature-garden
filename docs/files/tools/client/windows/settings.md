@@ -1,10 +1,22 @@
 # `tools/client/windows/settings.js`
 
+## 内容
+
 设置窗口（窗口层）。
+窗口 = 抢焦点、有 open/close 生命周期。宿主只负责：
+- 告诉我 config 现在是什么（getConfig / setConfig）
+- 给我能用的小工具（api / renderState / refreshSizes …）
+其余（页面结构、按键捕获、存档按钮）都在这里。
 
-## 导出
+行数：283
 
-- `createSettingsWindow`
+## 接口
+
+### 函数 `createSettingsWindow`
+
+```ts
+function createSettingsWindow(ctx)
+```
 
 ## 依赖
 

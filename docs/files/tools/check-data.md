@@ -1,11 +1,19 @@
 # `tools/check-data.mjs`
 
-数据体检：数据化之后，规则要的字段，包里到底有没有。
+## 内容
 
-## 导出
+数据体检：数据化之后，规则要的字段，包里到底有没有。
+起因：敌人伤害数据化后，AI 改成必须有 core.melee，
+但模板没跟上——规则每回合静默返回「不知道打多重」，
+表现出来就是「敌人不动手」，查了很久。
+这里只做「组合看起来不对」的检查，不代替人工判断。
+用法：node tools/check-data.mjs [世界 id]
+
+行数：147
+
+## 接口
 
 （没有导出）
-
 ## 依赖
 
 - [`game/engine/core/src/pack/load.ts`](game/engine/core/src/pack/load.md)

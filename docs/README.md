@@ -37,6 +37,27 @@
 | 做地图/建筑/群系生成 | [systems/worldgen.md](systems/worldgen.md) |
 | 管「谁能过什么地形」 | [systems/movement.md](systems/movement.md) |
 
+## 文档分四层
+
+```
+1  每个文件一篇    docs/files/<路径>.md
+      内容（文件头注释）+ 接口（函数签名 / 接口字段）+ 依赖 / 被引用 / 测试 / 行数
+      自动生成；改代码后跑 node tools/gen-file-docs.mjs
+
+2  索引          docs/MAP.md（每个文件的导出与签名，找东西用）
+                  docs/dependency-tree.md（谁引用谁）
+
+3  契约          docs/modules/<规则|组件|模板>.md（机器可读 index.json）
+                  docs/packet-contract.md（事件与效果）
+
+4  为什么        docs/areas/*.md（分层与约束）
+                  docs/systems/*.md（一个体系怎么运转）
+                  docs/status.md（现在做到哪、下一步）
+```
+
+**第 1 层是给我（AI）写代码前读的**：每个文件干什么、有哪些函数、参数和返回是什么。
+**第 4 层是给人读的判断**：为什么不那么写。
+
 ## 阅读约定
 
 - 每篇**只在开头告诉你「什么时候该读它」**，读到一半不会跳走；

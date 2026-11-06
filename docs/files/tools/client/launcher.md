@@ -1,11 +1,14 @@
 # `tools/client/launcher.js`
 
+## 内容
 
+（没有文件头注释）
 
-## 导出
+行数：469
+
+## 接口
 
 （没有导出）
-
 ## 依赖
 
 - [`game/systems/ui/dom.ts`](game/systems/ui/dom.md)

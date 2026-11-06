@@ -1,11 +1,20 @@
 # `tools/serve.mjs`
 
-调试台 / 启动器（宿主侧）。
+## 内容
 
-## 导出
+调试台 / 启动器（宿主侧）。
+分工：
+服务端：读包、加载世界、求值规则、生成绘制指令
+页面：  只负责画（Canvas + DOM），不碰世界
+启动方式：
+node tools/serve.mjs                     # 启动器：列出 worlds/ 下的世界
+node tools/serve.mjs worlds/a worlds/b   # 直接进某个世界（开发用）
+
+行数：2039
+
+## 接口
 
 （没有导出）
-
 ## 依赖
 
 - [`game/engine/core/src/event/effects.ts`](game/engine/core/src/event/effects.md)

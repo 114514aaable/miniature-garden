@@ -1,18 +1,87 @@
 # `game/engine/core/src/time.ts`
 
+## 内容
+
 时间线：一个单调的时钟 + 它自己的记录。
+为什么把「时钟」和「事件日志」合在一起？
+因为分开时，`append(input, lTick, seq)` 允许调用方自己填时间——
+于是「时钟说到第 5 步、事件说自己来自第 2 步」这种状态可以构造出来。
+合并后，事件的 lTick 只能来自 now()，歧义在类型层面就消失了。
+四条铁律：
+1. 时间只有整数，只能前进。
+2. 事件一旦写入不可修改；改了一定能被 verify 发现。
+3. 事件的时间戳由时间线自己盖，调用方给不了。
+4. 不读真实时间（Date.now / setTimeout 在模拟层是禁词）。
+不在这里的东西（故意的）：
+- 调度器：什么时候该调用 append，属于规则层。
+- 世界时间（第几天、什么季节）：属于世界层，是 tick 的投影，能算就不存。
 
-## 导出
+行数：183
 
-- `Handle`
-- `JsonValue`
-- `LogEntry`
-- `LogEntryInput`
-- `Tick`
-- `Timeline`
-- `canonicalize`
-- `hashText`
-- `verifyChain`
+## 接口
+
+### 函数 `canonicalize`
+
+```ts
+function canonicalize(value: JsonValue): string
+```
+
+### 类型 `Handle`
+
+```ts
+type Handle = number
+```
+
+### 函数 `hashText`
+
+```ts
+function hashText(text: string): string
+```
+
+### 类型 `JsonValue`
+
+```ts
+type JsonValue = | string | number | boolean | null | JsonValue[] | { readonly [key: string]: JsonValue }
+```
+
+### 接口 `LogEntry`
+
+```ts
+interface LogEntry {
+  readonly id: number;
+  readonly lTick: Tick;
+  readonly seq: number;
+  readonly kind: string;
+  readonly actor: Handle | null;
+  readonly targets: readonly Handle[];
+  readonly data: Readonly<Record<string, JsonValue>>;
+  readonly prevHash: string;
+  readonly hash: string;
+}
+```
+
+### 接口 `LogEntryInput`
+
+```ts
+interface LogEntryInput {
+  readonly kind: string;
+  readonly actor?: Handle | null;
+  readonly targets?: readonly Handle[];
+  readonly data?: Readonly<Record<string, JsonValue>>;
+}
+```
+
+### 类型 `Tick`
+
+```ts
+type Tick = number
+```
+
+### 函数 `verifyChain`
+
+```ts
+function verifyChain(events: readonly LogEntry[]): number
+```
 
 ## 依赖
 

@@ -1,11 +1,26 @@
 # `game/systems/ui/dom.ts`
 
+## 内容
+
 把 spec 变成真实 DOM。这一层不判断任何布局，只做搬运。
+唯一允许「测量/摆放」的地方在 CanvasSlot（画布要跟着容器变大小），
+见各处的注释。
 
-## 导出
+行数：67
 
-- `mount`
-- `render`
+## 接口
+
+### 函数 `mount`
+
+```ts
+function mount(container: HTMLElement, node: UiNode): void
+```
+
+### 函数 `render`
+
+```ts
+function render(node: UiNode): HTMLElement
+```
 
 ## 依赖
 

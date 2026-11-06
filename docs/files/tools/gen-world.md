@@ -1,11 +1,21 @@
 # `tools/gen-world.mjs`
 
-生成一张地图（MVP：噪声 → 群系 → 地形号）。
+## 内容
 
-## 导出
+生成一张地图（MVP：噪声 → 群系 → 地形号）。
+数据全部来自包：
+群系      <pack>/biomes.json
+生成参数  <world>/world.json 的 generation 块
+地形名    <pack>/terrains.json（名字 → 号）
+用法：
+node tools/gen-world.mjs --world official.normal --seed 42 --size 40x20
+node tools/gen-world.mjs --seed 42 --size 40x20 --out spaces/field.json
+
+行数：136
+
+## 接口
 
 （没有导出）
-
 ## 依赖
 
 - [`game/engine/core/src/pack/load.ts`](game/engine/core/src/pack/load.md)

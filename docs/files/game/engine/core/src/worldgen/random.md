@@ -1,11 +1,24 @@
 # `game/engine/core/src/worldgen/random.ts`
 
+## 内容
+
 生成器共用的小随机：只依赖种子，不读时钟。
 
-## 导出
+行数：22
 
-- `makeRandom`
-- `randomInt`
+## 接口
+
+### 函数 `makeRandom`
+
+```ts
+function makeRandom(seed: number): () => number
+```
+
+### 函数 `randomInt`
+
+```ts
+function randomInt(rand: () => number, min: number, max: number): number
+```
 
 ## 依赖
 

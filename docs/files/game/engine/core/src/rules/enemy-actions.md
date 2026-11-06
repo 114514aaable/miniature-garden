@@ -1,13 +1,39 @@
 # `game/engine/core/src/rules/enemy-actions.ts`
 
+## 内容
+
 敌人的三个动作：起手、命中、走位。
+关键设计：**意图是数据**（core.intent 组件），不是画出来的。
+命中判定读它，渲染也读它——所以「画的和打的」永远不会错位。
+玩家在 resolveAt 之前走开，就真的躲掉。
 
-## 导出
+行数：143
 
-- `strikeHandler`
-- `strikeSignature`
-- `windupHandler`
-- `windupSignature`
+## 接口
+
+### 函数 `strikeHandler`
+
+```ts
+function strikeHandler(params: JsonValue, context: EvaluateContext): JsonValue
+```
+
+### 常量 `strikeSignature`
+
+```ts
+const strikeSignature: Signature
+```
+
+### 函数 `windupHandler`
+
+```ts
+function windupHandler(params: JsonValue, context: EvaluateContext): JsonValue
+```
+
+### 常量 `windupSignature`
+
+```ts
+const windupSignature: Signature
+```
 
 ## 依赖
 

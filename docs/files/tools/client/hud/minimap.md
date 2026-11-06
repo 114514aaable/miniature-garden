@@ -1,10 +1,19 @@
 # `tools/client/hud/minimap.js`
 
+## 内容
+
 右上区域：小地图。
+只读快照，不碰世界；玩家蓝、其他红。
 
-## 导出
+行数：45
 
-- `renderMinimap`
+## 接口
+
+### 函数 `renderMinimap`
+
+```ts
+function renderMinimap(state)
+```
 
 ## 依赖
 

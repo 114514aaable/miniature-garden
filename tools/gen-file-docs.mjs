@@ -60,15 +60,96 @@ function headerOf(source) {
   return collected.filter((line) => !line.startsWith("SPDX")).join("\n");
 }
 
-function exportsOf(source) {
-  const names = [];
-  for (const match of source.matchAll(/export\s+(?:async\s+)?(?:function|const|let|class|interface|type)\s+([A-Za-z0-9_$]+)/g)) {
-    names.push(match[1]);
+/** 取出一个文件所有导出的「签名 / 字段」，给 AI 和人都能直接读。 */
+function extractExports(source) {
+  const found = new Map();
+  const add = (entry) => {
+    if (!found.has(entry.name)) found.set(entry.name, entry);
+  };
+
+  for (const match of source.matchAll(/export\s+(?:async\s+)?function\s+([A-Za-z0-9_$]+)/g)) {
+    add({ name: match[1], kind: "function", detail: signatureOf(source, match.index) });
   }
-  return [...new Set(names)].sort();
+
+  for (const match of source.matchAll(/export\s+const\s+([A-Za-z0-9_$]+)\s*(?::\s*([^=;\n]+))?/g)) {
+    add({ name: match[1], kind: "const", detail: `const ${match[1]}${match[2] ? ": " + match[2].trim() : ""}` });
+  }
+
+  for (const match of source.matchAll(/export\s+interface\s+([A-Za-z0-9_$]+)\s*\{/g)) {
+    const name = match[1];
+    const body = blockAfter(source, match.index + match[0].length - 1);
+    const fields = body
+      .split("\n")
+      .map((line) => line.trim().replace(/,$/, ""))
+      .filter((line) => line.length > 0 && !line.startsWith("//") && !line.startsWith("/*") && !line.startsWith("*"))
+      .slice(0, 16);
+    add({ name, kind: "interface", detail: `interface ${name} {\n${fields.map((line) => "  " + line).join("\n")}\n}` });
+  }
+
+  for (const match of source.matchAll(/export\s+type\s+([A-Za-z0-9_$]+)\s*=/g)) {
+    add({ name: match[1], kind: "type", detail: statementOf(source, match.index) });
+  }
+
+  return [...found.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
-/** 相对/浏览器路径 → 仓库内路径。 */
+/** 从 export 开始截到函数体的 `{`（括号计数），压成一行。 */
+function signatureOf(source, start) {
+  let depth = 0;
+  let text = "";
+  for (let index = start; index < source.length; index += 1) {
+    const ch = source[index];
+
+    // 第一层的 `{`：返回类型里的对象字面量要算进来，函数体才停
+    if (ch === "{" && depth === 0) {
+      if (text.trim().endsWith(":")) {
+        depth += 1;
+        text += ch;
+        continue;
+      }
+      break;
+    }
+
+    if (ch === "{") depth += 1;
+    if (ch === "}") depth = Math.max(0, depth - 1);
+    if (ch === "(" || ch === "[" || ch === "<") depth += 1;
+    if (ch === ")" || ch === "]" || ch === ">") depth = Math.max(0, depth - 1);
+    text += ch;
+  }
+  return text.replace(/^export\s+/, "").replace(/\s+/g, " ").trim();
+}
+/** 类型别名：截到分号。 */
+function statementOf(source, start) {
+  let depth = 0;
+  let text = "";
+  for (let index = start; index < source.length; index += 1) {
+    const ch = source[index];
+    if (ch === ";" && depth === 0) break;
+    if (ch === "{" || ch === "(" || ch === "[") depth += 1;
+    if (ch === "}" || ch === ")" || ch === "]") depth = Math.max(0, depth - 1);
+    text += ch;
+  }
+  return text.replace(/^export\s+/, "").replace(/\s+/g, " ").trim();
+}
+
+/** 从 `{` 取到配对的 `}` 之间。 */
+function blockAfter(source, braceIndex) {
+  let depth = 0;
+  let text = "";
+  for (let index = braceIndex; index < source.length; index += 1) {
+    const ch = source[index];
+    if (ch === "{") {
+      depth += 1;
+      if (depth === 1) continue;
+    }
+    if (ch === "}") {
+      depth -= 1;
+      if (depth === 0) break;
+    }
+    text += ch;
+  }
+  return text;
+}
 function resolveSpecifier(fromFile, spec) {
   if (spec.startsWith("/web/")) {
     const rel = spec.slice("/web/".length).replace(/\.js$/, ".ts");
@@ -135,7 +216,8 @@ function main() {
   for (const file of files) {
     const source = readFileSync(file, "utf8");
     const header = headerOf(source);
-    const exports = exportsOf(source);
+    const api = extractExports(source);
+    const exports = api.map((entry) => entry.name);
     const deps = imports.get(file) ?? [];
     const users = reverse.get(file) ?? [];
     const test = files.includes(`${file.replace(/\.(ts|mjs|js)$/, "")}.test.ts`)
@@ -147,12 +229,24 @@ function main() {
     const lines = [
       `# \`${file}\``,
       "",
-      summary,
+      "## 内容",
       "",
-      "## 导出",
+      header.length > 0 ? header : "（没有文件头注释）",
       "",
-      ...(exports.length === 0 ? ["（没有导出）"] : exports.map((name) => `- \`${name}\``)),
+      `行数：${source.split("\n").length}`,
       "",
+      "## 接口",
+      "",
+      ...(api.length === 0
+        ? ["（没有导出）"]
+        : api.flatMap((entry) => [
+            `### ${entry.kind === "function" ? "函数" : entry.kind === "interface" ? "接口" : entry.kind === "type" ? "类型" : "常量"} \`${entry.name}\``,
+            "",
+            "```ts",
+            entry.detail,
+            "```",
+            "",
+          ])),
       "## 依赖",
       "",
       ...(deps.length === 0 ? ["（无）"] : deps.map((dep) => `- [\`${dep}\`](${toDocPath(dep)})`)),

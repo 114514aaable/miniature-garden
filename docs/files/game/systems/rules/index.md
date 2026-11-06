@@ -1,10 +1,20 @@
 # `game/systems/rules/index.ts`
 
+## 内容
+
 规则清单：一条规则 = 签名 + 处理器。
+宿主用它注册；文档生成器用它列目录。
+**只有这一处清单**——加规则只改这里，注册和文档自动跟上。
 
-## 导出
+行数：38
 
-- `RULE_TABLE`
+## 接口
+
+### 常量 `RULE_TABLE`
+
+```ts
+const RULE_TABLE: readonly RuleEntry[]
+```
 
 ## 依赖
 

@@ -1,11 +1,26 @@
 # `game/engine/core/src/rules/sweep.ts`
 
+## 内容
+
 横扫：打「自己周围一圈」里所有活着的目标。
+形状与过滤都来自 base（around1 / living）——
+规则里不出现半径、也不出现组件名。
 
-## 导出
+行数：74
 
-- `sweepHandler`
-- `sweepSignature`
+## 接口
+
+### 函数 `sweepHandler`
+
+```ts
+function sweepHandler(params: JsonValue, context: EvaluateContext): JsonValue
+```
+
+### 常量 `sweepSignature`
+
+```ts
+const sweepSignature: Signature
+```
 
 ## 依赖
 

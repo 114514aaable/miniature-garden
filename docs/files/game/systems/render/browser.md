@@ -1,13 +1,55 @@
 # `game/systems/render/browser.ts`
 
+## 内容
+
 浏览器侧的渲染器：拿快照、自己跑 60fps、自己插值。
+为什么渲染逻辑跑在浏览器：
+动画需要每帧推进，而服务端只在「一回合」时给一次数据。
+把 visual.ts / draw.ts 编成 JS 送到浏览器，服务端和客户端共用同一份源码
+——所以这里没有任何「镜像实现」。
 
-## 导出
+行数：315
 
-- `ClientOptions`
-- `ClientState`
-- `Renderer`
-- `attach`
+## 接口
+
+### 函数 `attach`
+
+```ts
+function attach(canvas: HTMLCanvasElement, options: ClientOptions): Renderer
+```
+
+### 接口 `ClientOptions`
+
+```ts
+interface ClientOptions {
+  readonly tile: number;
+  readonly visual?: VisualConfig;
+}
+```
+
+### 接口 `ClientState`
+
+```ts
+interface ClientState {
+  readonly playerHandle?: number;
+  readonly snapshot: FrameSnapshot;
+  readonly style?: RenderStyle;
+  readonly atlas?: unknown;
+}
+```
+
+### 接口 `Renderer`
+
+```ts
+interface Renderer {
+  setState(state: ClientState): void;
+  cellAt(x: number, y: number): Vec;
+  setCursor(cell: { x: number; y: number } | null): void;
+  setAim(cells: ReadonlyArray<readonly [number, number]>): void;
+  setVisualSpeed(speed: number): void;
+  stop(): void;
+}
+```
 
 ## 依赖
 

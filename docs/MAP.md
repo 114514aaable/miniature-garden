@@ -678,7 +678,7 @@ game/systems/render/*（投影成画面数据）
   语言包体检：包里每个 id 都应该有名字。
 - **`tools/gen-docs.mjs`**（188 行）
   从代码与语言包生成模块文档（docs/modules/）。
-- **`tools/gen-file-docs.mjs`**（201 行）
+- **`tools/gen-file-docs.mjs`**（295 行）
   每个源文件生成一篇 md（docs/files/...）。
 - **`tools/gen-map.mjs`**（176 行）
   生成「代码地图」：docs/MAP.md。

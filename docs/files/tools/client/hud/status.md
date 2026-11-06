@@ -1,10 +1,19 @@
 # `tools/client/hud/status.js`
 
+## 内容
+
 左下区域：状态（血量条 + 计数 + 可否行动）。
+区域 = 常驻、只读 state、自己算自己的显示。
 
-## 导出
+行数：32
 
-- `renderStatus`
+## 接口
+
+### 函数 `renderStatus`
+
+```ts
+function renderStatus(state)
+```
 
 ## 依赖
 

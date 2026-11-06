@@ -1,11 +1,14 @@
 # `tools/client/game.js`
 
+## 内容
 
+（没有文件头注释）
 
-## 导出
+行数：882
+
+## 接口
 
 （没有导出）
-
 ## 依赖
 
 - [`game/systems/config/config.ts`](game/systems/config/config.md)

@@ -1,11 +1,18 @@
 # `tools/play.mjs`
 
-从文件夹加载一个世界并画出来（宿主侧）。
+## 内容
 
-## 导出
+从文件夹加载一个世界并画出来（宿主侧）。
+用法：
+node tools/play.mjs game/worlds/official.base game/worlds/official.normal
+它做的每一步都是真的：读包 → 依赖排序 → 合并 → 加载 → 造 store → 放实体。
+只是最后没有交互，只是把世界画出来，让你看见「文件变成了世界」。
+
+行数：88
+
+## 接口
 
 （没有导出）
-
 ## 依赖
 
 - [`game/engine/core/src/pack/init.ts`](game/engine/core/src/pack/init.md)
