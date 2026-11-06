@@ -123,6 +123,9 @@
         "dx": 2,
         "dy": 2
       }
+    ],
+    "tags": [
+      "treasure"
     ]
   },
   {
@@ -158,6 +161,9 @@
         "y": 3,
         "facing": "east"
       }
+    ],
+    "tags": [
+      "hall"
     ]
   },
   {
@@ -196,6 +202,9 @@
         "y": 9,
         "facing": "south"
       }
+    ],
+    "tags": [
+      "treasure"
     ]
   }
 ]

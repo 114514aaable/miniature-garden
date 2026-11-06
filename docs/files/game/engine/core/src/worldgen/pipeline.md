@@ -5,8 +5,10 @@
 ## 导出
 
 - `CAVE_LAYER`
+- `EntityPlacement`
 - `PipelineDeps`
 - `Sandbox`
+- `SpaceRoom`
 - `Step`
 - `createSandbox`
 - `runPipeline`
@@ -17,6 +19,7 @@
 - [`game/engine/core/src/worldgen/generate.ts`](game/engine/core/src/worldgen/generate.md)
 - [`game/engine/core/src/worldgen/layout.ts`](game/engine/core/src/worldgen/layout.md)
 - [`game/engine/core/src/worldgen/maze.ts`](game/engine/core/src/worldgen/maze.md)
+- [`game/engine/core/src/worldgen/populate.ts`](game/engine/core/src/worldgen/populate.md)
 - [`game/engine/core/src/worldgen/rooms.ts`](game/engine/core/src/worldgen/rooms.md)
 - [`game/engine/core/src/worldgen/select.ts`](game/engine/core/src/worldgen/select.md)
 - [`game/engine/core/src/worldgen/sprawl.ts`](game/engine/core/src/worldgen/sprawl.md)
@@ -25,4 +28,5 @@
 
 ## 被引用
 
+- [`game/engine/core/src/worldgen/populate.ts`](game/engine/core/src/worldgen/populate.md)
 - [`tools/serve.mjs`](tools/serve.md)

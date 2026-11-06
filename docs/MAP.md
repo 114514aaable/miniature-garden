@@ -371,19 +371,26 @@ game/systems/render/*（投影成画面数据）
   - `interface FbmOptions`
   - `type NoiseKind`
   - `const NOISE_KINDS`
-- **`game/engine/core/src/worldgen/pipeline.ts`**（388 行）
+- **`game/engine/core/src/worldgen/pipeline.ts`**（460 行）
   生成流水线：把生成算法拆成「一步一个算子」，串起来跑。
   - `createSandbox(seed: number, width: number, height: number, fill: number) → Sandbox`
   - `runPipeline(sandbox: Sandbox, steps: readonly Step[], deps: PipelineDeps,) → Sandbox`
   - `interface Sandbox`
+  - `interface EntityPlacement`
+  - `interface SpaceRoom`
   - `interface PipelineDeps`
   - `type Step`
   - `const CAVE_LAYER`
+- **`game/engine/core/src/worldgen/populate.ts`**（132 行）
+  实体投放：按「房间 / 走廊 / 死胡同」的规则往实体图里放东西。
+  - `populate(sandbox: Sandbox, spec: PopulateSpec, seed: number, floorId: number,)`
+  - `interface PopulateRule`
+  - `interface PopulateSpec`
 - **`game/engine/core/src/worldgen/random.ts`**（22 行）
   生成器共用的小随机：只依赖种子，不读时钟。
   - `makeRandom(seed: number) → () => number`
   - `randomInt(rand: () => number, min: number, max: number) → number`
-- **`game/engine/core/src/worldgen/rooms.ts`**（413 行）
+- **`game/engine/core/src/worldgen/rooms.ts`**（414 行）
   房间布局：BSP 摆房间 → 门当顶点 → 修走廊把门连起来。
   - `partition(width: number, height: number, minSize: readonly [number, number], seed: number, inset = 1,) → Rect[]`
   - `placeRooms(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, spec: RoomSpec, seed: number, terrainIdByCode: ReadonlyMap<string, number>, codeOfTerrain: (terrainId: number) => string | undefined,)`
@@ -400,12 +407,12 @@ game/systems/render/*（投影成画面数据）
   - `interface Biome`
   - `interface TerrainLevels`
   - `type Sample`
-- **`game/engine/core/src/worldgen/sprawl.ts`**（349 行）
+- **`game/engine/core/src/worldgen/sprawl.ts`**（350 行）
   散落地牢：房间自由摆放 + 房间图 + 绕路 + 走廊加宽。
   - `placeSprawl(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, spec: SprawlSpec, seed: number, terrainIdByCode: ReadonlyMap<string, number>,)`
   - `interface SprawlSpec`
   - `interface SprawlRoom`
-- **`game/engine/core/src/worldgen/structures.ts`**（481 行）
+- **`game/engine/core/src/worldgen/structures.ts`**（496 行）
   结构：带图例的字符画，摆进生成出来的地图里。
   - `parseStructure(raw: unknown, idKey: string) → RawStructure`
   - `resolveStructures(raws: ReadonlyMap<string, RawStructure>) → Map<string, StructureDef>`
@@ -696,7 +703,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（2038 行）
+- **`tools/serve.mjs`**（2039 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。

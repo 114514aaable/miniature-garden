@@ -63,6 +63,7 @@ export interface RoomPlacement {
   readonly h: number;
   readonly rect: Rect;
   readonly doors: ReadonlyArray<RoomDoor>;
+  readonly tags: readonly string[];
 }
 
 /** 把一块区域切成若干矩形（BSP）。 */
@@ -184,7 +185,7 @@ export function placeRooms(
       warnings.push(`${def.id}：没有门，临时在底部开一个`);
     }
 
-    placements.push({ structure: def.id, x, y, w: def.width, h: def.height, rect, doors });
+    placements.push({ structure: def.id, x, y, w: def.width, h: def.height, rect, doors, tags: def.tags });
   }
 
   // 房间占用的格子：修路时绕开（门本身除外）

@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 108 个文件。
+共 109 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -58,6 +58,7 @@
 | `game/engine/core/src/worldgen/maze.ts` | 迷宫生成（迭代回溯 + 可选编织）。 | [md](game/engine/core/src/worldgen/maze.md) |
 | `game/engine/core/src/worldgen/noise.ts` | 噪声：把「种子 + 坐标」变成 0..1 的值。 | [md](game/engine/core/src/worldgen/noise.md) |
 | `game/engine/core/src/worldgen/pipeline.ts` | 生成流水线：把生成算法拆成「一步一个算子」，串起来跑。 | [md](game/engine/core/src/worldgen/pipeline.md) |
+| `game/engine/core/src/worldgen/populate.ts` | 实体投放：按「房间 / 走廊 / 死胡同」的规则往实体图里放东西。 | [md](game/engine/core/src/worldgen/populate.md) |
 | `game/engine/core/src/worldgen/random.ts` | 生成器共用的小随机：只依赖种子，不读时钟。 | [md](game/engine/core/src/worldgen/random.md) |
 | `game/engine/core/src/worldgen/rooms.ts` | 房间布局：BSP 摆房间 → 门当顶点 → 修走廊把门连起来。 | [md](game/engine/core/src/worldgen/rooms.md) |
 | `game/engine/core/src/worldgen/select.ts` | 选：把「若干场」翻译成「群系」，再把群系翻译成「地形」。 | [md](game/engine/core/src/worldgen/select.md) |

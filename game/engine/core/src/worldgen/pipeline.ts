@@ -21,6 +21,7 @@ import { placeRooms } from "./rooms.ts";
 import { placeTiles } from "./tiles.ts";
 import { placeLayout } from "./layout.ts";
 import { placeSprawl } from "./sprawl.ts";
+import { populate } from "./populate.ts";
 import { generateTerrain, type FieldConfig } from "./generate.ts";
 import type { Biome } from "./select.ts";
 
@@ -36,6 +37,27 @@ export interface Sandbox {
   biome: number[];
   /** 生成期产出的出生请求（结构里的实体）。 */
   spawns: SpawnRequest[];
+  /** 实体图：cell → 实体（模板 + 标签）。 */
+  readonly entities: Map<number, EntityPlacement[]>;
+  /** 生成期登记的区域（房间，带标签）。 */
+  readonly regions: { rooms: SpaceRoom[] };
+  /** 出生点（populate 的 avoid: start 用）。 */
+  start: { x: number; y: number } | null;
+}
+
+export interface EntityPlacement {
+  readonly template: string;
+  readonly tags: readonly string[];
+  readonly source: string;
+}
+
+export interface SpaceRoom {
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+  readonly tags: readonly string[];
+  readonly structure: string;
 }
 
 export interface PipelineDeps {
@@ -43,6 +65,8 @@ export interface PipelineDeps {
   readonly terrainIdByCode: ReadonlyMap<string, number>;
   /** 结构定义（place 阶段用；不摆结构可以不传）。 */
   readonly structures?: ReadonlyMap<string, StructureDef>;
+  /** 出生点（可选；populate 清空周围时用）。 */
+  readonly start?: { readonly x: number; readonly y: number };
 }
 
 export type Step =
@@ -68,6 +92,11 @@ export type Step =
       /** 0..1：死胡同打通比例。 */
       readonly braid?: number;
       readonly inset?: number;
+    }
+  | {
+      readonly op: "populate";
+      /** 投放规则（按房间 / 走廊 / 死胡同）。 */
+      readonly rules: readonly import("./populate.ts").PopulateRule[];
     }
   | {
       readonly op: "sprawl";
@@ -138,6 +167,9 @@ export function createSandbox(seed: number, width: number, height: number, fill:
     layers: new Map(),
     biome: new Array<number>(width * height).fill(0),
     spawns: [],
+    entities: new Map(),
+    regions: { rooms: [] },
+    start: null,
   };
 }
 
@@ -149,6 +181,8 @@ export function runPipeline(
   steps: readonly Step[],
   deps: PipelineDeps,
 ): Sandbox {
+  sandbox.start = deps.start ?? null;
+
   for (const [stepIndex, step] of steps.entries()) {
     switch (step.op) {
       case "overworld": {
@@ -213,6 +247,20 @@ export function runPipeline(
         break;
       }
 
+      case "populate": {
+        const floorId = deps.terrainIdByCode.get("floor");
+        if (floorId === undefined) throw new Error("populate 需要地形：floor");
+
+        const result = populate(
+          sandbox,
+          { rules: step.rules },
+          sandbox.seed + stepIndex * 7919,
+          floorId,
+        );
+        for (const warning of result.warnings) console.warn("[populate] " + warning);
+        break;
+      }
+
       case "sprawl": {
         const sprawlDefs = deps.structures;
         if (sprawlDefs === undefined) throw new Error("sprawl 需要 structures（结构定义）");
@@ -234,6 +282,9 @@ export function runPipeline(
           deps.terrainIdByCode,
         );
         sandbox.spawns.push(...sprawl.spawns);
+        for (const room of sprawl.rooms) {
+          sandbox.regions.rooms.push({ x: room.x, y: room.y, w: room.w, h: room.h, tags: room.tags, structure: room.structure });
+        }
         for (const warning of sprawl.warnings) console.warn("[sprawl] " + warning);
         break;
       }
@@ -258,6 +309,9 @@ export function runPipeline(
           deps.terrainIdByCode,
         );
         sandbox.spawns.push(...layout.spawns);
+        for (const room of layout.rooms) {
+          sandbox.regions.rooms.push({ x: room.x * 7, y: room.y * 7, w: room.w * 7, h: room.h * 7, tags: [], structure: "(layout)" });
+        }
         for (const warning of layout.warnings) console.warn("[layout] " + warning);
         break;
       }
@@ -316,6 +370,9 @@ export function runPipeline(
         );
 
         sandbox.spawns.push(...roomResult.spawns);
+        for (const room of roomResult.placements) {
+          sandbox.regions.rooms.push({ x: room.x, y: room.y, w: room.w, h: room.h, tags: room.tags, structure: room.structure });
+        }
         void roomResult.placements; // 以后 fill / 传送会用到
         break;
       }
@@ -382,6 +439,21 @@ export function runPipeline(
       }
     }
   }
+
+  // 实体图摊平成宿主认识的 spawns（按坐标排序，保证确定性）
+  const spawns: SpawnRequest[] = [...sandbox.spawns];
+  const keys = [...sandbox.entities.keys()].sort((a, b) => a - b);
+  for (const key of keys) {
+    for (const entity of sandbox.entities.get(key) ?? []) {
+      spawns.push({
+        template: entity.template,
+        x: key % sandbox.width,
+        y: Math.floor(key / sandbox.width),
+        source: entity.source,
+      });
+    }
+  }
+  sandbox.spawns = spawns;
 
   return sandbox;
 }

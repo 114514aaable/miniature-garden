@@ -279,6 +279,7 @@ function runPipelineToTerrain(steps, seed, width, height, loaded, ids, worldId) 
     biomes: loaded.biomes,
     terrainIdByCode: ids,
     structures: loadStructures(worldId),
+    start: loaded.start?.pos,
   });
 
   return { width: sandbox.width, height: sandbox.height, terrain: sandbox.terrain, stats: {}, spawns: sandbox.spawns };

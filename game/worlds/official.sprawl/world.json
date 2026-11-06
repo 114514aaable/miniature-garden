@@ -31,6 +31,49 @@
         "margin": 1,
         "corridor": "floor",
         "widen": 0.35
+      },
+      {
+        "op": "populate",
+        "rules": [
+          {
+            "where": "room",
+            "tags": [
+              "treasure"
+            ],
+            "templates": {
+              "prop_crate": 3,
+              "item_lamp": 1
+            },
+            "density": 0.35,
+            "once": false
+          },
+          {
+            "where": "room",
+            "templates": {
+              "item_lamp": 1
+            },
+            "density": 0.12
+          },
+          {
+            "where": "corridor",
+            "templates": {
+              "item_lamp": 1
+            },
+            "density": 0.04,
+            "avoid": [
+              "start"
+            ]
+          },
+          {
+            "where": "deadend",
+            "templates": {
+              "prop_crate": 2,
+              "item_lamp": 1
+            },
+            "density": 0.5,
+            "once": false
+          }
+        ]
       }
     ]
   },

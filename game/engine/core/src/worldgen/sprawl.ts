@@ -39,6 +39,7 @@ export interface SprawlRoom {
   readonly w: number;
   readonly h: number;
   readonly doors: ReadonlyArray<{ readonly x: number; readonly y: number; readonly facing: string }>;
+  readonly tags: readonly string[];
 }
 
 export function placeSprawl(
@@ -113,7 +114,7 @@ export function placeSprawl(
       warnings.push(`${def.id}：没有门，临时在底部开一个`);
     }
 
-    rooms.push({ structure: def.id, x, y, w: def.width, h: def.height, doors });
+    rooms.push({ structure: def.id, x, y, w: def.width, h: def.height, doors, tags: def.tags });
 
     for (let dy = 0; dy < def.height; dy += 1) {
       for (let dx = 0; dx < def.width; dx += 1) {

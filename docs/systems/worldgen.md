@@ -203,6 +203,30 @@ field → biome → select → place → fill
 
 **世界只写「用哪些 op + 参数」**，不写算法。
 
+## 实体图与投放（populate）
+
+生成期除了地形，还有一张**实体图**：`cell → 实体（模板 + 标签）`。
+它们和地形一起产出，最后由宿主统一变成真实实体。
+
+```json
+{ "op": "populate", "rules": [
+  { "where": "room", "tags": ["treasure"], "templates": { "prop_crate": 3 }, "density": 0.35 },
+  { "where": "deadend", "templates": { "prop_crate": 2, "item_lamp": 1 }, "density": 0.5 },
+  { "where": "corridor", "templates": { "item_lamp": 1 }, "density": 0.04, "avoid": ["start"] }
+]}
+```
+
+```
+where     room / corridor / deadend / floor
+tags      房间标签（结构上写 tags，populate 只投带标签的房间）
+density   每个候选格命中的概率
+once      同一间房最多一个
+avoid     start：出生点周围留空（默认 3 格）
+```
+
+**先不限制一格几个实体**（用户决定）；只保证不压墙、出生点干净。
+结构自带的实体仍然有效，和投放共用同一张实体图。
+
 ## 确定性
 
 ```

@@ -47,6 +47,8 @@ export interface StructureDef {
   readonly anchors: ReadonlyArray<StructureAnchor>;
   /** 拼贴时的权重（默认 1）。 */
   readonly weight: number;
+  /** 房间标签（treasure / guard / trap …），populate 用。 */
+  readonly tags: readonly string[];
 }
 
 /** 展开前：图例里可能是地形，也可能是子结构。 */
@@ -60,6 +62,7 @@ export interface RawStructure {
   readonly entities: ReadonlyArray<StructureEntity>;
   readonly anchors: ReadonlyArray<StructureAnchor>;
   readonly weight: number;
+  readonly tags: readonly string[];
 }
 
 export interface PlaceSpec {
@@ -105,6 +108,7 @@ export function parseStructure(raw: unknown, idKey: string): RawStructure {
     anchors?: unknown;
     entities?: unknown;
     weight?: unknown;
+    tags?: unknown;
   };
 
   if (!Array.isArray(data.map) || data.map.length === 0) {
@@ -188,6 +192,7 @@ export function parseStructure(raw: unknown, idKey: string): RawStructure {
     entities: parseEntities(data, width, rows.length, idKey),
     anchors: parseAnchors(data, width, rows.length, idKey),
     weight: parseWeight(data),
+    tags: parseTags(data),
   };
 }
 
@@ -251,6 +256,7 @@ export function resolveStructures(raws: ReadonlyMap<string, RawStructure>): Map<
       entities,
       anchors,
       weight: raw.weight,
+      tags: raw.tags,
     };
     resolved.set(id, def);
     return def;
@@ -258,6 +264,15 @@ export function resolveStructures(raws: ReadonlyMap<string, RawStructure>): Map<
 
   for (const id of raws.keys()) resolve(id);
   return resolved;
+}
+
+/** tags：房间标签，默认空。 */
+function parseTags(data: { tags?: unknown }): string[] {
+  if (data.tags === undefined) return [];
+  if (!Array.isArray(data.tags) || data.tags.some((tag) => typeof tag !== "string")) {
+    throw new Error("结构的 tags 应该是字符串数组");
+  }
+  return [...data.tags];
 }
 
 /** weight：默认 1，必须 > 0。 */
