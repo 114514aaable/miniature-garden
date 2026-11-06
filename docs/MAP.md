@@ -351,6 +351,10 @@ game/systems/render/*（投影成画面数据）
   - `interface GenerateResult`
   - `const MAX_SIZE`
   - `const MIN_SIZE`
+- **`game/engine/core/src/worldgen/maze.ts`**（136 行）
+  迷宫生成（迭代回溯 + 可选编织）。
+  - `generateMaze(config: MazeConfig) → number[]`
+  - `interface MazeConfig`
 - **`game/engine/core/src/worldgen/noise.ts`**（112 行）
   噪声：把「种子 + 坐标」变成 0..1 的值。
   - `cellRandom(seed: number, x: number, y: number) → number`
@@ -361,7 +365,7 @@ game/systems/render/*（投影成画面数据）
   - `interface FbmOptions`
   - `type NoiseKind`
   - `const NOISE_KINDS`
-- **`game/engine/core/src/worldgen/pipeline.ts`**（189 行）
+- **`game/engine/core/src/worldgen/pipeline.ts`**（217 行）
   生成流水线：把生成算法拆成「一步一个算子」，串起来跑。
   - `createSandbox(seed: number, width: number, height: number, fill: number) → Sandbox`
   - `runPipeline(sandbox: Sandbox, steps: readonly Step[], deps: PipelineDeps,) → Sandbox`

@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 101 个文件。
+共 102 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -54,6 +54,7 @@
 | `game/engine/core/src/traversal/transform.ts` | 偏移 → 偏移：形状的组合就是靠这几个变换。 | [md](game/engine/core/src/traversal/transform.md) |
 | `game/engine/core/src/worldgen/caves.ts` | 元胞地牢：元胞自动机（cellular automata）挖洞穴。 | [md](game/engine/core/src/worldgen/caves.md) |
 | `game/engine/core/src/worldgen/generate.ts` | 生成一片地形：种子 + 尺寸 + 场参数 + 群系 → 地形号数组。 | [md](game/engine/core/src/worldgen/generate.md) |
+| `game/engine/core/src/worldgen/maze.ts` | 迷宫生成（迭代回溯 + 可选编织）。 | [md](game/engine/core/src/worldgen/maze.md) |
 | `game/engine/core/src/worldgen/noise.ts` | 噪声：把「种子 + 坐标」变成 0..1 的值。 | [md](game/engine/core/src/worldgen/noise.md) |
 | `game/engine/core/src/worldgen/pipeline.ts` | 生成流水线：把生成算法拆成「一步一个算子」，串起来跑。 | [md](game/engine/core/src/worldgen/pipeline.md) |
 | `game/engine/core/src/worldgen/select.ts` | 选：把「若干场」翻译成「群系」，再把群系翻译成「地形」。 | [md](game/engine/core/src/worldgen/select.md) |

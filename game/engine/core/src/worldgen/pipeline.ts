@@ -15,6 +15,7 @@
  */
 
 import { generateCaves } from "./caves.ts";
+import { generateMaze } from "./maze.ts";
 import { placeStructures, type StructureDef } from "./structures.ts";
 import { generateTerrain, type FieldConfig } from "./generate.ts";
 import type { Biome } from "./select.ts";
@@ -49,6 +50,15 @@ export type Step =
       readonly chambers?: number;
       /** 图层名，默认 "cave"。 */
       readonly as?: string;
+    }
+  | {
+      readonly op: "maze";
+      /** 墙 / 通道的地形代号（默认 wall / floor）。 */
+      readonly wall?: string;
+      readonly floor?: string;
+      /** 0..1：死胡同打通比例。 */
+      readonly braid?: number;
+      readonly inset?: number;
     }
   | {
       readonly op: "place";
@@ -119,6 +129,24 @@ export function runPipeline(
         });
         // 1 = 洞，0 = 石
         sandbox.layers.set(step.as ?? CAVE_LAYER, caves.walls.map((wall) => (wall ? 0 : 1)));
+        break;
+      }
+
+      case "maze": {
+        const wallId = deps.terrainIdByCode.get(step.wall ?? "wall");
+        const floorId = deps.terrainIdByCode.get(step.floor ?? "floor");
+        if (wallId === undefined) throw new Error("迷宫缺少地形：wall");
+        if (floorId === undefined) throw new Error("迷宫缺少地形：floor");
+
+        sandbox.terrain = generateMaze({
+          seed: sandbox.seed + stepIndex * 7919,
+          width: sandbox.width,
+          height: sandbox.height,
+          wall: wallId,
+          floor: floorId,
+          braid: step.braid,
+          inset: step.inset,
+        });
         break;
       }
 

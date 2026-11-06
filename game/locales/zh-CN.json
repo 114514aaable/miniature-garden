@@ -123,5 +123,7 @@
   "rule.base.rest_finish.name": "休息结算",
   "rule.base.rest_finish.desc": "休息到点：回 2 点血。",
   "template.rat.name": "洞鼠",
-  "template.rat.desc": "会咬人的小东西。"
+  "template.rat.desc": "会咬人的小东西。",
+  "world.official.labyrinth.name": "迷宫",
+  "world.official.labyrinth.desc": "在实心岩里挖出来的一座迷宫。通道绕，但一定走得通。"
 }
