@@ -1384,46 +1384,61 @@ function speedOf(handle) {
 
 const SAVE_DIR = "saves";
 /** 世界实例目录：一个世界一个文件夹。 */
-const WORLD_DIR = "saves/worlds";
+const WORLD_DIR = "saves";
 /** 生成器版本：算法一改就加一，旧世界读档时会提示不匹配。 */
 const GENERATOR_VERSION = 1;
 const SELECTION_FILE = "saves/selection.json";
 
 /** 每个世界「关掉了哪些规则」。给 AI 和界面共用的外置接口。 */
 /** 列世界实例（按更新时间倒序）。坏的目录跳过。 */
+/** 一个存档目录：saves/<id>/。 */
+function worldDir(id) {
+  return WORLD_DIR + "/" + id;
+}
+
+/** 列所有存档（按更新时间倒序）。坏目录跳过。 */
 function listWorlds() {
   const out = [];
   try {
     for (const name of readdirSync(WORLD_DIR)) {
-      const file = WORLD_DIR + "/" + name + "/meta.json";
+      const file = worldDir(name) + "/world.json";
       if (!existsSync(file)) continue;
       try {
         const meta = JSON.parse(readFileSync(file, "utf8"));
-        if (typeof meta.id === "string" && typeof meta.pack === "string") out.push(meta);
+        if (typeof meta.id === "string" && typeof meta.pack === "string") {
+          const stateFile = worldDir(name) + "/state.json";
+          out.push({
+            ...meta,
+            saved: existsSync(stateFile),
+            stateAt: existsSync(stateFile) ? statSync(stateFile).mtime.toISOString() : null,
+          });
+        }
       } catch {
-        // 坏文件跳过，不影响别的世界
+        // 坏文件跳过
       }
     }
   } catch {
     return [];
   }
-  return out.sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+  return out.sort((a, b) =>
+    String(b.stateAt ?? b.updatedAt ?? "").localeCompare(String(a.stateAt ?? a.updatedAt ?? "")),
+  );
 }
 
 function readWorld(id) {
   try {
-    return JSON.parse(readFileSync(WORLD_DIR + "/" + id + "/meta.json", "utf8"));
+    return JSON.parse(readFileSync(worldDir(id) + "/world.json", "utf8"));
   } catch {
     return null;
   }
 }
 
 function writeWorld(meta) {
-  mkdirSync(WORLD_DIR + "/" + meta.id, { recursive: true });
-  writeFileSync(WORLD_DIR + "/" + meta.id + "/meta.json", JSON.stringify(meta, null, 2), "utf8");
+  mkdirSync(worldDir(meta.id), { recursive: true });
+  writeFileSync(worldDir(meta.id) + "/world.json", JSON.stringify(meta, null, 2), "utf8");
 }
 
-/** 新建一个世界实例。名字 = 世界名 + 序号（可改名）。 */
+/** 新建一个存档。名字 = 包名 + 序号（可改名）。 */
 function createWorld(pack, seed, options, name) {
   const id = "w" + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36);
   const count = listWorlds().filter((item) => item.pack === pack).length + 1;
@@ -1456,151 +1471,88 @@ function writeSelection(all) {
 const SAVE_FILE = "saves/quicksave.json";
 
 /** 槽位名只允许字母数字下划线短横，防止路径穿越。 */
-function slotPath(slot) {
-  if (!/^[a-zA-Z0-9_-]{1,32}$/.test(slot)) {
-    throw new Error("槽位名只能用字母、数字、下划线、短横（1–32 个字）");
-  }
-  return SAVE_DIR + "/" + slot + ".json";
-}
+/** 存档：把当前进度写进这个世界的 state.json。 */
+function saveGame() {
+  if (session === null || !session.worldId) return { ok: false, error: "没有进行中的世界" };
 
-/** 列出所有存档（按时间倒序）。坏的存档跳过，不拖垮列表。 */
-function listSaves() {
-  let names = [];
-  try {
-    names = readdirSync(SAVE_DIR);
-  } catch {
-    return [];
-  }
+  const dir = worldDir(session.worldId);
+  mkdirSync(dir, { recursive: true });
 
-  const saves = [];
-  for (const name of names) {
-    if (!name.endsWith(".json")) continue;
-    const slot = name.slice(0, -".json".length);
-    try {
-      const data = JSON.parse(readFileSync(SAVE_DIR + "/" + name, "utf8"));
-      saves.push({
-        slot,
-        world: data.world ?? null,
-        seed: data.seed ?? 0,
-        savedAt: data.savedAt ?? null,
-        tick: data.engine?.tick ?? 0,
-        packs: data.packs ?? [],
-        bytes: readFileSync(SAVE_DIR + "/" + name).length,
-      });
-    } catch {
-      saves.push({ slot, broken: true });
-    }
-  }
-
-  return saves.sort((a, b) => String(b.savedAt ?? "").localeCompare(String(a.savedAt ?? "")));
-}
-
-
-/** 存档：引擎状态 + 宿主侧（玩家、就绪时刻、调度器、关掉的规则）。 */
-function saveGame(slot = "quick") {
-  if (session === null) return { ok: false, error: "没有进行中的世界" };
   const data = {
-    version: 1,
-    world: session.world ?? null,
-    worldId: session.worldId ?? null,
+    version: 2,
     savedAt: new Date().toISOString(),
-    packs: session.packs,
     engine: session.store.exportState(),
     playerHandle: session.playerHandle,
     seed: session.seed,
     playerReadyAt: session.playerReadyAt,
     scheduler: session.scheduler.upcoming(999).map((due) => [due.handle, due.tick]),
     disabled: session.disabled ?? [],
-    options: session.options ?? {},
-    // 场景栈连同每层的内部状态（比如对话说到第几句）
     scene: session.scenes.export(),
   };
-  mkdirSync(SAVE_DIR, { recursive: true });
-  writeFileSync(slotPath(slot), JSON.stringify(data), "utf8");
+
+  writeFileSync(dir + "/state.json", JSON.stringify(data), "utf8");
+
+  const meta = readWorld(session.worldId);
+  if (meta !== null) {
+    meta.updatedAt = new Date().toISOString();
+    writeWorld(meta);
+  }
+
   return { ok: true, message: "已存档（" + session.store.now() + "）" };
 }
 
-/** 读档：把世界恢复到存档那一刻。 */
-function loadGame(slot = "quick") {
+/** 读档：按存档目录里的配方重建世界，再把进度灌回去。 */
+function loadGame(id) {
+  const worldId = typeof id === "string" && id.length > 0 ? id : (session === null ? null : session.worldId);
+  const meta = worldId === null ? null : readWorld(worldId);
+  if (meta === null) return { ok: false, error: "没有这个存档" };
+
   let data;
   try {
-    data = JSON.parse(readFileSync(slotPath(slot), "utf8"));
+    data = JSON.parse(readFileSync(worldDir(meta.id) + "/state.json", "utf8"));
   } catch {
-    return { ok: false, error: "还没有存档" };
-  }
-
-  // 有世界实例就按它的配方来（包/种子/尺寸），旧存档退回自身字段
-  const instance = typeof data.worldId === "string" ? readWorld(data.worldId) : null;
-  if (instance !== null && instance.generator !== GENERATOR_VERSION) {
-    // 生成器改过：地图可能和当年不一样，明确告诉玩家
-    session.notice = "这个世界的生成器版本是 " + instance.generator + "，现在是 " + GENERATOR_VERSION + "，地形可能和当年不同";
-  }
-
-  if (instance !== null) {
-    data = {
-      ...data,
-      world: instance.pack,
-      seed: instance.seed,
-      options: instance.options ?? {},
-      packs: data.packs ?? [],
-    };
-  }
-
-  if (typeof data.world !== "string" || !Array.isArray(data.packs)) {
-    return { ok: false, error: "存档缺少世界信息，可能是旧格式" };
+    return { ok: false, error: "这个存档还没存过进度" };
   }
 
   let ordered;
   try {
     const { byId } = collectPacks();
-    ordered = closureOf(data.world, byId);
+    ordered = closureOf(meta.pack, byId);
   } catch (error) {
     return { ok: false, error: "存档要的世界包找不到了：" + messageOf(error) };
   }
 
-  const packs = ordered.map((content) => content.pack.id + "@" + content.pack.version);
-  const missing = data.packs.filter((pack) => !packs.includes(pack));
-  const extra = packs.filter((pack) => !data.packs.includes(pack));
-  if (missing.length > 0 || extra.length > 0) {
-    return {
-      ok: false,
-      error: "存档的包和现在的不一致，拒绝读取（防止读出悬空引用）",
-      missing,
-      extra,
-    };
-  }
-
-  // 存档自带规则集：按它的 disabled 重建，再导入状态。
   session = buildSession(
     ordered,
     new Set(resolveTags(data.disabled ?? [])),
-    data.seed ?? 0,
+    meta.seed,
     false,
     new Set(),
-    data.options ?? {},
+    meta.options ?? {},
   );
-  session.world = data.world;
+
+  session.world = meta.pack;
+  session.worldId = meta.id;
+  session.worldName = meta.name;
+  session.seed = meta.seed;
+  session.options = meta.options ?? {};
+  session.disabled = data.disabled ?? [];
   session.dead = false;
+
   session.store.importState(data.engine);
   session.playerHandle = data.playerHandle;
-  session.seed = data.seed ?? 0;
-  if (instance !== null) {
-    session.worldId = instance.id;
-    session.worldName = instance.name;
-    instance.updatedAt = new Date().toISOString();
-    writeWorld(instance);
-  }
-  session.options = data.options ?? {};
   session.playerReadyAt = data.playerReadyAt;
   session.scheduler = new Scheduler(
-    data.scheduler.map(([handle, readyAt]) => ({ handle, readyAt })),
+    (data.scheduler ?? []).map(([handle, readyAt]) => ({ handle, readyAt })),
     session.store.now(),
   );
 
-  // 读档后检查玩家站得住（存档的位置可能落在新地图的水里）
+  if (meta.generator !== GENERATOR_VERSION) {
+    session.notice = "这个存档的生成器版本是 " + meta.generator + "，现在是 " + GENERATOR_VERSION + "，地形可能和当年不同";
+  }
+
   ensurePlayerOnWalkable();
 
-  // 场景：按层重建（对话要重新读脚本），再让每层恢复内部状态
   if (Array.isArray(data.scene) && data.scene.length > 0) {
     const layers = [];
     for (const layer of data.scene) {
@@ -1619,11 +1571,17 @@ function loadGame(slot = "quick") {
     }
     if (layers.length > 0) session.scenes.restore(layers);
   }
+
+  const savedMeta = readWorld(meta.id);
+  if (savedMeta !== null) {
+    savedMeta.updatedAt = new Date().toISOString();
+    writeWorld(savedMeta);
+  }
+
   session.lastEvents = [];
-  session.devlog.action(session.store.now(), "读档", { tick: session.store.now(), world: data.world });
+  session.devlog.action(session.store.now(), "读档", { tick: session.store.now(), world: meta.pack });
   return { ok: true, message: "已读档（tick " + session.store.now() + "）" };
 }
-
 /** 技能显示名从链接表里取，不在代码里写死。 */
 function skillName(tag) {
   const sym = session.link.tags.get(tag);
@@ -1705,7 +1663,7 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.url === "/api/saves") {
-      sendJson(response, { ok: true, saves: listSaves() });
+      sendJson(response, { ok: true, saves: listWorlds() });
       return;
     }
 
@@ -1791,6 +1749,15 @@ const server = createServer(async (request, response) => {
 
         // 配方：沿用已有世界实例，或按请求新建一个
         const reused = typeof instanceId === "string" ? readWorld(instanceId) : null;
+
+        // 从「最近的世界」进来：有进度就直接读档，没进度按配方新开
+        if (reused !== null && existsSync(worldDir(reused.id) + "/state.json")) {
+          const loaded = loadGame(reused.id);
+          if (loaded.ok) {
+            sendJson(response, snapshot(loaded.message));
+            return;
+          }
+        }
         const packId = reused !== null ? reused.pack : String(id);
         const worldSeed = reused !== null ? Number(reused.seed) || 0 : Number(seed) || 0;
         const worldOptions =
@@ -1839,15 +1806,14 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.method === "POST" && request.url === "/api/save") {
-      const { slot } = await readBody(request);
-      const result = saveGame(typeof slot === "string" && slot.length > 0 ? slot : "quick");
+      const result = saveGame();
       sendJson(response, result.ok ? snapshot(result.message) : { error: result.error });
       return;
     }
 
     if (request.method === "POST" && request.url === "/api/load") {
-      const { slot } = await readBody(request);
-      const result = loadGame(typeof slot === "string" && slot.length > 0 ? slot : "quick");
+      const { id } = await readBody(request);
+      const result = loadGame(typeof id === "string" ? id : null);
       sendJson(response, result.ok ? snapshot(result.message) : snapshot(result.error));
       return;
     }

@@ -449,13 +449,14 @@ async function renderLoad() {
 
   const draw = (saves, message) => {
     const rows = saves.map((save) => {
-      const label = save.broken
-        ? save.slot + '（损坏）'
-        : save.slot + ' · ' + (save.world || '?') + ' · 种子 ' + save.seed + ' · tick ' + save.tick +
-          (save.savedAt ? ' · ' + save.savedAt.slice(0, 16).replace('T', ' ') : '');
+      const size = save.options && save.options.width ? save.options.width + '×' + save.options.height : '默认';
+      const when = save.stateAt || save.updatedAt || save.createdAt || '';
+      const label = (save.name || save.id) + ' · ' + save.pack + ' · 种子 ' + save.seed + ' · ' + size +
+        (save.saved ? ' · 有进度' : ' · 新世界') +
+        (when ? ' · ' + String(when).slice(0, 16).replace('T', ' ') : '');
       return row({ gap: 8, align: 'center' },
         text(label, { policy: 'fill' }),
-        save.broken ? text('—', { policy: 'fixed' }) : button('读取', () => tryLoad(save.slot)),
+        button(save.saved ? '读取' : '进入', () => tryLoad(save.id)),
       );
     });
 
@@ -466,17 +467,9 @@ async function renderLoad() {
     ), { title: '读档' }));
   };
 
-  const tryLoad = async (slot) => {
+  const tryLoad = async (id) => {
     draw([], '正在读取…');
-    const result = await api('/api/load', { slot });
-    if (result && result.ok === false) {
-      const missing = result.missing && result.missing.length ? '缺：' + result.missing.join(', ') : '';
-      const extra = result.extra && result.extra.length ? '多：' + result.extra.join(', ') : '';
-      const saves = await api('/api/saves');
-      draw(saves.saves || [], result.error + '   ' + [missing, extra].filter(Boolean).join('   '));
-      return;
-    }
-    location.href = '/game?world=' + encodeURIComponent(result.world || activeWorld || '') + '&loaded=1';
+    location.href = '/game?instance=' + encodeURIComponent(id);
   };
 
   draw([], '正在读取存档列表…');
@@ -485,9 +478,9 @@ async function renderLoad() {
     draw([], '读不出存档列表：' + (result && result.error ? result.error : '未知'));
     return;
   }
-  draw(result.saves || [], (result.saves || []).length === 0 ? '还没有存档。游戏里点「存档」会写一份。' : '选择一个存档读取：');
+  const saves = result.saves || [];
+  draw(saves, saves.length === 0 ? '还没有存档。点「开始游戏」会新建一个世界。' : '选择一个世界进入：');
 }
-
 document.getElementById('quit-back').textContent = '← 返回';
 
 api('/api/worlds').then((state) => {
