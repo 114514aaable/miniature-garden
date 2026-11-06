@@ -20,6 +20,7 @@ import { placeStructures, type SpawnRequest, type StructureDef } from "./structu
 import { placeRooms } from "./rooms.ts";
 import { placeTiles } from "./tiles.ts";
 import { placeLayout } from "./layout.ts";
+import { placeSprawl } from "./sprawl.ts";
 import { generateTerrain, type FieldConfig } from "./generate.ts";
 import type { Biome } from "./select.ts";
 
@@ -67,6 +68,16 @@ export type Step =
       /** 0..1：死胡同打通比例。 */
       readonly braid?: number;
       readonly inset?: number;
+    }
+  | {
+      readonly op: "sprawl";
+      /** 候选房间件（role = room，尺寸随意）。 */
+      readonly rooms: readonly string[];
+      readonly count?: number;
+      readonly tries?: number;
+      readonly margin?: number;
+      readonly corridor?: string;
+      readonly widen?: number;
     }
   | {
       readonly op: "layout";
@@ -199,6 +210,31 @@ export function runPipeline(
           braid: step.braid,
           inset: step.inset,
         });
+        break;
+      }
+
+      case "sprawl": {
+        const sprawlDefs = deps.structures;
+        if (sprawlDefs === undefined) throw new Error("sprawl 需要 structures（结构定义）");
+
+        const sprawl = placeSprawl(
+          sandbox.terrain,
+          sandbox.width,
+          sandbox.height,
+          sprawlDefs,
+          {
+            rooms: step.rooms,
+            count: step.count,
+            tries: step.tries,
+            margin: step.margin,
+            corridor: step.corridor,
+            widen: step.widen,
+          },
+          sandbox.seed + stepIndex * 7919,
+          deps.terrainIdByCode,
+        );
+        sandbox.spawns.push(...sprawl.spawns);
+        for (const warning of sprawl.warnings) console.warn("[sprawl] " + warning);
         break;
       }
 

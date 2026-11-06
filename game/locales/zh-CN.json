@@ -129,5 +129,7 @@
   "world.official.rooms.name": "房间地牢",
   "world.official.rooms.desc": "先切房间，再挖走廊。房间是数据，走廊是算法。",
   "world.official.tiles.name": "拼贴地牢",
-  "world.official.tiles.desc": "七种 7×7 的房间件按门口拼起来。先测试拼贴与兜底。"
+  "world.official.tiles.desc": "七种 7×7 的房间件按门口拼起来。先测试拼贴与兜底。",
+  "world.official.sprawl.name": "散落地牢",
+  "world.official.sprawl.desc": "房间自由散落，门对门连起来；走廊会绕、会变宽。"
 }

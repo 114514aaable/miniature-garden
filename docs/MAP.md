@@ -371,7 +371,7 @@ game/systems/render/*（投影成画面数据）
   - `interface FbmOptions`
   - `type NoiseKind`
   - `const NOISE_KINDS`
-- **`game/engine/core/src/worldgen/pipeline.ts`**（352 行）
+- **`game/engine/core/src/worldgen/pipeline.ts`**（388 行）
   生成流水线：把生成算法拆成「一步一个算子」，串起来跑。
   - `createSandbox(seed: number, width: number, height: number, fill: number) → Sandbox`
   - `runPipeline(sandbox: Sandbox, steps: readonly Step[], deps: PipelineDeps,) → Sandbox`
@@ -400,6 +400,11 @@ game/systems/render/*（投影成画面数据）
   - `interface Biome`
   - `interface TerrainLevels`
   - `type Sample`
+- **`game/engine/core/src/worldgen/sprawl.ts`**（349 行）
+  散落地牢：房间自由摆放 + 房间图 + 绕路 + 走廊加宽。
+  - `placeSprawl(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, spec: SprawlSpec, seed: number, terrainIdByCode: ReadonlyMap<string, number>,)`
+  - `interface SprawlSpec`
+  - `interface SprawlRoom`
 - **`game/engine/core/src/worldgen/structures.ts`**（481 行）
   结构：带图例的字符画，摆进生成出来的地图里。
   - `parseStructure(raw: unknown, idKey: string) → RawStructure`

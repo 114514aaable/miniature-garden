@@ -20,3 +20,4 @@
 
 - [`game/engine/core/src/worldgen/layout.ts`](game/engine/core/src/worldgen/layout.md)
 - [`game/engine/core/src/worldgen/pipeline.ts`](game/engine/core/src/worldgen/pipeline.md)
+- [`game/engine/core/src/worldgen/sprawl.ts`](game/engine/core/src/worldgen/sprawl.md)

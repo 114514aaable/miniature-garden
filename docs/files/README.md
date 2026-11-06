@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 107 个文件。
+共 108 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -61,6 +61,7 @@
 | `game/engine/core/src/worldgen/random.ts` | 生成器共用的小随机：只依赖种子，不读时钟。 | [md](game/engine/core/src/worldgen/random.md) |
 | `game/engine/core/src/worldgen/rooms.ts` | 房间布局：BSP 摆房间 → 门当顶点 → 修走廊把门连起来。 | [md](game/engine/core/src/worldgen/rooms.md) |
 | `game/engine/core/src/worldgen/select.ts` | 选：把「若干场」翻译成「群系」，再把群系翻译成「地形」。 | [md](game/engine/core/src/worldgen/select.md) |
+| `game/engine/core/src/worldgen/sprawl.ts` | 散落地牢：房间自由摆放 + 房间图 + 绕路 + 走廊加宽。 | [md](game/engine/core/src/worldgen/sprawl.md) |
 | `game/engine/core/src/worldgen/structures.ts` | 结构：带图例的字符画，摆进生成出来的地图里。 | [md](game/engine/core/src/worldgen/structures.md) |
 | `game/engine/core/src/worldgen/tiles.ts` | 拼贴：把 7×7 的房间件按「门口」贴成一张图。 | [md](game/engine/core/src/worldgen/tiles.md) |
 | `game/engine/core/types/node-shim.d.ts` | 临时的 node 类型声明。 | [md](game/engine/core/types/node-shim.d.md) |

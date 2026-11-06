@@ -1,0 +1,59 @@
+{
+  "start": {
+    "space": "sprawl",
+    "x": 3,
+    "y": 3
+  },
+  "rules": [
+    "core.move",
+    "core.take",
+    "core.drop",
+    "core.wait",
+    "core.aim",
+    "base.attack",
+    "core.use",
+    "base.rest",
+    "base.rest_finish"
+  ],
+  "onConflict": "error",
+  "generation": {
+    "pipeline": [
+      {
+        "op": "sprawl",
+        "rooms": [
+          "cell",
+          "hall",
+          "vault",
+          "chamber",
+          "crypt"
+        ],
+        "count": 10,
+        "margin": 1,
+        "corridor": "floor",
+        "widen": 0.35
+      }
+    ]
+  },
+  "startMenu": {
+    "fields": [
+      {
+        "key": "seed",
+        "label": "种子",
+        "type": "number",
+        "default": 0
+      },
+      {
+        "key": "width",
+        "label": "宽",
+        "type": "number",
+        "default": 40
+      },
+      {
+        "key": "height",
+        "label": "高",
+        "type": "number",
+        "default": 30
+      }
+    ]
+  }
+}
