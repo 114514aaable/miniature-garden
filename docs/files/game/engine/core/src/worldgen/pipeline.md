@@ -19,6 +19,7 @@
 - [`game/engine/core/src/worldgen/rooms.ts`](game/engine/core/src/worldgen/rooms.md)
 - [`game/engine/core/src/worldgen/select.ts`](game/engine/core/src/worldgen/select.md)
 - [`game/engine/core/src/worldgen/structures.ts`](game/engine/core/src/worldgen/structures.md)
+- [`game/engine/core/src/worldgen/tiles.ts`](game/engine/core/src/worldgen/tiles.md)
 
 ## 被引用
 

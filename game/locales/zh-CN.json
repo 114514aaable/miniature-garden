@@ -127,5 +127,7 @@
   "world.official.labyrinth.name": "迷宫",
   "world.official.labyrinth.desc": "在实心岩里挖出来的一座迷宫。通道绕，但一定走得通。",
   "world.official.rooms.name": "房间地牢",
-  "world.official.rooms.desc": "先切房间，再挖走廊。房间是数据，走廊是算法。"
+  "world.official.rooms.desc": "先切房间，再挖走廊。房间是数据，走廊是算法。",
+  "world.official.tiles.name": "拼贴地牢",
+  "world.official.tiles.desc": "七种 7×7 的房间件按门口拼起来。先测试拼贴与兜底。"
 }

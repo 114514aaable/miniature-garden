@@ -24,4 +24,5 @@
 
 - [`game/engine/core/src/worldgen/pipeline.ts`](game/engine/core/src/worldgen/pipeline.md)
 - [`game/engine/core/src/worldgen/rooms.ts`](game/engine/core/src/worldgen/rooms.md)
+- [`game/engine/core/src/worldgen/tiles.ts`](game/engine/core/src/worldgen/tiles.md)
 - [`tools/worldgen-structures.mjs`](tools/worldgen-structures.md)

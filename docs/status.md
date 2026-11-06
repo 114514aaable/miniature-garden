@@ -11,7 +11,8 @@
           official.dungeon  元胞地牢：纯洞穴，切成 4 个洞厅
           official.cavern   洞穴地表：地表 + 洞穴 + 洞底（流水线叠加）
           official.labyrinth 迷宫：实心岩里挖通道，编织过的死胡同
-          official.rooms    房间地牢：BSP 切房间 + 门对门走廊
+          official.rooms    房间地牢：BSP 切房间 + 门图走廊
+          official.tiles    拼贴地牢：7×7 件按门口拼（测试）
 地图      4..200 任选尺寸，开局现场生成；存档按 seed + 尺寸复现
 动作      走路、劈砍、蓄力劈砍（10 回合）、横扫、休息、捡起/放下/使用、等待、交谈
 敌人      起手（红格预警 + 倒计时）→ 结算；走出去就落空
@@ -68,6 +69,7 @@ overworld    噪声 → 群系 → 地形
 caves        元胞自动机（fill / iterations / regions / chambers）
 maze         迭代回溯 + 编织；保证连通
 rooms        BSP 分区 + 门图（门=顶点、房间=团）+ A* 修路；可加环路
+tiles        7×7 件 + 门口 + 旋转 + 加权 + 程序化兜底
 structures   role / anchors / 实体 / 子结构（展开时查环）
 pipeline     overworld → caves → maze → place → blend，可叠加
 确定性       纯函数 + 按坐标派发；元胞是迭代算法（不可按格并行）

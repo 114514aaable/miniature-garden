@@ -1,0 +1,338 @@
+[
+  {
+    "id": "tile_cross",
+    "role": "room",
+    "legend": {
+      "#": {
+        "terrain": "wall"
+      },
+      ".": {
+        "terrain": "floor"
+      }
+    },
+    "map": [
+      "###.###",
+      "###.###",
+      "###.###",
+      ".......",
+      "###.###",
+      "###.###",
+      "###.###"
+    ],
+    "anchors": [
+      {
+        "kind": "door",
+        "x": 3,
+        "y": 0,
+        "facing": "north"
+      },
+      {
+        "kind": "door",
+        "x": 6,
+        "y": 3,
+        "facing": "east"
+      },
+      {
+        "kind": "door",
+        "x": 3,
+        "y": 6,
+        "facing": "south"
+      },
+      {
+        "kind": "door",
+        "x": 0,
+        "y": 3,
+        "facing": "west"
+      }
+    ],
+    "weight": 1
+  },
+  {
+    "id": "tile_room_nw",
+    "role": "room",
+    "legend": {
+      "#": {
+        "terrain": "wall"
+      },
+      ".": {
+        "terrain": "floor"
+      }
+    },
+    "map": [
+      "###.###",
+      "#...###",
+      "#...###",
+      ".......",
+      "###.###",
+      "###.###",
+      "###.###"
+    ],
+    "anchors": [
+      {
+        "kind": "door",
+        "x": 3,
+        "y": 0,
+        "facing": "north"
+      },
+      {
+        "kind": "door",
+        "x": 6,
+        "y": 3,
+        "facing": "east"
+      },
+      {
+        "kind": "door",
+        "x": 3,
+        "y": 6,
+        "facing": "south"
+      },
+      {
+        "kind": "door",
+        "x": 0,
+        "y": 3,
+        "facing": "west"
+      }
+    ],
+    "weight": 1
+  },
+  {
+    "id": "tile_hall_north",
+    "role": "room",
+    "legend": {
+      "#": {
+        "terrain": "wall"
+      },
+      ".": {
+        "terrain": "floor"
+      }
+    },
+    "map": [
+      "###.###",
+      "#.....#",
+      "#.....#",
+      ".......",
+      "###.###",
+      "###.###",
+      "###.###"
+    ],
+    "anchors": [
+      {
+        "kind": "door",
+        "x": 3,
+        "y": 0,
+        "facing": "north"
+      },
+      {
+        "kind": "door",
+        "x": 6,
+        "y": 3,
+        "facing": "east"
+      },
+      {
+        "kind": "door",
+        "x": 3,
+        "y": 6,
+        "facing": "south"
+      },
+      {
+        "kind": "door",
+        "x": 0,
+        "y": 3,
+        "facing": "west"
+      }
+    ],
+    "weight": 1
+  },
+  {
+    "id": "tile_diagonal",
+    "role": "room",
+    "legend": {
+      "#": {
+        "terrain": "wall"
+      },
+      ".": {
+        "terrain": "floor"
+      }
+    },
+    "map": [
+      "###.###",
+      "#...###",
+      "#...###",
+      ".......",
+      "###...#",
+      "###...#",
+      "###.###"
+    ],
+    "anchors": [
+      {
+        "kind": "door",
+        "x": 3,
+        "y": 0,
+        "facing": "north"
+      },
+      {
+        "kind": "door",
+        "x": 6,
+        "y": 3,
+        "facing": "east"
+      },
+      {
+        "kind": "door",
+        "x": 3,
+        "y": 6,
+        "facing": "south"
+      },
+      {
+        "kind": "door",
+        "x": 0,
+        "y": 3,
+        "facing": "west"
+      }
+    ],
+    "weight": 1
+  },
+  {
+    "id": "tile_three",
+    "role": "room",
+    "legend": {
+      "#": {
+        "terrain": "wall"
+      },
+      ".": {
+        "terrain": "floor"
+      }
+    },
+    "map": [
+      "###.###",
+      "#.....#",
+      "#.....#",
+      ".......",
+      "#...###",
+      "#...###",
+      "###.###"
+    ],
+    "anchors": [
+      {
+        "kind": "door",
+        "x": 3,
+        "y": 0,
+        "facing": "north"
+      },
+      {
+        "kind": "door",
+        "x": 6,
+        "y": 3,
+        "facing": "east"
+      },
+      {
+        "kind": "door",
+        "x": 3,
+        "y": 6,
+        "facing": "south"
+      },
+      {
+        "kind": "door",
+        "x": 0,
+        "y": 3,
+        "facing": "west"
+      }
+    ],
+    "weight": 1
+  },
+  {
+    "id": "tile_hall",
+    "role": "room",
+    "legend": {
+      "#": {
+        "terrain": "wall"
+      },
+      ".": {
+        "terrain": "floor"
+      }
+    },
+    "map": [
+      "###.###",
+      "#.....#",
+      "#.....#",
+      ".......",
+      "#.....#",
+      "#.....#",
+      "###.###"
+    ],
+    "anchors": [
+      {
+        "kind": "door",
+        "x": 3,
+        "y": 0,
+        "facing": "north"
+      },
+      {
+        "kind": "door",
+        "x": 6,
+        "y": 3,
+        "facing": "east"
+      },
+      {
+        "kind": "door",
+        "x": 3,
+        "y": 6,
+        "facing": "south"
+      },
+      {
+        "kind": "door",
+        "x": 0,
+        "y": 3,
+        "facing": "west"
+      }
+    ],
+    "weight": 1
+  },
+  {
+    "id": "tile_pillar",
+    "role": "room",
+    "legend": {
+      "#": {
+        "terrain": "wall"
+      },
+      ".": {
+        "terrain": "floor"
+      }
+    },
+    "map": [
+      "###.###",
+      "###...#",
+      "###...#",
+      ".......",
+      "#.....#",
+      "#.....#",
+      "###.###"
+    ],
+    "anchors": [
+      {
+        "kind": "door",
+        "x": 3,
+        "y": 0,
+        "facing": "north"
+      },
+      {
+        "kind": "door",
+        "x": 6,
+        "y": 3,
+        "facing": "east"
+      },
+      {
+        "kind": "door",
+        "x": 3,
+        "y": 6,
+        "facing": "south"
+      },
+      {
+        "kind": "door",
+        "x": 0,
+        "y": 3,
+        "facing": "west"
+      }
+    ],
+    "weight": 1
+  }
+]

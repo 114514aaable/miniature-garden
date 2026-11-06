@@ -37,15 +37,18 @@ export function loadStructures(worldId) {
   const raws = new Map();
 
   for (const dir of packDirsOf(worldId)) {
-    const file = dir + "/worldgen/structures.json";
-    if (!existsSync(file)) continue;
+    // 结构定义：structures.json（普通结构）+ tiles.json（7×7 拼贴件）
+    for (const name of ["structures.json", "tiles.json"]) {
+      const file = dir + "/worldgen/" + name;
+      if (!existsSync(file)) continue;
 
-    const items = JSON.parse(readFileSync(file, "utf8"));
-    if (!Array.isArray(items)) continue;
+      const items = JSON.parse(readFileSync(file, "utf8"));
+      if (!Array.isArray(items)) continue;
 
-    for (const item of items) {
-      if (typeof item !== "object" || item === null || typeof item.id !== "string") continue;
-      raws.set(item.id, parseStructure(item, item.id));
+      for (const item of items) {
+        if (typeof item !== "object" || item === null || typeof item.id !== "string") continue;
+        raws.set(item.id, parseStructure(item, item.id));
+      }
     }
   }
 

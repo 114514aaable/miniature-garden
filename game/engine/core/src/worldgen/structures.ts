@@ -45,6 +45,8 @@ export interface StructureDef {
   readonly cells: ReadonlyArray<string | null>;
   readonly entities: ReadonlyArray<StructureEntity>;
   readonly anchors: ReadonlyArray<StructureAnchor>;
+  /** 拼贴时的权重（默认 1）。 */
+  readonly weight: number;
 }
 
 /** 展开前：图例里可能是地形，也可能是子结构。 */
@@ -57,6 +59,7 @@ export interface RawStructure {
   readonly subs: ReadonlyArray<{ readonly x: number; readonly y: number; readonly id: string; readonly align: "top-left" | "center" }>;
   readonly entities: ReadonlyArray<StructureEntity>;
   readonly anchors: ReadonlyArray<StructureAnchor>;
+  readonly weight: number;
 }
 
 export interface PlaceSpec {
@@ -101,6 +104,7 @@ export function parseStructure(raw: unknown, idKey: string): RawStructure {
     role?: unknown;
     anchors?: unknown;
     entities?: unknown;
+    weight?: unknown;
   };
 
   if (!Array.isArray(data.map) || data.map.length === 0) {
@@ -183,6 +187,7 @@ export function parseStructure(raw: unknown, idKey: string): RawStructure {
     subs,
     entities: parseEntities(data, width, rows.length, idKey),
     anchors: parseAnchors(data, width, rows.length, idKey),
+    weight: parseWeight(data),
   };
 }
 
@@ -245,6 +250,7 @@ export function resolveStructures(raws: ReadonlyMap<string, RawStructure>): Map<
       cells,
       entities,
       anchors,
+      weight: raw.weight,
     };
     resolved.set(id, def);
     return def;
@@ -252,6 +258,15 @@ export function resolveStructures(raws: ReadonlyMap<string, RawStructure>): Map<
 
   for (const id of raws.keys()) resolve(id);
   return resolved;
+}
+
+/** weight：默认 1，必须 > 0。 */
+function parseWeight(data: { weight?: unknown }): number {
+  if (data.weight === undefined) return 1;
+  if (typeof data.weight !== "number" || !Number.isFinite(data.weight) || data.weight <= 0) {
+    throw new Error("结构的 weight 必须是正数");
+  }
+  return data.weight;
 }
 
 /** role：默认 prop。 */

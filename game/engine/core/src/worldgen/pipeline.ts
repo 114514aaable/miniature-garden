@@ -18,6 +18,7 @@ import { generateCaves } from "./caves.ts";
 import { generateMaze } from "./maze.ts";
 import { placeStructures, type SpawnRequest, type StructureDef } from "./structures.ts";
 import { placeRooms } from "./rooms.ts";
+import { placeTiles } from "./tiles.ts";
 import { generateTerrain, type FieldConfig } from "./generate.ts";
 import type { Biome } from "./select.ts";
 
@@ -62,6 +63,11 @@ export type Step =
       /** 0..1：死胡同打通比例。 */
       readonly braid?: number;
       readonly inset?: number;
+    }
+  | {
+      readonly op: "tiles";
+      /** 候选 7×7 件。 */
+      readonly tiles: readonly string[];
     }
   | {
       readonly op: "rooms";
@@ -165,6 +171,24 @@ export function runPipeline(
           braid: step.braid,
           inset: step.inset,
         });
+        break;
+      }
+
+      case "tiles": {
+        const tileDefs = deps.structures;
+        if (tileDefs === undefined) throw new Error("tiles 需要 structures（结构定义）");
+
+        const tiled = placeTiles(
+          sandbox.terrain,
+          sandbox.width,
+          sandbox.height,
+          tileDefs,
+          step.tiles,
+          sandbox.seed + stepIndex * 7919,
+          deps.terrainIdByCode,
+        );
+        sandbox.spawns.push(...tiled.spawns);
+        for (const warning of tiled.warnings) console.warn("[tiles] " + warning);
         break;
       }
 

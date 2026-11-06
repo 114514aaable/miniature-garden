@@ -365,7 +365,7 @@ game/systems/render/*（投影成画面数据）
   - `interface FbmOptions`
   - `type NoiseKind`
   - `const NOISE_KINDS`
-- **`game/engine/core/src/worldgen/pipeline.ts`**（276 行）
+- **`game/engine/core/src/worldgen/pipeline.ts`**（300 行）
   生成流水线：把生成算法拆成「一步一个算子」，串起来跑。
   - `createSandbox(seed: number, width: number, height: number, fill: number) → Sandbox`
   - `runPipeline(sandbox: Sandbox, steps: readonly Step[], deps: PipelineDeps,) → Sandbox`
@@ -394,7 +394,7 @@ game/systems/render/*（投影成画面数据）
   - `interface Biome`
   - `interface TerrainLevels`
   - `type Sample`
-- **`game/engine/core/src/worldgen/structures.ts`**（466 行）
+- **`game/engine/core/src/worldgen/structures.ts`**（481 行）
   结构：带图例的字符画，摆进生成出来的地图里。
   - `parseStructure(raw: unknown, idKey: string) → RawStructure`
   - `resolveStructures(raws: ReadonlyMap<string, RawStructure>) → Map<string, StructureDef>`
@@ -407,6 +407,13 @@ game/systems/render/*（投影成画面数据）
   - `interface PlaceSpec`
   - `interface Placement`
   - `interface SpawnRequest`
+- **`game/engine/core/src/worldgen/tiles.ts`**（259 行）
+  拼贴：把 7×7 的房间件按「门口」贴成一张图。
+  - `rotateStructure(def: StructureDef) → StructureDef`
+  - `portsOf(def: StructureDef) → Set<Side>`
+  - `findRotation(def: StructureDef, required: ReadonlySet<Side>, boundary: ReadonlySet<Side> = new Set(),) → StructureDef | null`
+  - `placeTiles(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, ids: readonly string[], seed: number, terrainIdByCode: ReadonlyMap<string, number>,)`
+  - `interface TilePlacement`
 
 ### 系统 game/systems
 
@@ -658,6 +665,8 @@ game/systems/render/*（投影成画面数据）
   生成「代码地图」：docs/MAP.md。
 - **`tools/gen-pack-graph.mjs`**（178 行）
   世界包的引用图（Mermaid）。
+- **`tools/gen-tiles.mjs`**（92 行）
+  一次性脚本：生成 7 张 7×7 测试件。
 - **`tools/gen-tree.mjs`**（188 行）
   扫源码里的 import，画一张引用树。
 - **`tools/gen-world.mjs`**（136 行）
@@ -679,7 +688,7 @@ game/systems/render/*（投影成画面数据）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。
-- **`tools/worldgen-structures.mjs`**（68 行）
+- **`tools/worldgen-structures.mjs`**（71 行）
   读一个世界的「结构」定义（生成期数据，不进运行时加载）。
   - `loadStructures(worldId)`
   - `previewStructure(def)`

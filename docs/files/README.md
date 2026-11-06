@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 104 个文件。
+共 106 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -61,6 +61,7 @@
 | `game/engine/core/src/worldgen/rooms.ts` | 房间布局：BSP 摆房间 → 门当顶点 → 修走廊把门连起来。 | [md](game/engine/core/src/worldgen/rooms.md) |
 | `game/engine/core/src/worldgen/select.ts` | 选：把「若干场」翻译成「群系」，再把群系翻译成「地形」。 | [md](game/engine/core/src/worldgen/select.md) |
 | `game/engine/core/src/worldgen/structures.ts` | 结构：带图例的字符画，摆进生成出来的地图里。 | [md](game/engine/core/src/worldgen/structures.md) |
+| `game/engine/core/src/worldgen/tiles.ts` | 拼贴：把 7×7 的房间件按「门口」贴成一张图。 | [md](game/engine/core/src/worldgen/tiles.md) |
 | `game/engine/core/types/node-shim.d.ts` | 临时的 node 类型声明。 | [md](game/engine/core/types/node-shim.d.md) |
 | `game/systems/camera/camera.ts` | 相机：把「看哪儿」从渲染里拆出来。 | [md](game/systems/camera/camera.md) |
 | `game/systems/config/config.ts` | 界面配置：所有「可能想调」的东西集中在这里。 | [md](game/systems/config/config.md) |
@@ -103,6 +104,7 @@
 | `tools/gen-file-docs.mjs` | 每个源文件生成一篇 md（docs/files/...）。 | [md](tools/gen-file-docs.md) |
 | `tools/gen-map.mjs` | 生成「代码地图」：docs/MAP.md。 | [md](tools/gen-map.md) |
 | `tools/gen-pack-graph.mjs` | 世界包的引用图（Mermaid）。 | [md](tools/gen-pack-graph.md) |
+| `tools/gen-tiles.mjs` | 一次性脚本：生成 7 张 7×7 测试件。 | [md](tools/gen-tiles.md) |
 | `tools/gen-tree.mjs` | 扫源码里的 import，画一张引用树。 | [md](tools/gen-tree.md) |
 | `tools/gen-world.mjs` | 生成一张地图（MVP：噪声 → 群系 → 地形号）。 | [md](tools/gen-world.md) |
 | `tools/import-csv.mjs` | CSV → 模板 JSON（宿主侧工具）。 | [md](tools/import-csv.md) |
