@@ -64,7 +64,7 @@ export function createSettingsWindow(ctx) {
         button('配置', () => open('config')),
         button('按键', () => open('keys')),
         button('世界', () => open('world')),
-        button('存档 / 读档', () => open('saves')),
+        button('进度', () => open('saves')),
         button('回到启动器', async () => {
           await ctx.api('/api/leave', {});
           location.href = '/';
@@ -142,13 +142,19 @@ export function createSettingsWindow(ctx) {
         back,
       );
     } else {
+      const state = ctx.getLastState();
+      const info = state === null
+        ? '（未开局）'
+        : (state.worldName || state.world || '?') + ' · 种子 ' + state.seed + ' · tick ' + state.tick;
+
       body = col({ gap: 8 },
+        text('当前世界：' + info, { policy: 'fixed' }),
         row({ gap: 8 },
-          button('存档', async () => {
+          button('保存进度', async () => {
             ctx.renderState(await ctx.api('/api/save', {}));
             open('saves');
           }),
-          button('读档', async () => {
+          button('读取进度', async () => {
             const result = await ctx.api('/api/load', {});
             if (result && result.ok === false) {
               ctx.showError('读档失败：' + (result.error || '未知'));
@@ -162,7 +168,7 @@ export function createSettingsWindow(ctx) {
       );
     }
 
-    const titles = { root: '设置', config: '配置', keys: '按键', world: '世界', saves: '存档 / 读档' };
+    const titles = { root: '设置', config: '配置', keys: '按键', world: '世界', saves: '进度' };
     box.appendChild(renderNode(modal(body, { title: titles[page] ?? '设置' })));
   }
 

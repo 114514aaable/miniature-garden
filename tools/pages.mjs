@@ -138,8 +138,7 @@ export const LAUNCHER_PAGE = `<!doctype html>
 
   <div class="menu" id="menu">
     <button id="m-start">{{menu.start}}</button>
-    <button id="m-recent">最近的世界</button>
-    <button id="m-load">{{menu.load}}</button>
+    <button id="m-recent">存档</button>
     <button id="m-settings">{{menu.settings}}</button>
     <button id="m-packs">{{menu.packs}}</button>
     <button id="m-quit">{{menu.quit}}</button>
@@ -153,13 +152,12 @@ export const LAUNCHER_PAGE = `<!doctype html>
   </div></div>
 
   <div class="panel" id="recent" hidden><div class="card">
-    <h2>最近的世界</h2>
+    <h2>存档</h2>
     <div id="recent-list" style="max-height:320px;overflow:auto"></div>
     <div style="margin-top:10px"><button id="recent-back">{{menu.back}}</button></div>
   </div></div>
 
   <div class="panel plain" id="settings" hidden></div>
-  <div class="panel plain" id="load" hidden></div>
 
   <div class="panel" id="quit" hidden><div class="card">
     <h2>{{menu.quit}}</h2>

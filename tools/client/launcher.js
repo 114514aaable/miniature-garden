@@ -358,10 +358,6 @@ on('m-recent', async () => {
   await renderRecent();
 });
 
-on('m-load', async () => {
-  show('load');
-  await renderLoad();
-});
 
 
 
@@ -403,8 +399,8 @@ async function renderRecent() {
   if (list === null) return;
 
   list.textContent = '读取中…';
-  const result = await api('/api/instances');
-  const items = (result && result.worlds) || [];
+  const result = await api('/api/saves');
+  const items = (result && result.saves) || [];
   if (items.length === 0) {
     list.textContent = '还没有世界。开始游戏会自动建一个。';
     return;
@@ -444,43 +440,9 @@ async function renderRecent() {
     list.appendChild(line);
   }
 }
-async function renderLoad() {
-  const box = document.getElementById('load');
+document.getElementById('quit-back').addEventListener('click', () => show(null));
+document.getElementById('graphclose').addEventListener('click', () => { document.getElementById('graphpanel').hidden = true; });
 
-  const draw = (saves, message) => {
-    const rows = saves.map((save) => {
-      const size = save.options && save.options.width ? save.options.width + '×' + save.options.height : '默认';
-      const when = save.stateAt || save.updatedAt || save.createdAt || '';
-      const label = (save.name || save.id) + ' · ' + save.pack + ' · 种子 ' + save.seed + ' · ' + size +
-        (save.saved ? ' · 有进度' : ' · 新世界') +
-        (when ? ' · ' + String(when).slice(0, 16).replace('T', ' ') : '');
-      return row({ gap: 8, align: 'center' },
-        text(label, { policy: 'fill' }),
-        button(save.saved ? '读取' : '进入', () => tryLoad(save.id)),
-      );
-    });
-
-    mount(box, modal(col({ gap: 10 },
-      text(message, { policy: 'fixed' }),
-      ...rows,
-      row({ gap: 8, justify: 'end' }, button('← 返回', () => show(null))),
-    ), { title: '读档' }));
-  };
-
-  const tryLoad = async (id) => {
-    draw([], '正在读取…');
-    location.href = '/game?instance=' + encodeURIComponent(id);
-  };
-
-  draw([], '正在读取存档列表…');
-  const result = await api('/api/saves');
-  if (!result || result.ok !== true) {
-    draw([], '读不出存档列表：' + (result && result.error ? result.error : '未知'));
-    return;
-  }
-  const saves = result.saves || [];
-  draw(saves, saves.length === 0 ? '还没有存档。点「开始游戏」会新建一个世界。' : '选择一个世界进入：');
-}
 document.getElementById('quit-back').textContent = '← 返回';
 
 api('/api/worlds').then((state) => {
