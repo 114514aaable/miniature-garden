@@ -6,39 +6,41 @@
 ## 能玩到什么
 
 ```
-启动器    选世界 → 开始弹窗（种子 + 宽高 + 生成方式）→ 进游戏
-三个世界  official.normal   盐港：噪声 + 群系
-          official.dungeon  元胞地牢：纯洞穴，切成 4 个洞厅
-          official.cavern   洞穴地表：地表 + 洞穴 + 洞底（流水线叠加）
-          official.labyrinth 迷宫：实心岩里挖通道，编织过的死胡同
-          official.rooms    房间地牢：BSP 切房间 + 门图走廊
-          official.tiles    拼贴地牢：7×7 件按门口拼（测试）
-          official.sprawl   散落地牢：房间自由摆放 + Gabriel 图 + 绕路（40 间 / 80×60）
+启动器    选世界 → 开始弹窗（种子 + 宽高）→ 进游戏
+七个世界  official.normal     盐港：噪声 + 群系
+          official.dungeon    元胞地牢：纯洞穴，切成 4 个洞厅
+          official.cavern     洞穴地表：地表 + 洞穴 + 洞底（流水线叠加）
+          official.labyrinth  迷宫：实心岩里挖通道，编织过的死胡同
+          official.rooms      房间地牢：BSP 切房间 + 门图走廊
+          official.tiles      拼贴地牢：7×7 件按门口拼（测试）
+          official.sprawl     散落地牢：房间自由摆放 + Gabriel 图 + 绕路（40 间 / 80×60）
 地图      4..200 任选尺寸，开局现场生成；存档按 seed + 尺寸复现
 动作      走路、劈砍、蓄力劈砍（10 回合）、横扫、休息、捡起/放下/使用、等待、交谈
 敌人      起手（红格预警 + 倒计时）→ 结算；走出去就落空
 对话      按 E 选目标 → 台词 → 数字键选选项 → Esc 离开
 界面      立绘（可收）/ 状态条 / 小地图 / 24 格快捷栏 / 右下 3×4 点击映射
-存档      一个存档 = 一个世界（saves/<id>/{world.json,state.json}）；场景栈可恢复
+存档      一个存档 = 一个世界（saves/<id>/{world.json,state.json}）；阶段快照可叠加
 ```
 
-## 这一阶段做完的（表现 / 时间）
+## 世界生成（这一阶段的重点）
 
-- **步进统一成「帧」**：`advanceTo` 每 tick 产一帧；响应带 `frames`，客户端逐帧播放，播完回到最终状态。
-  - 帧是**投影记录 diff**：每 tick 投影一次实体，变了的整条发、消失的发 handle。
-    意图 / 蓄力 / 血条 / 以后新增的字段**自动进帧**，不用再改帧代码。
-  - 末尾的挂起结算也补一帧，不再「跳」出结果。
-  - 播放时只重画画布 + 状态栏，HUD 不闪。
-- **短动作更快**：≤3 帧的动作 55ms/帧（移动约 110ms 一格），长动作按配置。
-- **蓄力 = pending**：点一下挂 `core.pending`，进度条画在脚底血条上方，
-  每 400ms 自动推一回合；到点落刀。
-- **休息 = pending**：4 回合后回 2 血，和蓄力同一套表现。
-- **动作占用通道**：`hand` / `move`；`core.body.hands` 默认 2。
-  蓄力占一只手 → 可以边跑边蓄（走开就落空），二次蓄力被拒。
-- **实体技能加射程检查**：够不着直接拒绝（以前能隔空起手）。
-- **配置**：`frameMs`（30..500）、`chargeTickMs`（100..2000），设置里可调。
-- **客户端拆层**：`windows/` 出现——`settings.js`、`inventory.js`；
-  `game.js` 从 1115 行降到 ~840 行，只剩启动 / 网络 / 输入 / 场景 / 帧播放 / 快捷栏。
+**7 种生成器 + 2 个修饰算子 + 1 个实体投放算子**，全部走同一条流水线：
+
+```
+overworld    噪声 → 群系 → 地形
+caves        元胞自动机（默认直接写地形；as 才写图层给 blend）
+maze         迭代回溯 + 编织；保证连通
+rooms        BSP + 门图（门=顶点、房间=团）+ A* 修路
+tiles        7×7 件 + 门口 + 旋转 + 加权 + 兜底
+layout       大房间（多格）+ 走廊格拼贴，图的边决定门口
+sprawl       自由摆放 + Gabriel 图 + 噪声 A* + 走廊加宽
+place        摆结构（数量 / 间距 / 允许地形 / 权重）
+blend        洞穴层盖到地表
+populate     实体图投放（房间标签 / 走廊 / 死胡同，出生点留空）
+```
+
+**结构件是纯数据**：任意尺寸、任意门、可旋转、可带实体与子结构（加载期展开、查环）。
+**实体图**：`cell → [实体(模板+标签)]`，和地形一起产出，宿主统一落成真实实体。
 
 ## 代码结构
 
@@ -46,7 +48,7 @@
 game/
 ├─ engine/core/     内核 + 规则实现（store / space / event / pack / rules / worldgen）
 ├─ systems/         render · camera · ui · i18n · input · log · config · intel · scene · rules
-└─ worlds/          official.base（数据）· normal / dungeon / cavern（三个世界）
+└─ worlds/          official.base（数据）· 七个世界
 tools/
 ├─ serve.mjs        本地服务 + 全部接口（advanceTo 产帧）
 ├─ client/
@@ -56,32 +58,12 @@ tools/
 │   ├─ launcher.js  启动器
 │   └─ shared.js    api + 错误条
 ├─ play.mjs         无头跑世界
-├─ gen-*.mjs        文档生成 / 离线生成地图
+├─ gen-*.mjs        文档生成 / 离线生成地图 / 生成测试件
 └─ check-*.mjs      client（未定义函数 / 重复声明）/ locale / data
 ```
 
 **分层规矩**：规则返回效果，宿主执行；场景返回意图，宿主执行；区域/窗口不碰 config 与网络（走 ctx）。
 **改 `game/systems/**` 后要跑 `node tools/build-web.mjs`**（页面加载的是 `web/` 构建产物）。
-
-## 生成器
-
-```
-overworld    噪声 → 群系 → 地形
-caves        元胞自动机（fill / iterations / regions / chambers）
-maze         迭代回溯 + 编织；保证连通
-rooms        BSP 分区 + 门图（门=顶点、房间=团）+ A* 修路；可加环路
-tiles        7×7 件 + 门口 + 旋转 + 加权 + 程序化兜底
-layout       大房间（多格）+ 走廊格拼贴，图上的边决定门口
-sprawl       自由摆放 + Gabriel 图 + 噪声 A* + 走廊加宽
-populate     实体图投放（房间标签 / 走廊 / 死胡同，出生点留空）
-
-共 7 种生成器 + place / blend 两个修饰算子；房间件是纯数据（任意尺寸/门/旋转/实体）。
-structures   role / anchors / 实体 / 子结构（展开时查环）
-pipeline     overworld → caves → maze → place → blend，可叠加
-确定性       纯函数 + 按坐标派发；元胞是迭代算法（不可按格并行）
-```
-
-**流水线约定**：每一步只改同一个 sandbox（地形数组 + 具名图层），顺序即覆盖顺序。
 
 ## 输入与体验
 
@@ -90,6 +72,7 @@ pipeline     overworld → caves → maze → place → blend，可叠加
 动作互斥      客户端一次只发一个动作
 服务端限速    60ms 内重复请求 → 「慢一点」
 小地图        按尺寸缩放（1..4 px/格，最长边约 180）
+帧            每 tick 一帧（投影记录 diff）；短动作 55ms/帧
 ```
 
 ## 已知粗糙的地方
@@ -102,29 +85,29 @@ pipeline     overworld → caves → maze → place → blend，可叠加
 5  AI 接口（/api/ability 等）只有设计
 6  世界包还不能带代码（runtime.md 的方案未实现）
 7  群系只有二维（height / moisture），没有「深度」
-8  地牢里没有怪、没有宝箱（内容还没放）
+8  地牢有箱子/火把（populate），但没有怪、陷阱、大门/机关
 9  小地图是整张缩略：200×200 会挤成一团；缺视角与视野机制
 10 规则的 reason 被吞掉（敌人不动手时看不到原因）
 11 场景与地形变化还没进帧（实体这一层已经是投影 diff）
 12 蓄力/休息的「进度」只在画布上，HUD 没有单独区域
-15 存档列表还分「存档（启动器）」与「进度（设置）」两处文案，语义已统一但不是同一份 UI
 13 一次 10 回合的蓄力，敌人会走 10 步——数量级还没调平衡
-14 拆窗口时容易漏改宿主变量（applyDevMode / stateSkills 已各犯一次）；
-   静态检查只能抓函数与重复声明，变量级要靠手点
+14 拆窗口时容易漏改宿主变量（applyDevMode / stateSkills 已各犯一次）
+15 实体图还没有 id / links：大门+拉杆这类成对固定物做不了
+16 投放密度没有总预算：40 间房能撒出 100+ 箱子
 ```
 
 ## 下一步候选
 
 ```
-A  地牢内容：怪（复用 core.melee）+ 宝箱（容器/战利品）
-B  视角与视野：小地图按镜头画、视距；作为感知层前置
-C  拆 windows/：背包、设置、对话面板
-D  洞口切换空间（core.portal）：两张图之间的通路
-E  群系深度维度：地下群系表（蘑菇/岩浆/水晶）
-F  意图进帧：红格预警逐步出现
+A  固定物：实体 id/links + fixtures 算子 + 大门/拉杆（生成侧先通）
+B  陷阱与怪：踩上去触发 / 复用 core.melee，populate 里加模板
+C  玩法闭环：地牢目标（楼梯 / 出口 / 拿满什么）
+D  视角与视野：小地图按镜头画、视距；感知层前置
+E  拆 windows/：对话面板、快捷栏、死亡浮层
+F  洞口切换（core.portal）：两张图之间通路
 ```
 
-**建议顺序：A → F → B → D**（先让地牢能玩，再让预警可见，再做视野）。
+**建议顺序：A → B → C**（先把地牢的「东西」做全：固定的、会动的、有目标的）。
 
 ## 运行
 
@@ -133,7 +116,7 @@ node tools/build-web.mjs      # 构建浏览器端（改 systems 后必须跑）
 node tools/serve.mjs          # 8787
 PORT=8788 node tools/serve.mjs
 
-node --test --test-isolation=none     # 536 个测试
+node --test --test-isolation=none     # 584 个测试
 node tools/typecheck.mjs              # 0 错误
 node tools/check-client.mjs           # 页面脚本自检
 node tools/check-data.mjs             # 数据体检

@@ -6,7 +6,7 @@
 
 | 层 | 文件数 |
 |---|---|
-| 内核 | 103 |
+| 内核 | 105 |
 | 系统 | 42 |
 | 宿主工具 | 18 |
 | 页面脚本 | 9 |
@@ -105,6 +105,9 @@ tools/serve.mjs
         └─ game/engine/core/src/worldgen/random.ts  (已展开)
         └─ game/engine/core/src/worldgen/structures.ts  (已展开)
     └─ game/engine/core/src/worldgen/maze.ts
+    └─ game/engine/core/src/worldgen/populate.ts
+      └─ game/engine/core/src/worldgen/pipeline.ts  ⟲ 环
+      └─ game/engine/core/src/worldgen/random.ts  (已展开)
     └─ game/engine/core/src/worldgen/rooms.ts
       └─ game/engine/core/src/worldgen/random.ts  (已展开)
       └─ game/engine/core/src/worldgen/structures.ts  (已展开)
@@ -315,4 +318,4 @@ tools/build-web.mjs
 - `tools/typecheck.mjs`
 - `game/engine/core/types/node-shim.d.ts`
 
-> 共 108 个源文件（另有 64 个测试），375 条引用。
+> 共 109 个源文件（另有 65 个测试），380 条引用。
