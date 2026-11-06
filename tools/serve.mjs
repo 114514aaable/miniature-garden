@@ -44,8 +44,7 @@ import { createDialogScene, parseDialogScript } from "../game/systems/scene/dial
 import { selectTargets } from "../game/engine/core/src/traversal/select.ts";
 import { nearestWhere } from "../game/engine/core/src/space.ts";
 import { buildPassage } from "../game/systems/rules/passage.ts";
-import { clampSize, generateTerrain } from "../game/engine/core/src/worldgen/generate.ts";
-import { generateCaves } from "../game/engine/core/src/worldgen/caves.ts";
+import { clampSize } from "../game/engine/core/src/worldgen/generate.ts";
 import { createSandbox, runPipeline } from "../game/engine/core/src/worldgen/pipeline.ts";
 import { loadStructures } from "./worldgen-structures.mjs";
 import { offsetsOf } from "../game/engine/core/src/traversal/shapes.ts";
@@ -206,19 +205,19 @@ function withGeneratedSpace(merged, loaded, seed, options, worldId) {
 
   let generated;
   try {
-    generated = Array.isArray(generation.pipeline)
-      ? runPipelineToTerrain(generation.pipeline, seed, clampSize(Math.max(width, needWidth)), clampSize(Math.max(height, needHeight)), loaded, ids, worldId)
-      : generation.generator === "caves"
-      ? cavesToTerrain(generation, seed, clampSize(Math.max(width, needWidth)), clampSize(Math.max(height, needHeight)), ids)
-      : generateTerrain({
+    if (!Array.isArray(generation.pipeline) || generation.pipeline.length === 0) {
+      throw new Error("世界的 generation 缺少 pipeline（生成器只走流水线）");
+    }
+
+    generated = runPipelineToTerrain(
+      generation.pipeline,
       seed,
-      width: clampSize(Math.max(width, needWidth)),
-      height: clampSize(Math.max(height, needHeight)),
-      fields: generation.fields ?? {},
-      biomes: loaded.biomes,
-      terrainIdByCode: ids,
-      levels: generation.levels ?? {},
-    });
+      clampSize(Math.max(width, needWidth)),
+      clampSize(Math.max(height, needHeight)),
+      loaded,
+      ids,
+      worldId,
+    );
   } catch (error) {
     console.warn("[worldgen] " + messageOf(error));
     return none;
@@ -277,33 +276,6 @@ function runPipelineToTerrain(steps, seed, width, height, loaded, ids, worldId) 
   });
 
   return { width: sandbox.width, height: sandbox.height, terrain: sandbox.terrain, stats: {}, spawns: sandbox.spawns };
-}
-
-/** 元胞地牢：墙/空 → 地形号。 */
-function cavesToTerrain(generation, seed, width, height, ids) {
-  const caves = generateCaves({
-    seed,
-    width,
-    height,
-    fill: generation.fill ?? 0.46,
-    iterations: generation.iterations ?? 5,
-    spawnClear: generation.spawnClear ?? 2,
-    regions: generation.regions ?? 1,
-    chambers: generation.chambers ?? 1,
-  });
-
-  const wall = ids.get("wall");
-  const floor = ids.get("floor");
-  if (wall === undefined || floor === undefined) {
-    throw new Error("元胞世界需要地形代号 wall 与 floor");
-  }
-
-  return {
-    width: caves.width,
-    height: caves.height,
-    terrain: caves.walls.map((isWall) => (isWall ? wall : floor)),
-    stats: { walls: caves.walls.length - caves.floorCount, floors: caves.floorCount },
-  };
 }
 
 function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, offTemplates = new Set(), options = {}) {

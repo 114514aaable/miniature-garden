@@ -15,4 +15,3 @@
 ## 被引用
 
 - [`game/engine/core/src/worldgen/pipeline.ts`](game/engine/core/src/worldgen/pipeline.md)
-- [`tools/serve.mjs`](tools/serve.md)

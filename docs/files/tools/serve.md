@@ -25,7 +25,6 @@
 - [`game/engine/core/src/traversal/resolve.ts`](game/engine/core/src/traversal/resolve.md)
 - [`game/engine/core/src/traversal/select.ts`](game/engine/core/src/traversal/select.md)
 - [`game/engine/core/src/traversal/shapes.ts`](game/engine/core/src/traversal/shapes.md)
-- [`game/engine/core/src/worldgen/caves.ts`](game/engine/core/src/worldgen/caves.md)
 - [`game/engine/core/src/worldgen/generate.ts`](game/engine/core/src/worldgen/generate.md)
 - [`game/engine/core/src/worldgen/pipeline.ts`](game/engine/core/src/worldgen/pipeline.md)
 - [`game/systems/log/devlog.ts`](game/systems/log/devlog.md)

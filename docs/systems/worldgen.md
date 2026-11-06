@@ -203,9 +203,13 @@ mask             无随机
 
 ```json
 "generation": {
-  "generator": "overworld.temperate",
-  "size": [48, 32],
-  "place": [{ "structure": "hut", "count": 4, "spacing": 6, "avoid": ["water"] }]
+  "pipeline": [
+    { "op": "overworld",
+      "fields": { "height": { "noise": "fbm", "scale": 7, "octaves": 4 } },
+      "levels": { "water": 0.4, "hill": 0.65 } },
+    { "op": "place", "structures": ["hut"], "count": 4,
+      "spacing": 6, "on": ["floor"] }
+  ]
 }
 ```
 
@@ -213,18 +217,19 @@ mask             无随机
 
 ```json
 "generation": {
-  "generator": "dungeon.small",
-  "size": [32, 24],
-  "place": [{ "structure": "hut", "count": 1, "spacing": 10 }]
+  "pipeline": [
+    { "op": "caves", "fill": 0.5, "iterations": 5, "chambers": 4 },
+    { "op": "place", "structures": ["hut"], "count": 1, "spacing": 10 }
+  ]
 }
 ```
 
-**后半段完全一样**——只有「场从哪来」不同。
-
+**只有流水线一种写法**——`generation.fields` 和 `generation.generator`
+两条旧路径已经删掉，缺 pipeline 会直接报错（不会静默生成一张空图）。
 ## 自定义尺寸（运行时）
 
 开局现场生成：`/api/start` 带 `{ width, height }`（4..200），
-宿主用同一份 `generateTerrain` 生成地形，再走 `loadWorld` 校验。
+宿主用世界自己的 `generation.pipeline` 生成地形，再走 `loadWorld` 校验。
 
 - 尺寸**至少**要放得下现有内容（实体坐标、预制件尺寸），太小会自动放大；
 - 存档记录 `seed` 与尺寸，读档按同样参数复现；

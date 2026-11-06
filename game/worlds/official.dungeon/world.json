@@ -24,11 +24,15 @@
     "sweepEvery": 50
   },
   "generation": {
-    "generator": "caves",
-    "fill": 0.5,
-    "iterations": 5,
-    "spawnClear": 2,
-    "chambers": 4
+    "pipeline": [
+      {
+        "op": "caves",
+        "fill": 0.5,
+        "iterations": 5,
+        "spawnClear": 2,
+        "chambers": 4
+      }
+    ]
   },
   "startMenu": {
     "fields": [
