@@ -14,7 +14,8 @@
     "base.cast",
     "core.use",
     "base.rest",
-    "base.rest_finish"
+    "base.rest_finish",
+    "base.death"
   ],
   "onConflict": "error",
   "generation": {
@@ -28,10 +29,15 @@
       },
       {
         "op": "place",
-        "structures": ["ruin", "hut"],
+        "structures": [
+          "ruin",
+          "hut"
+        ],
         "count": 2,
         "spacing": 5,
-        "on": ["floor"],
+        "on": [
+          "floor"
+        ],
         "inset": 2
       }
     ]

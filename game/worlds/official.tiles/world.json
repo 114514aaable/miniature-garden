@@ -13,7 +13,8 @@
     "base.attack",
     "core.use",
     "base.rest",
-    "base.rest_finish"
+    "base.rest_finish",
+    "base.death"
   ],
   "onConflict": "error",
   "generation": {

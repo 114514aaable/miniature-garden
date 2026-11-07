@@ -124,11 +124,7 @@ export function strikeHandler(params: JsonValue, context: EvaluateContext): Json
   const health = target.components["core.health"];
   const max = numberIn(health, "max", 0);
   const hp = numberIn(health, "hp", max);
-  if (hp - damage <= 0) {
-    effects.push({ kind: "despawn", handle: p.target });
-  } else {
-    effects.push({ kind: "patch", handle: p.target, component: "core.health", data: { hp: hp - damage } });
-  }
+  effects.push({ kind: "patch", handle: p.target, component: "core.health", data: { hp: hp - damage } });
 
   return { ok: true, effects, missed: false };
 }

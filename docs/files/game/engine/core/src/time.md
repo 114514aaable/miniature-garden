@@ -105,6 +105,7 @@ function verifyChain(events: readonly LogEntry[]): number
 - [`game/engine/core/src/rules/ai.ts`](game/engine/core/src/rules/ai.md)
 - [`game/engine/core/src/rules/aim.ts`](game/engine/core/src/rules/aim.md)
 - [`game/engine/core/src/rules/attack.ts`](game/engine/core/src/rules/attack.md)
+- [`game/engine/core/src/rules/death.ts`](game/engine/core/src/rules/death.md)
 - [`game/engine/core/src/rules/enemy-actions.ts`](game/engine/core/src/rules/enemy-actions.md)
 - [`game/engine/core/src/rules/inventory.ts`](game/engine/core/src/rules/inventory.md)
 - [`game/engine/core/src/rules/move.ts`](game/engine/core/src/rules/move.md)

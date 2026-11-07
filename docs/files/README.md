@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 113 个文件。
+共 115 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -30,6 +30,7 @@
 | `game/engine/core/src/rules/attack.ts` | 攻击：相邻 → 扣血 → 血尽则倒。 | [md](game/engine/core/src/rules/attack.md) |
 | `game/engine/core/src/rules/clock.ts` | 游戏时钟：引擎的 tick 和游戏里的「回合」之间的唯一换算处。 | [md](game/engine/core/src/rules/clock.md) |
 | `game/engine/core/src/rules/collision.ts` | 碰撞规则：谁能挡路。 | [md](game/engine/core/src/rules/collision.md) |
+| `game/engine/core/src/rules/death.ts` | 致死：单独一条规则。写拦截器判定「这次写致死」后广播它。 | [md](game/engine/core/src/rules/death.md) |
 | `game/engine/core/src/rules/enemy-actions.ts` | 敌人的三个动作：起手、命中、走位。 | [md](game/engine/core/src/rules/enemy-actions.md) |
 | `game/engine/core/src/rules/inventory.ts` | 物品栏规则：捡起、放下。 | [md](game/engine/core/src/rules/inventory.md) |
 | `game/engine/core/src/rules/move.ts` | 第一条真规则：走一格。 | [md](game/engine/core/src/rules/move.md) |
@@ -69,9 +70,10 @@
 | `game/systems/camera/camera.ts` | 相机：把「看哪儿」从渲染里拆出来。 | [md](game/systems/camera/camera.md) |
 | `game/systems/config/config.ts` | 界面配置：所有「可能想调」的东西集中在这里。 | [md](game/systems/config/config.md) |
 | `game/systems/host/advance.ts` | 推进：把世界推到目标 tick，同时产帧。 | [md](game/systems/host/advance.md) |
+| `game/systems/host/base-rules.ts` | 基础数据写规则：核心血量的 hp 夹在 0..max，写到 0 视为致死。 | [md](game/systems/host/base-rules.md) |
 | `game/systems/host/effects.ts` | 宿主的「效果入口」：规则 / 场景产出的效果，统一从这里落进 store。 | [md](game/systems/host/effects.md) |
 | `game/systems/host/frames.ts` | 帧：把「这一 tick 的投影实体」和「上一 tick」做 diff。 | [md](game/systems/host/frames.md) |
-| `game/systems/host/health-write.ts` | 数据写规则（第一套）：核心血量的数值变化。 | [md](game/systems/host/health-write.md) |
+| `game/systems/host/writes.ts` | 数据写规则：按「参数名 + 变化方式」描述，而不是写死某个血量。 | [md](game/systems/host/writes.md) |
 | `game/systems/i18n/i18n.ts` | i18n：界面文字走 key，不写死在代码里。 | [md](game/systems/i18n/i18n.md) |
 | `game/systems/input/bindings.ts` | 按键映射：`event.code` → 命令字符串。 | [md](game/systems/input/bindings.md) |
 | `game/systems/intel/facts.ts` | 情报：关于一个实体或一个格子，我们「知道什么」。 | [md](game/systems/intel/facts.md) |

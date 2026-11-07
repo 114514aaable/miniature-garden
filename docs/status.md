@@ -106,10 +106,11 @@ A  ✅ 抽宿主逻辑：game/systems/host/effects.ts（统一效果入口）+
 B  共享测试工具：worldgen 测试里的 setup / orphans 等重复 helper
 C  ✅ 数据写拦截骨架：core.write 事件 + consume 约定 + 标记不递归
       （serve 的 resolveEntityWrite；没有规则时零开销）
-D  ✅ 数据写规则第一套：healthWrite（夹 0..max、保留其它字段）
-      —— 死亡仍由规则层直接发 despawn，不走写拦截
-E  致死规则（单独设计）：despawn 拦截 / core.death，待定契约
-F  部位规则包：同一入口换成部位实例
+D  ✅ 数据写规则：按「参数名 + 变化方式」声明（clamp/set/maxField/致死阈值）
+      默认 baseWriteRules：core.health.hp 夹 0..max，到 0 判致死
+E  ✅ 致死单独成规则 base.death：写拦截器判致死 → 广播 → 规则决定后果
+      攻击/横扫/敌人打击改成「只写 hp」，不再自己判死
+F  部位规则包：换掉 writeRules，同一入口写 core.body 部位实例
 ```
 
 ```

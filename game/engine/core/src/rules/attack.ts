@@ -72,10 +72,7 @@ export function attackHandler(params: JsonValue, context: EvaluateContext): Json
   const damage = Math.max(1, power - armor);
   const next = hp - damage;
 
-  if (next <= 0) {
-    return { ok: true, damage, effects: [{ kind: "despawn", handle: target }] };
-  }
-
+  // 只写结果；到 0 由数据写规则判「致死」，再广播 base.death
   return {
     ok: true,
     damage,

@@ -45,7 +45,8 @@ import { selectTargets } from "../game/engine/core/src/traversal/select.ts";
 import { nearestWhere } from "../game/engine/core/src/space.ts";
 import { buildPassage } from "../game/systems/rules/passage.ts";
 import { applyEffects } from "../game/systems/host/effects.ts";
-import { healthWrite } from "../game/systems/host/health-write.ts";
+import { applyWriteRules } from "../game/systems/host/writes.ts";
+import { baseWriteRules } from "../game/systems/host/base-rules.ts";
 import { advanceTo as hostAdvanceTo } from "../game/systems/host/advance.ts";
 import { captureEntities, diffEntities } from "../game/systems/host/frames.ts";
 import { clampSize } from "../game/engine/core/src/worldgen/generate.ts";
@@ -436,8 +437,8 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
     frames: [],
     /** 宿主效果拦截器（日志等从这里挂）。 */
     effectInterceptors: [],
-    /** 数据写规则链（默认：核心血量数值变化；部位模式换掉它）。 */
-    writeResolvers: [healthWrite],
+    /** 数据写规则（默认：hp 夹 0..max、到 0 视为致死；部位模式换掉它）。 */
+    writeRules: [...baseWriteRules],
     scenes,
     devlog: new DevLog(),
   };
@@ -713,6 +714,27 @@ function sceneCommand(command) {
  * 实体数据写拦截：某个属性组要被写时，问一句 core.write。
  * 规则包返回 { consume: true, effects: [...] } 就接管；替代写直接落库。
  */
+/** 致死广播：有 base.death 规则就交给它，没有就默认 despawn。 */
+function resolveDeath(handle) {
+  const symbol = session.link.tags.get("base.death");
+  if (symbol === undefined) {
+    return [{ kind: "despawn", handle }];
+  }
+
+  const result = evaluate(
+    { id: session.store.now() + 700, tag: "base.death", params: { handle, cause: "health" } },
+    session.link,
+    session.handlers,
+    currentView(),
+  );
+
+  if (result.ok && result.value && result.value.ok === true) {
+    return collectEffects(result.value);
+  }
+
+  return [{ kind: "despawn", handle }];
+}
+
 function resolveEntityWrite(write) {
   if (session === null) return null;
 
@@ -727,10 +749,16 @@ function resolveEntityWrite(write) {
 
   const full = { ...write, before };
 
-  // 1) 数据写规则链（默认：核心血量数值变化）
-  for (const resolver of session.writeResolvers) {
-    const taken = resolver(full);
-    if (taken !== null && taken.consume) return taken;
+  // 1) 数据写规则（参数名 + 变化方式）
+  const outcome = applyWriteRules(session.writeRules, full);
+  if (outcome !== null && outcome.consume) {
+    if (!outcome.lethal) return outcome;
+
+    // 致死：广播出去，让致死规则决定怎么处理
+    return {
+      consume: true,
+      effects: [...outcome.effects, ...resolveDeath(write.handle)],
+    };
   }
 
   // 2) 世界包还可以用 core.write 事件接管

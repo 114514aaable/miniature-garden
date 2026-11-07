@@ -88,5 +88,5 @@ interface WriteResult {
 
 ## 被引用
 
-- [`game/systems/host/health-write.ts`](game/systems/host/health-write.md)
+- [`game/systems/host/writes.ts`](game/systems/host/writes.md)
 - [`tools/serve.mjs`](tools/serve.md)

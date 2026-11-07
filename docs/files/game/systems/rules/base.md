@@ -11,7 +11,7 @@ base.*   base 包提供的基础玩法
 「冷加载」指的是：世界激活时才组装进运行时，而不是热更新。
 以后 base 有自己的代码目录，这里就改成 import 那个目录。
 
-行数：41
+行数：43
 
 ## 接口
 
@@ -35,6 +35,7 @@ interface RuleEntry {
 - [`game/engine/core/src/event/evaluate.ts`](game/engine/core/src/event/evaluate.md)
 - [`game/engine/core/src/event/registry.ts`](game/engine/core/src/event/registry.md)
 - [`game/engine/core/src/rules/attack.ts`](game/engine/core/src/rules/attack.md)
+- [`game/engine/core/src/rules/death.ts`](game/engine/core/src/rules/death.md)
 - [`game/engine/core/src/rules/pending.ts`](game/engine/core/src/rules/pending.md)
 - [`game/engine/core/src/rules/rest.ts`](game/engine/core/src/rules/rest.md)
 - [`game/engine/core/src/rules/sweep.ts`](game/engine/core/src/rules/sweep.md)

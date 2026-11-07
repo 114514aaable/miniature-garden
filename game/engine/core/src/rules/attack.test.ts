@@ -72,12 +72,12 @@ test("相邻攻击：扣 攻击−防御 的血", () => {
   ]);
 });
 
-test("血被打光：直接 despawn", () => {
+test("血被打光：只写 hp（致死由数据写规则广播）", () => {
   const { view, entities, actor, target } = setup();
   entities.setOverrides(target, { "core.health": { hp: 2 } });
 
   const result = run({ actor, x: 2, y: 1 }, view) as { ok: boolean; effects: Array<{ kind: string }> };
-  assert.deepEqual(result.effects, [{ kind: "despawn", handle: target }]);
+  assert.deepEqual(result.effects, [{ kind: "patch", handle: target, component: "core.health", data: { hp: 0 } }]);
 });
 
 test("够不着就不让打", () => {

@@ -181,7 +181,7 @@ game/systems/render/*（投影成画面数据）
   指向：鼠标/键盘选一个格子，问「这个技能能不能落在这里」。
   - `aimHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
   - `const aimSignature`
-- **`game/engine/core/src/rules/attack.ts`**（85 行）
+- **`game/engine/core/src/rules/attack.ts`**（82 行）
   攻击：相邻 → 扣血 → 血尽则倒。
   - `attackHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
   - `const attackSignature`
@@ -204,7 +204,11 @@ game/systems/render/*（投影成画面数据）
   - `blockersAt(view: WorldView, space: SpaceId, cell: Cell) → readonly number[]`
   - `occupies(view: WorldView, handle: number) → readonly Cell[]`
   - `const SOLID`
-- **`game/engine/core/src/rules/enemy-actions.ts`**（143 行）
+- **`game/engine/core/src/rules/death.ts`**（29 行）
+  致死：单独一条规则。写拦截器判定「这次写致死」后广播它。
+  - `deathHandler(params: JsonValue, _context: EvaluateContext) → JsonValue`
+  - `const deathSignature`
+- **`game/engine/core/src/rules/enemy-actions.ts`**（139 行）
   敌人的三个动作：起手、命中、走位。
   - `windupHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
   - `strikeHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
@@ -249,7 +253,7 @@ game/systems/render/*（投影成画面数据）
   - `sum(input: SumInput) → number`
   - `sumEffect(input: SumInput, space: number) → Effect`
   - `interface SumInput`
-- **`game/engine/core/src/rules/sweep.ts`**（74 行）
+- **`game/engine/core/src/rules/sweep.ts`**（73 行）
   横扫：打「自己周围一圈」里所有活着的目标。
   - `sweepHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
   - `const sweepSignature`
@@ -465,6 +469,9 @@ game/systems/render/*（投影成画面数据）
   - `advanceTo(host: AdvanceHost, target: number) → void`
   - `interface AdvanceHost`
   - `const MAX_FRAMES`
+- **`game/systems/host/base-rules.ts`**（23 行）
+  基础数据写规则：核心血量的 hp 夹在 0..max，写到 0 视为致死。
+  - `const baseWriteRules`
 - **`game/systems/host/effects.ts`**（105 行）
   宿主的「效果入口」：规则 / 场景产出的效果，统一从这里落进 store。
   - `applyEffects(sink: EffectSink, effects: readonly Effect[], meta: EffectMeta = { source: "system" }, interceptors: readonly EffectInterceptor[] = [], resolveWrite: WriteResolver | null = null,) → void`
@@ -482,9 +489,12 @@ game/systems/render/*（投影成画面数据）
   - `interface Frame`
   - `interface FrameEvent`
   - `interface ProjectionSource`
-- **`game/systems/host/health-write.ts`**（55 行）
-  数据写规则（第一套）：核心血量的数值变化。
-  - `healthWrite(write: EntityWrite) → WriteResult | null`
+- **`game/systems/host/writes.ts`**（100 行）
+  数据写规则：按「参数名 + 变化方式」描述，而不是写死某个血量。
+  - `applyWriteRules(rules: readonly WriteRule[], write: EntityWrite,) → WriteOutcome | null`
+  - `interface WriteRule`
+  - `interface WriteOutcome`
+  - `type WriteMode`
 - **`game/systems/i18n/i18n.ts`**（55 行）
   i18n：界面文字走 key，不写死在代码里。
   - `createTranslator(locale: string, messages: Messages) → Translator`
@@ -581,7 +591,7 @@ game/systems/render/*（投影成画面数据）
   - `resolveTag(tag: string) → string`
   - `resolveTags(tags: readonly string[]) → string[]`
   - `const LEGACY_TAGS`
-- **`game/systems/rules/base.ts`**（41 行）
+- **`game/systems/rules/base.ts`**（43 行）
   base 包的规则：劈砍、蓄力劈砍。
   - `interface RuleEntry`
   - `const BASE_RULES`
@@ -728,7 +738,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（2053 行）
+- **`tools/serve.mjs`**（2081 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。

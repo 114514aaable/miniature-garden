@@ -59,8 +59,7 @@ export function sweepHandler(params: JsonValue, context: EvaluateContext): JsonV
     const health = context.view.entity(handle).components["core.health"];
     const max = numberIn(health, "max", 0);
     const hp = numberIn(health, "hp", max);
-    if (hp - damage <= 0) effects.push({ kind: "despawn", handle });
-    else effects.push({ kind: "patch", handle, component: "core.health", data: { hp: hp - damage } });
+    effects.push({ kind: "patch", handle, component: "core.health", data: { hp: hp - damage } });
   }
 
   return { ok: true, effects };

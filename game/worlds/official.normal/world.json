@@ -19,7 +19,8 @@
     "base.talk",
     "base.sweep",
     "base.rest",
-    "base.rest_finish"
+    "base.rest_finish",
+    "base.death"
   ],
   "onConflict": "error",
   "init": [
