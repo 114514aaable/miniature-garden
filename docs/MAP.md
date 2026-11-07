@@ -460,6 +460,25 @@ game/systems/render/*（投影成画面数据）
   - `interface ClickPolicy`
   - `interface Config`
   - `const DEFAULT_CONFIG`
+- **`game/systems/host/advance.ts`**（89 行）
+  推进：把世界推到目标 tick，同时产帧。
+  - `advanceTo(host: AdvanceHost, target: number) → void`
+  - `interface AdvanceHost`
+  - `const MAX_FRAMES`
+- **`game/systems/host/effects.ts`**（64 行）
+  宿主的「效果入口」：规则 / 场景产出的效果，统一从这里落进 store。
+  - `applyEffects(sink: EffectSink, effects: readonly Effect[], meta: EffectMeta = { source: "system" }, interceptors: readonly EffectInterceptor[] = [],) → void`
+  - `interface EffectSink`
+  - `interface EffectMeta`
+  - `type EffectSource`
+  - `type EffectInterceptor`
+- **`game/systems/host/frames.ts`**（77 行）
+  帧：把「这一 tick 的投影实体」和「上一 tick」做 diff。
+  - `captureEntities(projector: Projector, source: ProjectionSource, tick: number,) → Map<number, unknown>`
+  - `diffEntities(projector: Projector, source: ProjectionSource, prev: ReadonlyMap<number, unknown>, tick: number, events: readonly FrameEvent[],) → Frame`
+  - `interface Frame`
+  - `interface FrameEvent`
+  - `interface ProjectionSource`
 - **`game/systems/i18n/i18n.ts`**（55 行）
   i18n：界面文字走 key，不写死在代码里。
   - `createTranslator(locale: string, messages: Messages) → Translator`
@@ -668,6 +687,8 @@ game/systems/render/*（投影成画面数据）
 
 ### 工具 tools
 
+- **`tools/_gw3.mjs`**（31 行）
+  const base = "http://127.0.0.1:8788";
 - **`tools/build-web.mjs`**（87 行）
   把 TS 转成浏览器能跑的 JS（构建产物放 web/）。
 - **`tools/check-client.mjs`**（108 行）
@@ -703,7 +724,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（2039 行）
+- **`tools/serve.mjs`**（2000 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。

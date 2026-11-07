@@ -76,6 +76,7 @@ interface SnapshotEntity {
 
 ## 被引用
 
+- [`game/systems/host/frames.ts`](game/systems/host/frames.md)
 - [`game/systems/render/browser.ts`](game/systems/render/browser.md)
 - [`game/systems/render/draw.ts`](game/systems/render/draw.md)
 - [`tools/serve.mjs`](tools/serve.md)

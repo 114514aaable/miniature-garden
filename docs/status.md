@@ -100,12 +100,12 @@ tools/
 
 ```
 下一次开工（已定好的顺序）
-A  抽宿主逻辑：game/systems/host/pipeline.ts（applyEffects + advanceTo）
-   —— 现在效果提交散在 serve 四处，宿主逻辑完全没测试
-B  共享测试工具：game/engine/core/src/testing/kit.ts
-   —— setup×7 / orphans×3 / world×5 都是重复的本地 helper
+A  ✅ 抽宿主逻辑：game/systems/host/effects.ts（统一效果入口）+
+      host/advance.ts（推进与产帧）+ host/frames.ts（投影 diff）
+      —— serve 只剩适配器；新增 15 个测试
+B  共享测试工具：worldgen 测试里的 setup / orphans 等重复 helper
 C  damage 拦截器 + 部位模式（无 UI）
-   —— 模式关 = 原样放行；模式开 = 把 core.health 的 patch 换成部位
+   —— 挂在 session.effectInterceptors；模式关 = 原样放行
 ```
 
 ```

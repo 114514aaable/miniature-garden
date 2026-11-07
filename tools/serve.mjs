@@ -44,6 +44,9 @@ import { createDialogScene, parseDialogScript } from "../game/systems/scene/dial
 import { selectTargets } from "../game/engine/core/src/traversal/select.ts";
 import { nearestWhere } from "../game/engine/core/src/space.ts";
 import { buildPassage } from "../game/systems/rules/passage.ts";
+import { applyEffects } from "../game/systems/host/effects.ts";
+import { advanceTo as hostAdvanceTo } from "../game/systems/host/advance.ts";
+import { captureEntities, diffEntities } from "../game/systems/host/frames.ts";
 import { clampSize } from "../game/engine/core/src/worldgen/generate.ts";
 import { createSandbox, runPipeline } from "../game/engine/core/src/worldgen/pipeline.ts";
 import { loadStructures } from "./worldgen-structures.mjs";
@@ -430,6 +433,8 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
     seed,
     lastEvents: [],
     frames: [],
+    /** 宿主效果拦截器（部位伤害、日志等从这里挂）。 */
+    effectInterceptors: [],
     scenes,
     devlog: new DevLog(),
   };
@@ -696,7 +701,7 @@ function sceneCommand(command) {
     else if (next.op === "replace" && typeof next.id === "string") session.scenes.replace(next.id, next.params ?? {});
   }
 
-  for (const effect of result.effects ?? []) session.store.submit(effect);
+  applyEffects(session.store, result.effects ?? [], { source: "scene" }, session.effectInterceptors);
 
   return { ok: true };
 }
@@ -1106,9 +1111,7 @@ function run(tag, params, costKey) {
   }
 
   const effects = collectEffects(result.value);
-  for (const effect of effects) {
-    session.store.submit(effect);
-  }
+  applyEffects(session.store, effects, { source: "skill", tag, actor: session.playerHandle ?? undefined }, session.effectInterceptors);
 
   // 动作生效，然后世界推进到玩家下次能行动为止（敌人会在这段里行动）。
   // 注意：成本不看「有没有效果」——等待就是不产生效果但照样花时间。
@@ -1183,86 +1186,38 @@ function tickPhases() {
   ];
 }
 
-/** 一帧的数据上限：防止超长动作把响应撑爆。 */
-const MAX_FRAMES = 200;
-
-/** 这一 tick 的投影实体：handle → 完整记录（渲染用的那一份）。 */
-function captureSnapshotOfEntities() {
-  const projected = session.projector.snapshot({
-    tick: session.store.now(),
+/** 这一 tick 的投影来源（空间 / 模板 / 实体）。 */
+function projectionSource() {
+  return {
     spaces: session.loaded.spaces,
     templates: session.loaded.templates,
     entities: session.store.allEntities(),
-  });
-
-  const map = new Map();
-  for (const entity of projected.entities) map.set(entity.handle, entity);
-  return map;
-}
-
-/** 对比前后两拍：变化的实体整条发，消失的只发 handle。 */
-function diffFrame(prev, tick, events) {
-  const now = captureSnapshotOfEntities();
-  const entities = [];
-  const removed = [];
-
-  for (const [handle, record] of now) {
-    const before = prev.get(handle);
-    if (before === undefined || JSON.stringify(before) !== JSON.stringify(record)) {
-      entities.push(record);
-    }
-  }
-
-  for (const handle of prev.keys()) {
-    if (!now.has(handle)) removed.push(handle);
-  }
-
-  return {
-    tick,
-    entities,
-    removed,
-    events: events.map((entry) => `#${entry.id} ${entry.kind} ${JSON.stringify(entry.data)}`),
   };
 }
-function advanceTo(target) {
-  if (!Number.isFinite(target)) {
-    session.devlog.action(session.store.now(), "调度器", { error: "target 不是数字" });
-    return;
-  }
 
-  const phases = tickPhases();
-  let guard = 0;
-  while (session.store.now() < target) {
-    const before = captureSnapshotOfEntities();
-    const eventsBefore = session.lastEvents.length;
-    if (guard++ > 512) {
-      session.devlog.action(session.store.now(), "调度器", { error: "推进次数超限" });
-      // 没推到目标就把“下次能行动”拉回当前时刻，否则玩家会永远卡在“恢复中”
-      session.playerReadyAt = session.store.now();
-      session.notice = "动作太长，被截断在 " + session.store.now() + " 回合";
-      break;
-    }
-    runPhases(phases, session.store.now());
-
-    // 这一 tick 新产生的事件（step 阶段会往 lastEvents 里追加）
-    const events = session.lastEvents.slice(eventsBefore);
-    if (session.frames.length < MAX_FRAMES) {
-      session.frames.push(diffFrame(before, session.store.now(), events));
-    }
-  }
-
-  // 循环末尾的挂起效果也要成一帧，否则最后一下会直接跳到最终状态
-  const tailBefore = captureSnapshotOfEntities();
-  const tailEvents = session.lastEvents.length;
-  applyPending();
-  if (session.frames.length < MAX_FRAMES) {
-    const tail = session.lastEvents.slice(tailEvents);
-    if (tail.length > 0 || session.frames.length === 0) {
-      session.frames.push(diffFrame(tailBefore, session.store.now(), tail));
-    }
-  }
+function captureSnapshotOfEntities() {
+  return captureEntities(session.projector, projectionSource(), session.store.now());
 }
 
+function diffFrame(prev, tick, events) {
+  return diffEntities(session.projector, projectionSource(), prev, tick, events);
+}
+
+/** 推进到目标 tick：循环和帧的逻辑在 host/advance.ts，这里只提供「这一 tick 干什么」。 */
+function advanceTo(target) {
+  hostAdvanceTo({
+    now: () => session.store.now(),
+    setReadyAt: (tick) => { session.playerReadyAt = tick; },
+    notice: (message) => { session.notice = message; },
+    devlog: (message, data) => session.devlog.action(session.store.now(), message, data),
+    frames: session.frames,
+    lastEvents: session.lastEvents,
+    capture: captureSnapshotOfEntities,
+    diff: diffFrame,
+    stepTick: () => runPhases(tickPhases(), session.store.now()),
+    applyPending: () => applyPending(),
+  }, target);
+}
 /** 到点的挂起动作：求值它记下的信封，然后清空。 */
 function resolvePending() {
   const now = session.store.now();
@@ -1282,9 +1237,12 @@ function resolvePending() {
 
     const done = result.ok && result.value && result.value.ok === true;
     if (done) {
-      for (const effect of collectEffects(result.value)) {
-        session.store.submit(effect);
-      }
+      applyEffects(
+        session.store,
+        collectEffects(result.value),
+        { source: "pending", tag: String(pending.tag), target: entity.handle },
+        session.effectInterceptors,
+      );
     }
 
     session.store.submit({ kind: "patch", handle: entity.handle, component: PENDING, data: EMPTY_PENDING });
@@ -1350,9 +1308,12 @@ function enemyAct(handle) {
     view,
   );
   if (result.ok && result.value && result.value.ok === true) {
-    for (const effect of collectEffects(result.value)) {
-      session.store.submit(effect);
-    }
+    applyEffects(
+      session.store,
+      collectEffects(result.value),
+      { source: "enemy", tag: next.tag, actor: handle, target: session.playerHandle ?? undefined },
+      session.effectInterceptors,
+    );
   } else {
     session.devlog.action(session.store.now(), `敌人 ${handle} 动不了`, {
       reason: (result.ok && result.value && result.value.reason) || "求值失败",
