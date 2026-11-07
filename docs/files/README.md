@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 112 个文件。
+共 113 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -71,6 +71,7 @@
 | `game/systems/host/advance.ts` | 推进：把世界推到目标 tick，同时产帧。 | [md](game/systems/host/advance.md) |
 | `game/systems/host/effects.ts` | 宿主的「效果入口」：规则 / 场景产出的效果，统一从这里落进 store。 | [md](game/systems/host/effects.md) |
 | `game/systems/host/frames.ts` | 帧：把「这一 tick 的投影实体」和「上一 tick」做 diff。 | [md](game/systems/host/frames.md) |
+| `game/systems/host/health-write.ts` | 数据写规则（第一套）：核心血量的数值变化。 | [md](game/systems/host/health-write.md) |
 | `game/systems/i18n/i18n.ts` | i18n：界面文字走 key，不写死在代码里。 | [md](game/systems/i18n/i18n.md) |
 | `game/systems/input/bindings.ts` | 按键映射：`event.code` → 命令字符串。 | [md](game/systems/input/bindings.md) |
 | `game/systems/intel/facts.ts` | 情报：关于一个实体或一个格子，我们「知道什么」。 | [md](game/systems/intel/facts.md) |

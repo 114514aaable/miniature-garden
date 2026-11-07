@@ -45,6 +45,7 @@ import { selectTargets } from "../game/engine/core/src/traversal/select.ts";
 import { nearestWhere } from "../game/engine/core/src/space.ts";
 import { buildPassage } from "../game/systems/rules/passage.ts";
 import { applyEffects } from "../game/systems/host/effects.ts";
+import { healthWrite } from "../game/systems/host/health-write.ts";
 import { advanceTo as hostAdvanceTo } from "../game/systems/host/advance.ts";
 import { captureEntities, diffEntities } from "../game/systems/host/frames.ts";
 import { clampSize } from "../game/engine/core/src/worldgen/generate.ts";
@@ -433,8 +434,10 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
     seed,
     lastEvents: [],
     frames: [],
-    /** 宿主效果拦截器（部位伤害、日志等从这里挂）。 */
+    /** 宿主效果拦截器（日志等从这里挂）。 */
     effectInterceptors: [],
+    /** 数据写规则链（默认：核心血量数值变化；部位模式换掉它）。 */
+    writeResolvers: [healthWrite],
     scenes,
     devlog: new DevLog(),
   };
@@ -712,8 +715,6 @@ function sceneCommand(command) {
  */
 function resolveEntityWrite(write) {
   if (session === null) return null;
-  const symbol = session.link.tags.get("core.write");
-  if (symbol === undefined) return null;
 
   let before = null;
   try {
@@ -723,6 +724,18 @@ function resolveEntityWrite(write) {
     // 实体已经不在了：按没有旧值处理
     before = null;
   }
+
+  const full = { ...write, before };
+
+  // 1) 数据写规则链（默认：核心血量数值变化）
+  for (const resolver of session.writeResolvers) {
+    const taken = resolver(full);
+    if (taken !== null && taken.consume) return taken;
+  }
+
+  // 2) 世界包还可以用 core.write 事件接管
+  const symbol = session.link.tags.get("core.write");
+  if (symbol === undefined) return null;
 
   const result = evaluate(
     {

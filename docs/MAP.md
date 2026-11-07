@@ -482,6 +482,9 @@ game/systems/render/*（投影成画面数据）
   - `interface Frame`
   - `interface FrameEvent`
   - `interface ProjectionSource`
+- **`game/systems/host/health-write.ts`**（55 行）
+  数据写规则（第一套）：核心血量的数值变化。
+  - `healthWrite(write: EntityWrite) → WriteResult | null`
 - **`game/systems/i18n/i18n.ts`**（55 行）
   i18n：界面文字走 key，不写死在代码里。
   - `createTranslator(locale: string, messages: Messages) → Translator`
@@ -725,7 +728,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（2040 行）
+- **`tools/serve.mjs`**（2053 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。
