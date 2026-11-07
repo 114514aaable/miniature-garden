@@ -5,12 +5,15 @@
  * 宿主的「效果入口」：规则 / 场景产出的效果，统一从这里落进 store。
  *
  * 为什么要有这一个函数：
- *   - 以前四处各自 store.submit，拦截（部位伤害、日志、回放）没地方挂；
+ *   - 以前四处各自 store.submit，拦截（数据写、日志、回放）没地方挂；
  *   - 规则层不该知道「血在哪」——它只产出效果；
- *   - 宿主想改写效果（比如把 core.health 的伤害换成部位伤害）时，
+ *   - 宿主想改写效果（比如把核心血量的写换成部位实例的写）时，
  *     只改这里，不改任何规则。
  *
- * 拦截器是纯函数：拿一批效果 + 元信息，返回一批新效果。按安装顺序串起来。
+ * 两层拦截：
+ *   1  效果拦截器：拿一批效果 + 元信息，返回一批新效果（通用管道）
+ *   2  数据写拦截器：实体某个属性组要被写时，问一句「谁接管」
+ *      —— 接管方标记 consume，然后给出替代写；替代写直接落库，不再拦
  */
 
 import type { Effect } from "../../engine/core/src/store.ts";
@@ -40,16 +43,39 @@ export type EffectInterceptor = (
   meta: EffectMeta,
 ) => readonly Effect[];
 
+/** 一次「实体数据要被写」的描述。 */
+export interface EntityWrite {
+  readonly handle: number;
+  /** 属性组名（core.health / core.body / 自定义）。 */
+  readonly component: string;
+  /** 写之前的值（没有就是 undefined）。 */
+  readonly before: unknown;
+  /** 规则想让新值变成什么。 */
+  readonly after: unknown;
+  readonly meta: EffectMeta;
+}
+
+/** 接管方返回：consume 表示「原写不要执行」，effects 是替代写。 */
+export interface WriteResult {
+  readonly consume: boolean;
+  readonly effects: readonly Effect[];
+}
+
+/** 数据写拦截器：null = 没人接管，原样写。 */
+export type WriteResolver = (write: EntityWrite) => WriteResult | null;
+
 /**
  * 把效果交给 store。
  *
  * @param interceptors 按顺序调用；返回空列表就表示「这批效果被吞掉」。
+ * @param resolveWrite  实体数据写拦截；替代写直接落库，不再拦。
  */
 export function applyEffects(
   sink: EffectSink,
   effects: readonly Effect[],
   meta: EffectMeta = { source: "system" },
   interceptors: readonly EffectInterceptor[] = [],
+  resolveWrite: WriteResolver | null = null,
 ): void {
   let list: readonly Effect[] = effects;
 
@@ -58,6 +84,21 @@ export function applyEffects(
   }
 
   for (const effect of list) {
+    if (resolveWrite !== null && effect.kind === "patch" && effect.component !== "core.place") {
+      const taken = resolveWrite({
+        handle: effect.handle,
+        component: effect.component,
+        before: undefined,
+        after: effect.data,
+        meta,
+      });
+
+      if (taken !== null && taken.consume) {
+        for (const replacement of taken.effects) sink.submit(replacement);
+        continue;
+      }
+    }
+
     sink.submit(effect);
   }
 }

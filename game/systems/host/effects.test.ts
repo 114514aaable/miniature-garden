@@ -80,3 +80,68 @@ test("拦截器返回空列表时，后续拦截器也拿不到效果", () => {
   assert.deepEqual(got, []);
   assert.equal(store.seen.length, 0);
 });
+
+const HEALTH_PATCH: Effect = {
+  kind: "patch",
+  handle: 5 as never,
+  component: "core.health",
+  data: { hp: 7 },
+};
+
+const BODY_PATCH: Effect = {
+  kind: "patch",
+  handle: 5 as never,
+  component: "core.body",
+  data: { parts: [] },
+};
+
+test("数据写：没人接管就原样写", () => {
+  const store = sink();
+  applyEffects(store, [HEALTH_PATCH], { source: "skill" }, [], () => null);
+  assert.deepEqual(store.seen, [HEALTH_PATCH]);
+});
+
+test("数据写：接管后只写替代效果（consume）", () => {
+  const store = sink();
+  const seenWrites: string[] = [];
+
+  applyEffects(
+    store,
+    [HEALTH_PATCH],
+    { source: "skill", target: 5 },
+    [],
+    (write) => {
+      seenWrites.push(write.component + ":" + JSON.stringify(write.after));
+      return { consume: true, effects: [BODY_PATCH] };
+    },
+  );
+
+  assert.deepEqual(seenWrites, ['core.health:{"hp":7}']);
+  assert.deepEqual(store.seen, [BODY_PATCH]);
+});
+
+test("数据写：consume=false 时仍写原效果", () => {
+  const store = sink();
+  applyEffects(
+    store,
+    [HEALTH_PATCH],
+    { source: "enemy" },
+    [],
+    () => ({ consume: false, effects: [BODY_PATCH] }),
+  );
+  assert.deepEqual(store.seen, [HEALTH_PATCH]);
+});
+
+test("数据写：位置写（core.place）不拦", () => {
+  const store = sink();
+  let called = false;
+  const place: Effect = { kind: "patch", handle: 1 as never, component: "core.place", data: null };
+
+  applyEffects(store, [place], { source: "skill" }, [], () => {
+    called = true;
+    return null;
+  });
+
+  assert.equal(called, false);
+  assert.deepEqual(store.seen, [place]);
+});

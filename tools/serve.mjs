@@ -701,11 +701,49 @@ function sceneCommand(command) {
     else if (next.op === "replace" && typeof next.id === "string") session.scenes.replace(next.id, next.params ?? {});
   }
 
-  applyEffects(session.store, result.effects ?? [], { source: "scene" }, session.effectInterceptors);
+  applyEffects(session.store, result.effects ?? [], { source: "scene" }, session.effectInterceptors, resolveEntityWrite);
 
   return { ok: true };
 }
 
+/**
+ * 实体数据写拦截：某个属性组要被写时，问一句 core.write。
+ * 规则包返回 { consume: true, effects: [...] } 就接管；替代写直接落库。
+ */
+function resolveEntityWrite(write) {
+  if (session === null) return null;
+  const symbol = session.link.tags.get("core.write");
+  if (symbol === undefined) return null;
+
+  let before = null;
+  try {
+    const component = currentView().entity(write.handle).components[write.component];
+    before = component === undefined ? null : component;
+  } catch {
+    // 实体已经不在了：按没有旧值处理
+    before = null;
+  }
+
+  const result = evaluate(
+    {
+      id: session.store.now() + 500,
+      tag: "core.write",
+      params: {
+        handle: write.handle,
+        component: write.component,
+        before,
+        after: write.after,
+        source: write.meta.source,
+      },
+    },
+    session.link,
+    session.handlers,
+    currentView(),
+  );
+
+  if (!result.ok || !result.value || result.value.consume !== true) return null;
+  return { consume: true, effects: collectEffects(result.value) };
+}
 /** 玩家背包里有什么（名字、描述都带上，界面不用再查）。 */
 function inventoryList() {
   if (session === null || session.playerHandle === null) {
@@ -1111,7 +1149,7 @@ function run(tag, params, costKey) {
   }
 
   const effects = collectEffects(result.value);
-  applyEffects(session.store, effects, { source: "skill", tag, actor: session.playerHandle ?? undefined }, session.effectInterceptors);
+  applyEffects(session.store, effects, { source: "skill", tag, actor: session.playerHandle ?? undefined }, session.effectInterceptors, resolveEntityWrite);
 
   // 动作生效，然后世界推进到玩家下次能行动为止（敌人会在这段里行动）。
   // 注意：成本不看「有没有效果」——等待就是不产生效果但照样花时间。
@@ -1242,6 +1280,7 @@ function resolvePending() {
         collectEffects(result.value),
         { source: "pending", tag: String(pending.tag), target: entity.handle },
         session.effectInterceptors,
+        resolveEntityWrite,
       );
     }
 
@@ -1313,6 +1352,7 @@ function enemyAct(handle) {
       collectEffects(result.value),
       { source: "enemy", tag: next.tag, actor: handle, target: session.playerHandle ?? undefined },
       session.effectInterceptors,
+      resolveEntityWrite,
     );
   } else {
     session.devlog.action(session.store.now(), `敌人 ${handle} 动不了`, {
