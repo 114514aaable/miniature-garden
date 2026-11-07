@@ -14,6 +14,7 @@
 import { type JsonValue } from "../time.ts";
 import { type Signature } from "../event/registry.ts";
 import { type EvaluateContext } from "../event/evaluate.ts";
+import { resolveDamage } from "./damage.ts";
 
 export const attackSignature: Signature = {
   tag: "base.attack",
@@ -67,9 +68,7 @@ export function attackHandler(params: JsonValue, context: EvaluateContext): Json
 
   const max = numberIn(health, "max", 0);
   const hp = numberIn(health, "hp", max);
-  const power = numberIn(actor.components["core.stats"], "attack", 1);
-  const armor = numberIn(targetEntity.components["core.stats"], "defense", 0);
-  const damage = Math.max(1, power - armor);
+  const { damage } = resolveDamage(actor.components["core.stats"], targetEntity.components["core.stats"]);
   const next = hp - damage;
 
   // 只写结果；到 0 由数据写规则判「致死」，再广播 base.death

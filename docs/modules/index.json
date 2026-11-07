@@ -345,6 +345,25 @@
       "returnsEffects": true
     },
     {
+      "kind": "rule",
+      "id": "base.death",
+      "name": "致死",
+      "desc": "血量归零时广播；默认把实体移出世界。",
+      "file": "rule-base.death.md",
+      "params": {
+        "t": "object",
+        "fields": {
+          "handle": {
+            "t": "int"
+          },
+          "cause": {
+            "t": "str"
+          }
+        }
+      },
+      "returnsEffects": true
+    },
+    {
       "kind": "component",
       "id": "core.health",
       "name": "生命",
@@ -735,6 +754,28 @@
       }
     },
     {
+      "kind": "component",
+      "id": "core.rest",
+      "name": "core.rest",
+      "desc": "",
+      "file": "component-core.rest.md",
+      "schema": {
+        "t": "object",
+        "fields": {
+          "ticks": {
+            "t": "int"
+          },
+          "heal": {
+            "t": "int"
+          }
+        },
+        "optional": [
+          "ticks",
+          "heal"
+        ]
+      }
+    },
+    {
       "kind": "group",
       "id": "camp",
       "name": "camp",
@@ -775,7 +816,8 @@
         "core.stats",
         "core.container",
         "core.solid",
-        "core.pending"
+        "core.pending",
+        "core.rest"
       ]
     },
     {

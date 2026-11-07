@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 115 个文件。
+共 116 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -30,6 +30,7 @@
 | `game/engine/core/src/rules/attack.ts` | 攻击：相邻 → 扣血 → 血尽则倒。 | [md](game/engine/core/src/rules/attack.md) |
 | `game/engine/core/src/rules/clock.ts` | 游戏时钟：引擎的 tick 和游戏里的「回合」之间的唯一换算处。 | [md](game/engine/core/src/rules/clock.md) |
 | `game/engine/core/src/rules/collision.ts` | 碰撞规则：谁能挡路。 | [md](game/engine/core/src/rules/collision.md) |
+| `game/engine/core/src/rules/damage.ts` | 伤害计算：一处定义，所有技能共用。 | [md](game/engine/core/src/rules/damage.md) |
 | `game/engine/core/src/rules/death.ts` | 致死：单独一条规则。写拦截器判定「这次写致死」后广播它。 | [md](game/engine/core/src/rules/death.md) |
 | `game/engine/core/src/rules/enemy-actions.ts` | 敌人的三个动作：起手、命中、走位。 | [md](game/engine/core/src/rules/enemy-actions.md) |
 | `game/engine/core/src/rules/inventory.ts` | 物品栏规则：捡起、放下。 | [md](game/engine/core/src/rules/inventory.md) |

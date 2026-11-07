@@ -16,10 +16,19 @@ import { type Signature } from "../event/registry.ts";
 import { type EvaluateContext } from "../event/evaluate.ts";
 import { isActive, PENDING } from "./pending.ts";
 
-/** 休息几个回合。 */
-const REST_TICKS = 4;
-/** 每次休息回多少血。 */
-const REST_HEAL = 2;
+/** 默认休息几个回合 / 回多少血；模板可以用 core.rest 覆盖。 */
+const DEFAULT_REST_TICKS = 4;
+const DEFAULT_REST_HEAL = 2;
+
+function restConfig(component: JsonValue | undefined): { ticks: number; heal: number } {
+  if (typeof component !== "object" || component === null || Array.isArray(component)) {
+    return { ticks: DEFAULT_REST_TICKS, heal: DEFAULT_REST_HEAL };
+  }
+  const data = component as Record<string, JsonValue>;
+  const ticks = typeof data.ticks === "number" && data.ticks > 0 ? Math.floor(data.ticks) : DEFAULT_REST_TICKS;
+  const heal = typeof data.heal === "number" && data.heal >= 0 ? Math.floor(data.heal) : DEFAULT_REST_HEAL;
+  return { ticks, heal };
+}
 
 export const restSignature: Signature = {
   tag: "base.rest",
@@ -52,6 +61,8 @@ export function restHandler(params: JsonValue, context: EvaluateContext): JsonVa
     return { ok: false, reason: "已经是满血" };
   }
 
+  const config = restConfig(view.entity(actor).components["core.rest"]);
+
   return {
     ok: true,
     effects: [
@@ -62,9 +73,9 @@ export function restHandler(params: JsonValue, context: EvaluateContext): JsonVa
         data: {
           tag: "base.rest_finish",
           params: { actor },
-          resolveAt: view.tick + REST_TICKS,
+          resolveAt: view.tick + config.ticks,
           startedAt: view.tick,
-          totalTicks: REST_TICKS,
+          totalTicks: config.ticks,
         },
       },
     ],
@@ -93,6 +104,7 @@ export function restFinishHandler(params: JsonValue, context: EvaluateContext): 
 
   const max = numberIn(health, "max", 0);
   const hp = numberIn(health, "hp", max);
+  const config = restConfig(context.view.entity(actor).components["core.rest"]);
 
   return {
     ok: true,
@@ -101,7 +113,7 @@ export function restFinishHandler(params: JsonValue, context: EvaluateContext): 
         kind: "patch",
         handle: actor,
         component: "core.health",
-        data: { hp: Math.min(max, hp + REST_HEAL) },
+        data: { hp: Math.min(max, hp + config.heal) },
       },
     ],
   };

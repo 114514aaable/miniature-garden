@@ -8,7 +8,7 @@ v0 故意简单：不掷骰、不打部位、不算护甲穿透。
 它只产出两种效果：patch 改血，或者 despawn 收尸。
 「打不中」以后走命中判定，仍然是规则层的事。
 
-行数：82
+行数：81
 
 ## 接口
 
@@ -28,6 +28,7 @@ const attackSignature: Signature
 
 - [`game/engine/core/src/event/evaluate.ts`](game/engine/core/src/event/evaluate.md)
 - [`game/engine/core/src/event/registry.ts`](game/engine/core/src/event/registry.md)
+- [`game/engine/core/src/rules/damage.ts`](game/engine/core/src/rules/damage.md)
 - [`game/engine/core/src/time.ts`](game/engine/core/src/time.md)
 
 ## 被引用

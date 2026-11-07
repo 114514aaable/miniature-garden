@@ -324,5 +324,23 @@
         }
       }
     }
+  },
+  {
+    "id": "core.rest",
+    "schema": {
+      "t": "object",
+      "fields": {
+        "ticks": {
+          "t": "int"
+        },
+        "heal": {
+          "t": "int"
+        }
+      },
+      "optional": [
+        "ticks",
+        "heal"
+      ]
+    }
   }
 ]

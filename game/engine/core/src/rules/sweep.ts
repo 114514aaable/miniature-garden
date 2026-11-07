@@ -11,6 +11,7 @@
 import { type JsonValue } from "../time.ts";
 import { type Signature } from "../event/registry.ts";
 import { type EvaluateContext } from "../event/evaluate.ts";
+import { resolveDamage } from "./damage.ts";
 
 export const sweepSignature: Signature = {
   tag: "base.sweep",
@@ -36,7 +37,6 @@ export function sweepHandler(params: JsonValue, context: EvaluateContext): JsonV
 
   const shape = typeof p.shape === "string" ? p.shape : "around1";
   const filter = typeof p.filter === "string" ? p.filter : "living";
-  const damage = 3;
 
   // 找「周围一圈」的格子：形状由宿主在 aim 时算过，这里按同样参数重算
   const offsets = context.tools?.offsets?.(shape);
@@ -56,7 +56,9 @@ export function sweepHandler(params: JsonValue, context: EvaluateContext): JsonV
 
   const effects: JsonValue[] = [];
   for (const handle of targets) {
-    const health = context.view.entity(handle).components["core.health"];
+    const targetView = context.view.entity(handle);
+    const health = targetView.components["core.health"];
+    const { damage } = resolveDamage(actorView.components["core.stats"], targetView.components["core.stats"]);
     const max = numberIn(health, "max", 0);
     const hp = numberIn(health, "hp", max);
     effects.push({ kind: "patch", handle, component: "core.health", data: { hp: hp - damage } });

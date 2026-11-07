@@ -6,7 +6,7 @@
 形状与过滤都来自 base（around1 / living）——
 规则里不出现半径、也不出现组件名。
 
-行数：73
+行数：75
 
 ## 接口
 
@@ -26,6 +26,7 @@ const sweepSignature: Signature
 
 - [`game/engine/core/src/event/evaluate.ts`](game/engine/core/src/event/evaluate.md)
 - [`game/engine/core/src/event/registry.ts`](game/engine/core/src/event/registry.md)
+- [`game/engine/core/src/rules/damage.ts`](game/engine/core/src/rules/damage.md)
 - [`game/engine/core/src/time.ts`](game/engine/core/src/time.md)
 
 ## 被引用

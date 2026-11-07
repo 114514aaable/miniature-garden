@@ -2,7 +2,7 @@
 
 > 由 `node tools/gen-docs.mjs` 生成。**不要手改**——改语言包或代码。
 
-规则 15 条 · 组件 16 个 · 模板 5 个
+规则 16 条 · 组件 17 个 · 模板 5 个
 
 | 类型 | 名字 | id | 说明 |
 |---|---|---|---|
@@ -21,6 +21,7 @@
 | 规则 | [横扫](rule-base.sweep.md) | `base.sweep` | 打自己周围一圈里所有活着的目标。 |
 | 规则 | [休息](rule-base.rest.md) | `base.rest` | 花 4 回合喘口气，恢复 2 点血。 |
 | 规则 | [休息结算](rule-base.rest_finish.md) | `base.rest_finish` | 休息到点：回 2 点血。 |
+| 规则 | [致死](rule-base.death.md) | `base.death` | 血量归零时广播；默认把实体移出世界。 |
 | 组件 | [生命](component-core.health.md) | `core.health` | 血量：最大生命与当前生命。 |
 | 组件 | [属性](component-core.stats.md) | `core.stats` | 速度、攻击、防御。速度决定动作成本。 |
 | 组件 | [身体](component-core.body.md) | `core.body` | 手的数量。默认 2；四只手就写 4。 |
@@ -37,6 +38,7 @@
 | 组件 | [存在感](component-core.persistence.md) | `core.persistence` | 锚定 / 普通 / 短暂：决定离得远时要不要继续留在世界里。 |
 | 组件 | [近战](component-core.melee.md) | `core.melee` | 伤害与起手回合数：写在模板里，规则读它。 |
 | 组件 | [行动方式](component-core.locomotion.md) | `core.locomotion` | 能贴哪些面：ground（地面）、liquid（水里）、solid、air。 |
+| 组件 | [core.rest](component-core.rest.md) | `core.rest` |  |
 | 预制件 | camp | `camp` | 4 个实体 |
 | 模板 | [你](template-pc.md) | `pc` | 玩家角色。 |
 | 模板 | [木箱](template-prop_crate.md) | `prop_crate` | 实心障碍，挡路。 |

@@ -8,7 +8,7 @@
 到点    base.rest_finish 结算，回 2 点血
 以前它用 time.mode "sequence"，一次跳 4 回合；现在拆成看得见的 4 步。
 
-行数：115
+行数：127
 
 ## 接口
 

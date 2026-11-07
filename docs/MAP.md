@@ -181,7 +181,7 @@ game/systems/render/*（投影成画面数据）
   指向：鼠标/键盘选一个格子，问「这个技能能不能落在这里」。
   - `aimHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
   - `const aimSignature`
-- **`game/engine/core/src/rules/attack.ts`**（82 行）
+- **`game/engine/core/src/rules/attack.ts`**（81 行）
   攻击：相邻 → 扣血 → 血尽则倒。
   - `attackHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
   - `const attackSignature`
@@ -204,6 +204,13 @@ game/systems/render/*（投影成画面数据）
   - `blockersAt(view: WorldView, space: SpaceId, cell: Cell) → readonly number[]`
   - `occupies(view: WorldView, handle: number) → readonly Cell[]`
   - `const SOLID`
+- **`game/engine/core/src/rules/damage.ts`**（50 行）
+  伤害计算：一处定义，所有技能共用。
+  - `numberIn(component: JsonValue | undefined, key: string, fallback: number) → number`
+  - `powerOf(stats: JsonValue | undefined) → number`
+  - `armorOf(stats: JsonValue | undefined) → number`
+  - `damageOf(power: number, armor: number) → number`
+  - `resolveDamage(attackerStats: JsonValue | undefined, targetStats: JsonValue | undefined,)`
 - **`game/engine/core/src/rules/death.ts`**（29 行）
   致死：单独一条规则。写拦截器判定「这次写致死」后广播它。
   - `deathHandler(params: JsonValue, _context: EvaluateContext) → JsonValue`
@@ -231,7 +238,7 @@ game/systems/render/*（投影成画面数据）
   - `const PENDING`
   - `const EMPTY_PENDING`
   - `const castSignature`
-- **`game/engine/core/src/rules/rest.ts`**（115 行）
+- **`game/engine/core/src/rules/rest.ts`**（127 行）
   休息：和蓄力同一套机制——点一下挂 pending，到点结算。
   - `restHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
   - `restFinishHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
@@ -253,7 +260,7 @@ game/systems/render/*（投影成画面数据）
   - `sum(input: SumInput) → number`
   - `sumEffect(input: SumInput, space: number) → Effect`
   - `interface SumInput`
-- **`game/engine/core/src/rules/sweep.ts`**（73 行）
+- **`game/engine/core/src/rules/sweep.ts`**（75 行）
   横扫：打「自己周围一圈」里所有活着的目标。
   - `sweepHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
   - `const sweepSignature`

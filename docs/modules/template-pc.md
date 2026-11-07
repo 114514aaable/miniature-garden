@@ -10,3 +10,4 @@
 - `core.container` — 物品栏
 - `core.solid` — 实心
 - `core.pending` — 挂起
+- `core.rest` — core.rest

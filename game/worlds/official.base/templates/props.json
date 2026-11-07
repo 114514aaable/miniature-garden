@@ -20,6 +20,10 @@
         "tag": "",
         "params": {},
         "resolveAt": 0
+      },
+      "core.rest": {
+        "ticks": 4,
+        "heal": 2
       }
     }
   },
