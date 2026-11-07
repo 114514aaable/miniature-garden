@@ -6,9 +6,9 @@
 
 | 层 | 文件数 |
 |---|---|
-| 内核 | 105 |
-| 系统 | 48 |
-| 宿主工具 | 19 |
+| 内核 | 108 |
+| 系统 | 51 |
+| 宿主工具 | 18 |
 | 页面脚本 | 9 |
 
 ## tools/serve.mjs
@@ -127,9 +127,14 @@ tools/serve.mjs
         └─ game/engine/core/src/space.ts  (已展开)
         └─ game/engine/core/src/time.ts  (已展开)
         └─ game/systems/render/contract.ts
-  └─ game/systems/host/effects.ts
-    └─ game/engine/core/src/store.ts  (已展开)
+  └─ game/systems/host/base-rules.ts
+    └─ game/systems/host/writes.ts
+      └─ game/engine/core/src/store.ts  (已展开)
+      └─ game/systems/host/effects.ts
+        └─ game/engine/core/src/store.ts  (已展开)
+  └─ game/systems/host/effects.ts  (已展开)
   └─ game/systems/host/frames.ts  (已展开)
+  └─ game/systems/host/writes.ts  (已展开)
   └─ game/systems/log/devlog.ts
     └─ game/engine/core/src/time.ts  (已展开)
   └─ game/systems/render/project.ts  (已展开)
@@ -174,6 +179,12 @@ tools/serve.mjs
       └─ game/engine/core/src/rules/attack.ts
         └─ game/engine/core/src/event/evaluate.ts  (已展开)
         └─ game/engine/core/src/event/registry.ts  (已展开)
+        └─ game/engine/core/src/rules/damage.ts
+          └─ game/engine/core/src/time.ts  (已展开)
+        └─ game/engine/core/src/time.ts  (已展开)
+      └─ game/engine/core/src/rules/death.ts
+        └─ game/engine/core/src/event/evaluate.ts  (已展开)
+        └─ game/engine/core/src/event/registry.ts  (已展开)
         └─ game/engine/core/src/time.ts  (已展开)
       └─ game/engine/core/src/rules/pending.ts  (已展开)
       └─ game/engine/core/src/rules/rest.ts
@@ -184,6 +195,7 @@ tools/serve.mjs
       └─ game/engine/core/src/rules/sweep.ts
         └─ game/engine/core/src/event/evaluate.ts  (已展开)
         └─ game/engine/core/src/event/registry.ts  (已展开)
+        └─ game/engine/core/src/rules/damage.ts  (已展开)
         └─ game/engine/core/src/time.ts  (已展开)
       └─ game/engine/core/src/rules/talk.ts
         └─ game/engine/core/src/event/evaluate.ts  (已展开)
@@ -287,11 +299,11 @@ tools/build-web.mjs
 
 | 文件 | 被引用 |
 |---|---|
-| `game/engine/core/src/time.ts` | 40 处：`game/engine/core/src/entity/entity.ts`, `game/engine/core/src/entity/merge.test.ts`, `game/engine/core/src/entity/merge.ts`, `game/engine/core/src/entity/template.ts` … |
+| `game/engine/core/src/time.ts` | 42 处：`game/engine/core/src/entity/entity.ts`, `game/engine/core/src/entity/merge.test.ts`, `game/engine/core/src/entity/merge.ts`, `game/engine/core/src/entity/template.ts` … |
 | `game/engine/core/src/space.ts` | 25 处：`tools/serve.mjs`, `game/engine/core/src/entity/entity.ts`, `game/engine/core/src/event/effects.test.ts`, `game/engine/core/src/event/effects.ts` … |
-| `game/engine/core/src/event/registry.ts` | 17 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/event/evaluate.ts`, `game/engine/core/src/event/registry.test.ts` … |
-| `game/engine/core/src/store.ts` | 15 处：`tools/play.mjs`, `tools/serve.mjs`, `game/engine/core/src/event/effects.test.ts`, `game/engine/core/src/event/effects.ts` … |
-| `game/engine/core/src/event/evaluate.ts` | 14 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/rules/ai.ts`, `game/engine/core/src/rules/aim.ts` … |
+| `game/engine/core/src/event/registry.ts` | 18 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/event/evaluate.ts`, `game/engine/core/src/event/registry.test.ts` … |
+| `game/engine/core/src/store.ts` | 16 处：`tools/play.mjs`, `tools/serve.mjs`, `game/engine/core/src/event/effects.test.ts`, `game/engine/core/src/event/effects.ts` … |
+| `game/engine/core/src/event/evaluate.ts` | 15 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/rules/ai.ts`, `game/engine/core/src/rules/aim.ts` … |
 | `game/engine/core/src/event/view.ts` | 11 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/event/evaluate.ts`, `game/engine/core/src/event/view.test.ts` … |
 | `game/engine/core/src/worldgen/structures.ts` | 11 处：`tools/worldgen-structures.mjs`, `game/engine/core/src/worldgen/layout.test.ts`, `game/engine/core/src/worldgen/layout.ts`, `game/engine/core/src/worldgen/pipeline.ts` … |
 | `game/engine/core/src/entity/entity.ts` | 11 处：`game/engine/core/src/entity/entity.test.ts`, `game/engine/core/src/entity/place.ts`, `game/engine/core/src/event/view.ts`, `game/engine/core/src/rules/ai.test.ts` … |
@@ -322,7 +334,6 @@ tools/build-web.mjs
 - `tools/gen-world.mjs`
 - `tools/import-csv.mjs`
 - `tools/typecheck.mjs`
-- `tools/_gw3.mjs`
 - `game/engine/core/types/node-shim.d.ts`
 
-> 共 113 个源文件（另有 68 个测试），392 条引用。
+> 共 116 个源文件（另有 70 个测试），408 条引用。
