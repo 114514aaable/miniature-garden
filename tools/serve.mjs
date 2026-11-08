@@ -140,6 +140,25 @@ function closureOf(rootId, byId) {
 }
 
 /** 列世界：只列「根包」——没有被别的包依赖的那些。 */
+/** 扫所有包的 rig（立绘分层数据）。 */
+function scanRigs() {
+  const rigs = {};
+  for (const name of readdirSync("game/worlds")) {
+    const dir = "game/worlds/" + name + "/rigs";
+    if (!existsSync(dir)) continue;
+    for (const file of readdirSync(dir)) {
+      if (!file.endsWith(".json")) continue;
+      try {
+        const rig = JSON.parse(readFileSync(dir + "/" + file, "utf8"));
+        if (typeof rig.id === "string") rigs[rig.id] = { ...rig, pack: name };
+      } catch {
+        // 坏文件跳过
+      }
+    }
+  }
+  return rigs;
+}
+
 function scanWorlds() {
   const { contents, byId, errors } = collectPacks();
 
@@ -411,6 +430,7 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
           { name: "core.container", required: false },
           { name: "core.intent", required: false },
           { name: "core.pending", required: false },
+          { name: "core.body", required: false },
           { name: "core.disposition", required: false },
           { name: "core.dialog", required: false },
           { name: "core.persistence", required: false },
@@ -1871,6 +1891,43 @@ const server = createServer(async (request, response) => {
 
     if (request.url === "/api/instances") {
       sendJson(response, { ok: true, worlds: listWorlds() });
+      return;
+    }
+
+    if (request.url === "/api/art") {
+      sendJson(response, { ok: true, rigs: scanRigs() });
+      return;
+    }
+
+    if (request.url.startsWith("/art/")) {
+      const relative = decodeURIComponent(request.url.slice("/art/".length).split("?")[0]);
+      const [pack, ...rest] = relative.split("/");
+      if (!/^[a-z0-9-]+$/.test(pack) || rest.length === 0) {
+        response.writeHead(404);
+        response.end("not found");
+        return;
+      }
+
+      const root = resolve("game/worlds", pack, "art");
+      const file = resolve(root, ...rest);
+      if (!file.startsWith(root)) {
+        response.writeHead(403);
+        response.end("forbidden");
+        return;
+      }
+
+      try {
+        const data = readFileSync(file);
+        const type = extname(file) === ".svg" ? "image/svg+xml"
+          : extname(file) === ".png" ? "image/png"
+          : extname(file) === ".jpg" || extname(file) === ".jpeg" ? "image/jpeg"
+          : "application/octet-stream";
+        response.writeHead(200, { "content-type": type });
+        response.end(data);
+      } catch {
+        response.writeHead(404);
+        response.end("not found");
+      }
       return;
     }
 

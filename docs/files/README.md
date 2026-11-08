@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 118 个文件。
+共 119 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -112,6 +112,7 @@
 | `tools/client/shared.js` | 页面共用：错误提示 + API 调用。 | [md](tools/client/shared.md) |
 | `tools/client/windows/inventory.js` | 背包窗口。 | [md](tools/client/windows/inventory.md) |
 | `tools/client/windows/settings.js` | 设置窗口（窗口层）。 | [md](tools/client/windows/settings.md) |
+| `tools/gen-body-art.mjs` | 一次性脚本：生成人形立绘的占位部件（SVG）+ rig 布局。 | [md](tools/gen-body-art.md) |
 | `tools/gen-docs.mjs` | 从代码与语言包生成模块文档（docs/modules/）。 | [md](tools/gen-docs.md) |
 | `tools/gen-file-docs.mjs` | 每个源文件生成一篇 md（docs/files/...）。 | [md](tools/gen-file-docs.md) |
 | `tools/gen-map.mjs` | 生成「代码地图」：docs/MAP.md。 | [md](tools/gen-map.md) |

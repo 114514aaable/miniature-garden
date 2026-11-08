@@ -10,7 +10,7 @@
 node tools/serve.mjs                     # 启动器：列出 worlds/ 下的世界
 node tools/serve.mjs worlds/a worlds/b   # 直接进某个世界（开发用）
 
-行数：2107
+行数：2164
 
 ## 接口
 

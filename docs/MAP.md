@@ -690,7 +690,7 @@ game/systems/render/*（投影成画面数据）
 
 ### 页面脚本 tools/client
 
-- **`tools/client/game.js`**（882 行）
+- **`tools/client/game.js`**（967 行）
   import { api } from '/client/shared.js';
 - **`tools/client/hud/aim.js`**（62 行）
   瞄准高亮：记住「鼠标在哪、当前选了什么技能」，随时可以重算。
@@ -733,6 +733,8 @@ game/systems/render/*（投影成画面数据）
   数据体检：数据化之后，规则要的字段，包里到底有没有。
 - **`tools/check-locale.mjs`**（99 行）
   语言包体检：包里每个 id 都应该有名字。
+- **`tools/gen-body-art.mjs`**（97 行）
+  一次性脚本：生成人形立绘的占位部件（SVG）+ rig 布局。
 - **`tools/gen-docs.mjs`**（188 行）
   从代码与语言包生成模块文档（docs/modules/）。
 - **`tools/gen-file-docs.mjs`**（295 行）
@@ -760,7 +762,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（2107 行）
+- **`tools/serve.mjs`**（2164 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。

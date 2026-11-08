@@ -114,6 +114,7 @@ graph LR
   template_npc_salt --> component_core_persistence
   template_npc_salt --> component_core_solid
   template_npc_salt --> component_core_stats
+  template_pc --> component_core_body
   template_pc --> component_core_container
   template_pc --> component_core_health
   template_pc --> component_core_pending

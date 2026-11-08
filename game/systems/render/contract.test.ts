@@ -61,8 +61,8 @@ test("契约必须声明 pos", () => {
 });
 
 test("契约的组件 / UI 数量有上限", () => {
-  const many = Array.from({ length: 9 }, (_, i) => ({ name: `core.c${i}`, required: false }));
-  assert.throws(() => validateContract(contract({ components: many })), /最多 8 个/);
+  const many = Array.from({ length: 17 }, (_, i) => ({ name: `core.c${i}`, required: false }));
+  assert.throws(() => validateContract(contract({ components: many })), /最多 16 个/);
 });
 
 test("必需组件缺失：启动就报错", () => {

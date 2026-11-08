@@ -54,6 +54,93 @@ const seed = Number(params.get('seed') || '0') || 0;
 
 let renderer = null;
 let aimTimer = 0;
+let artRigs = {};
+let portraitCache = null;
+
+/** 加载立绘 rig（失败就当没有美术，退回字符）。 */
+async function loadArt() {
+  try {
+    const data = await api('/api/art');
+    artRigs = (data && data.rigs) || {};
+  } catch {
+    artRigs = {};
+  }
+}
+
+/** 按部位状态画玩家立绘；没有 rig 就退回字符。 */
+function renderPortrait(state) {
+  const art = document.getElementById('portrait-art');
+  const plate = document.getElementById('nameplate');
+  if (plate) plate.textContent = state.playerName || '你';
+  if (!art) return;
+
+  const entity = (state.snapshot && state.snapshot.entities || []).find(
+    (item) => item.handle === state.playerHandle,
+  );
+  const body = entity && entity.components ? entity.components['core.body'] : undefined;
+  const rig = body && artRigs[body.plan];
+
+  if (!rig || !Array.isArray(rig.layers) || rig.layers.length === 0) {
+    portraitCache = null;
+    art.textContent = '';
+    const glyph = document.createElement('span');
+    glyph.id = 'portrait-glyph';
+    glyph.textContent = state.playerGlyph || '@';
+    art.appendChild(glyph);
+    return;
+  }
+
+  const box = art.getBoundingClientRect();
+  const canvasW = rig.canvas[0];
+  const canvasH = rig.canvas[1];
+  const scale = Math.min((box.width || 160) / canvasW, (box.height || 190) / canvasH);
+
+  if (portraitCache === null || portraitCache.plan !== body.plan) {
+    art.textContent = '';
+    const wrap = document.createElement('div');
+    wrap.id = 'portrait-layers';
+    wrap.style.position = 'relative';
+    wrap.style.margin = '0 auto';
+
+    const nodes = new Map();
+    for (const layer of rig.layers) {
+      const img = document.createElement('img');
+      img.src = '/art/' + rig.pack + '/' + layer.image;
+      img.alt = layer.part;
+      img.draggable = false;
+      img.style.position = 'absolute';
+      img.style.left = layer.x + 'px';
+      img.style.top = layer.y + 'px';
+      img.style.width = (layer.w || 0) + 'px';
+      img.style.height = (layer.h || 0) + 'px';
+      img.style.zIndex = String(layer.depth || 0);
+      img.style.imageRendering = 'auto';
+      wrap.appendChild(img);
+      nodes.set(layer.part, img);
+    }
+
+    art.appendChild(wrap);
+    portraitCache = { plan: body.plan, wrap, nodes, canvasW, canvasH };
+  }
+
+  const cache = portraitCache;
+  cache.wrap.style.width = canvasW * scale + 'px';
+  cache.wrap.style.height = canvasH * scale + 'px';
+
+  const changes = new Map();
+  for (const entry of body.parts || []) changes.set(entry.id, entry);
+
+  for (const [partId, img] of cache.nodes) {
+    img.style.transform = 'scale(' + scale + ')';
+    img.style.transformOrigin = '0 0';
+    const change = changes.get(partId);
+    const status = change && change.state ? change.state : 'ok';
+    img.style.filter = status === 'disabled'
+      ? 'grayscale(1) brightness(0.55)'
+      : status === 'hurt' ? 'saturate(1.4) sepia(0.3) hue-rotate(-18deg)' : '';
+    img.style.opacity = status === 'disabled' ? '0.45' : '1';
+  }
+}
 let tile = 32;
 
 // 按键：物理键 → 命令。用户设置覆盖默认。
@@ -200,10 +287,7 @@ function render(state) {
   tile = state.tile;
   renderer.setState(state);
 
-  const portrait = document.getElementById('portrait-glyph');
-  if (portrait) portrait.textContent = state.playerGlyph || '@';
-  const plate = document.getElementById('nameplate');
-  if (plate) plate.textContent = state.playerName || '你';
+  renderPortrait(state);
 
   if (uiFocus !== null || state.dead) {
     aim.clear();
@@ -874,6 +958,7 @@ window.addEventListener('blur', () => stopHoldRepeat(''));
   }
   hotbarItems = (await api('/api/inventory')).items || [];
   refreshHud();
+  await loadArt();
   render(state);
   applySettings();
   applyPortraitCollapsed();

@@ -24,6 +24,9 @@
       "core.rest": {
         "ticks": 4,
         "heal": 2
+      },
+      "core.body": {
+        "plan": "humanoid"
       }
     }
   },

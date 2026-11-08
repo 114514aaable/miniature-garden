@@ -112,6 +112,19 @@ tools/
   gen-world / check-data / check-locale 在改名后实测通过
 ```
 
+## 部位立绘（进行中）
+
+```
+数据    base/bodyparts/parts.json · base/bodyplans/plans.json
+美术    base/rigs/humanoid.json（18 层：x / y / w / h / depth）
+        base/art/parts/*.svg（占位图，可直接替换成真美术）
+接口    GET /api/art → 所有包的 rig
+        GET /art/<pack>/<path> → 部件图
+客户端  #portrait-art 按 rig 分层绘制；部位 hurt/disabled 加滤镜
+        pc 模板挂 core.body { plan: humanoid }
+        snapshot 新增投影组件 core.body
+```
+
 ## 下一步候选
 
 ```

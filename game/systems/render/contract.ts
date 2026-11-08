@@ -39,7 +39,7 @@ export interface RenderContract {
 }
 
 /** 契约校验的硬上限：防止有人写「我要全部」。 */
-export const MAX_COMPONENTS = 8;
+export const MAX_COMPONENTS = 16;
 export const MAX_UI = 8;
 
 export function validateContract(contract: RenderContract): void {

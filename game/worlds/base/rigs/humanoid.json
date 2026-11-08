@@ -1,0 +1,171 @@
+{
+  "id": "humanoid",
+  "canvas": [
+    256,
+    400
+  ],
+  "layers": [
+    {
+      "part": "torso",
+      "image": "parts/torso.svg",
+      "x": 68,
+      "y": 108,
+      "depth": 30,
+      "w": 120,
+      "h": 146
+    },
+    {
+      "part": "neck",
+      "image": "parts/neck.svg",
+      "x": 113,
+      "y": 92,
+      "depth": 28,
+      "w": 30,
+      "h": 26
+    },
+    {
+      "part": "head",
+      "image": "parts/head.svg",
+      "x": 90,
+      "y": 22,
+      "depth": 40,
+      "w": 76,
+      "h": 76
+    },
+    {
+      "part": "eye_1",
+      "image": "parts/eye.svg",
+      "x": 108,
+      "y": 50,
+      "depth": 45,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "part": "eye_2",
+      "image": "parts/eye.svg",
+      "x": 140,
+      "y": 50,
+      "depth": 45,
+      "w": 16,
+      "h": 16
+    },
+    {
+      "part": "ear_1",
+      "image": "parts/ear.svg",
+      "x": 86,
+      "y": 52,
+      "depth": 39,
+      "w": 14,
+      "h": 24
+    },
+    {
+      "part": "ear_2",
+      "image": "parts/ear.svg",
+      "x": 156,
+      "y": 52,
+      "depth": 39,
+      "w": 14,
+      "h": 24
+    },
+    {
+      "part": "mouth",
+      "image": "parts/mouth.svg",
+      "x": 115,
+      "y": 74,
+      "depth": 44,
+      "w": 26,
+      "h": 10
+    },
+    {
+      "part": "upper_arm_l",
+      "image": "parts/upper_arm.svg",
+      "x": 44,
+      "y": 118,
+      "depth": 26,
+      "w": 26,
+      "h": 74
+    },
+    {
+      "part": "upper_arm_r",
+      "image": "parts/upper_arm.svg",
+      "x": 186,
+      "y": 118,
+      "depth": 26,
+      "w": 26,
+      "h": 74
+    },
+    {
+      "part": "hand_l",
+      "image": "parts/hand.svg",
+      "x": 40,
+      "y": 188,
+      "depth": 27,
+      "w": 30,
+      "h": 32
+    },
+    {
+      "part": "hand_r",
+      "image": "parts/hand.svg",
+      "x": 186,
+      "y": 188,
+      "depth": 27,
+      "w": 30,
+      "h": 32
+    },
+    {
+      "part": "thigh_l",
+      "image": "parts/thigh.svg",
+      "x": 82,
+      "y": 246,
+      "depth": 20,
+      "w": 34,
+      "h": 84
+    },
+    {
+      "part": "thigh_r",
+      "image": "parts/thigh.svg",
+      "x": 140,
+      "y": 246,
+      "depth": 20,
+      "w": 34,
+      "h": 84
+    },
+    {
+      "part": "shin_l",
+      "image": "parts/shin.svg",
+      "x": 84,
+      "y": 324,
+      "depth": 18,
+      "w": 30,
+      "h": 70
+    },
+    {
+      "part": "shin_r",
+      "image": "parts/shin.svg",
+      "x": 142,
+      "y": 324,
+      "depth": 18,
+      "w": 30,
+      "h": 70
+    },
+    {
+      "part": "foot_l",
+      "image": "parts/foot.svg",
+      "x": 76,
+      "y": 388,
+      "depth": 16,
+      "w": 38,
+      "h": 18
+    },
+    {
+      "part": "foot_r",
+      "image": "parts/foot.svg",
+      "x": 142,
+      "y": 388,
+      "depth": 16,
+      "w": 38,
+      "h": 18
+    }
+  ]
+}
