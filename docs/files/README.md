@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 116 个文件。
+共 117 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -67,6 +67,7 @@
 | `game/engine/core/src/worldgen/populate.ts` | 实体投放：按「房间 / 走廊 / 死胡同」的规则往实体图里放东西。 | [md](game/engine/core/src/worldgen/populate.md) |
 | `game/engine/core/src/worldgen/random.ts` | 生成器共用的小随机：只依赖种子，不读时钟。 | [md](game/engine/core/src/worldgen/random.md) |
 | `game/engine/core/src/worldgen/structures.ts` | 结构：带图例的字符画，摆进生成出来的地图里。 | [md](game/engine/core/src/worldgen/structures.md) |
+| `game/engine/core/src/worldgen/variants.ts` | 开局选生成器：世界包提供一组「生成方案」，玩家在开始菜单里挑。 | [md](game/engine/core/src/worldgen/variants.md) |
 | `game/engine/core/types/node-shim.d.ts` | 临时的 node 类型声明。 | [md](game/engine/core/types/node-shim.d.md) |
 | `game/systems/camera/camera.ts` | 相机：把「看哪儿」从渲染里拆出来。 | [md](game/systems/camera/camera.md) |
 | `game/systems/config/config.ts` | 界面配置：所有「可能想调」的东西集中在这里。 | [md](game/systems/config/config.md) |

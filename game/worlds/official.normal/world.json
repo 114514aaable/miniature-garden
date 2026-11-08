@@ -1,8 +1,8 @@
 {
   "start": {
     "space": "field",
-    "x": 9,
-    "y": 1
+    "x": 2,
+    "y": 2
   },
   "rules": [
     "core.move",
@@ -59,10 +59,239 @@
           "hill": 0.65
         }
       }
-    ]
+    ],
+    "variants": {
+      "噪声地表": [
+        {
+          "op": "overworld",
+          "fields": {
+            "height": {
+              "noise": "fbm",
+              "scale": 7,
+              "octaves": 4,
+              "seedOffset": 0
+            },
+            "moisture": {
+              "noise": "fbm",
+              "scale": 13,
+              "octaves": 3,
+              "seedOffset": 1000
+            }
+          },
+          "levels": {
+            "water": 0.4,
+            "hill": 0.65
+          }
+        }
+      ],
+      "洞穴": [
+        {
+          "op": "caves",
+          "fill": 0.5,
+          "iterations": 5,
+          "spawnClear": 2,
+          "chambers": 4
+        }
+      ],
+      "迷宫": [
+        {
+          "op": "maze",
+          "wall": "wall",
+          "floor": "floor",
+          "braid": 0.15,
+          "inset": 1
+        },
+        {
+          "op": "place",
+          "structures": [
+            "ruin",
+            "hut"
+          ],
+          "count": 2,
+          "spacing": 5,
+          "on": [
+            "floor"
+          ],
+          "inset": 2
+        }
+      ],
+      "房间": [
+        {
+          "op": "rooms",
+          "structures": [
+            "cell",
+            "hall",
+            "vault"
+          ],
+          "minSize": [
+            7,
+            6
+          ],
+          "corridor": "floor",
+          "connect": "anchors",
+          "inset": 1,
+          "loops": 0.25
+        }
+      ],
+      "拼贴": [
+        {
+          "op": "layout",
+          "tiles": [
+            "tile_cross",
+            "tile_room_nw",
+            "tile_hall_north",
+            "tile_diagonal",
+            "tile_three",
+            "tile_hall",
+            "tile_pillar"
+          ],
+          "rooms": 2,
+          "roomMin": [
+            2,
+            2
+          ],
+          "roomMax": [
+            2,
+            2
+          ],
+          "loops": 0.2
+        }
+      ],
+      "散落": [
+        {
+          "op": "sprawl",
+          "rooms": [
+            "cell",
+            "hall",
+            "vault",
+            "chamber",
+            "crypt"
+          ],
+          "count": 40,
+          "margin": 1,
+          "corridor": "floor",
+          "widen": 0.35
+        },
+        {
+          "op": "populate",
+          "rules": [
+            {
+              "where": "room",
+              "tags": [
+                "treasure"
+              ],
+              "templates": {
+                "prop_crate": 3,
+                "item_lamp": 1
+              },
+              "density": 0.35,
+              "once": false
+            },
+            {
+              "where": "room",
+              "templates": {
+                "item_lamp": 1
+              },
+              "density": 0.12
+            },
+            {
+              "where": "corridor",
+              "templates": {
+                "item_lamp": 1
+              },
+              "density": 0.04,
+              "avoid": [
+                "start"
+              ]
+            },
+            {
+              "where": "deadend",
+              "templates": {
+                "prop_crate": 2,
+                "item_lamp": 1
+              },
+              "density": 0.5,
+              "once": false
+            },
+            {
+              "where": "room",
+              "templates": {
+                "rat": 1
+              },
+              "density": 0.06
+            }
+          ]
+        }
+      ],
+      "洞穴地表": [
+        {
+          "op": "overworld",
+          "fields": {
+            "height": {
+              "noise": "fbm",
+              "scale": 7,
+              "octaves": 4,
+              "seedOffset": 0
+            },
+            "moisture": {
+              "noise": "fbm",
+              "scale": 13,
+              "octaves": 3,
+              "seedOffset": 1000
+            }
+          },
+          "levels": {
+            "water": 0.4,
+            "hill": 0.65
+          }
+        },
+        {
+          "op": "caves",
+          "fill": 0.56,
+          "iterations": 4,
+          "chambers": 3,
+          "spawnClear": 3,
+          "as": "cave"
+        },
+        {
+          "op": "blend",
+          "floor": "cave_floor",
+          "wall": "keep"
+        },
+        {
+          "op": "place",
+          "structures": [
+            "ruin",
+            "hut"
+          ],
+          "count": 4,
+          "spacing": 6,
+          "on": [
+            "floor",
+            "cave_floor"
+          ],
+          "inset": 2
+        }
+      ]
+    }
   },
   "startMenu": {
     "fields": [
+      {
+        "key": "generator",
+        "label": "生成方式",
+        "type": "select",
+        "values": [
+          "噪声地表",
+          "洞穴",
+          "迷宫",
+          "房间",
+          "拼贴",
+          "散落",
+          "洞穴地表"
+        ],
+        "default": "噪声地表"
+      },
       {
         "key": "seed",
         "label": "种子",
@@ -73,13 +302,13 @@
         "key": "width",
         "label": "宽",
         "type": "number",
-        "default": 40
+        "default": 80
       },
       {
         "key": "height",
         "label": "高",
         "type": "number",
-        "default": 20
+        "default": 60
       }
     ]
   }

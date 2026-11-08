@@ -105,7 +105,14 @@ function openStartDialog(world, preset = null) {
   const controls = fields.map((item) => {
     const saved = item.key === 'seed' ? localStorage.getItem('nw.seed') : localStorage.getItem('nw.' + item.key);
     const initial = values[item.key] ?? (saved !== null && saved !== '' ? saved : item.default);
-    values[item.key] = item.type === 'select' ? String(initial ?? item.values[0]) : Number(initial ?? 0);
+    if (item.type === 'select') {
+      // 存的旧值可能已经不在选项里：回退到默认/第一项
+      const options = (item.values || []).map(String);
+      const wanted = String(initial ?? '');
+      values[item.key] = options.includes(wanted) ? wanted : String(item.default ?? options[0] ?? '');
+    } else {
+      values[item.key] = Number(initial ?? 0);
+    }
 
     if (item.type === 'select') {
       const buttons = [];

@@ -6,22 +6,17 @@
 ## 能玩到什么
 
 ```
-启动器    选世界 → 开始弹窗（种子 + 宽高）→ 进游戏
-七个世界  official.normal     盐港：噪声 + 群系
-          official.dungeon    元胞地牢：纯洞穴，切成 4 个洞厅
-          official.cavern     洞穴地表：地表 + 洞穴 + 洞底（流水线叠加）
-          official.labyrinth  迷宫：实心岩里挖通道，编织过的死胡同
-          official.rooms      房间地牢：BSP 切房间 + 门图走廊
-          official.tiles      拼贴地牢：7×7 件按门口拼（测试）
-          official.sprawl     散落地牢：房间自由摆放 + Gabriel 图 + 绕路（40 间 / 80×60）
-地图      4..200 任选尺寸，开局现场生成；存档按 seed + 尺寸复现
+启动器    选世界包 → 开始弹窗（生成方式 + 种子 + 宽高）→ 进游戏
+世界包    official.base（框架）· official.normal（第一个 mod）
+生成方式  开始菜单里自由选：
+          噪声地表 / 洞穴 / 迷宫 / 房间 / 拼贴 / 散落 / 洞穴地表
+地图      4..200 任选尺寸，开局现场生成；存档按 seed + 尺寸 + 方案复现
 动作      走路、劈砍、蓄力劈砍（10 回合）、横扫、休息、捡起/放下/使用、等待、交谈
 敌人      起手（红格预警 + 倒计时）→ 结算；走出去就落空
 对话      按 E 选目标 → 台词 → 数字键选选项 → Esc 离开
 界面      立绘（可收）/ 状态条 / 小地图 / 24 格快捷栏 / 右下 3×4 点击映射
 存档      一个存档 = 一个世界（saves/<id>/{world.json,state.json}）；阶段快照可叠加
 ```
-
 ## 世界生成（这一阶段的重点）
 
 **7 种生成器 + 2 个修饰算子 + 1 个实体投放算子**，全部走同一条流水线：
@@ -48,7 +43,7 @@ populate     实体图投放（房间标签 / 走廊 / 死胡同，出生点留�
 game/
 ├─ engine/core/     内核 + 规则实现（store / space / event / pack / rules / worldgen）
 ├─ systems/         render · camera · ui · i18n · input · log · config · intel · scene · rules
-└─ worlds/          official.base（数据）· 七个世界
+└─ worlds/          official.base（框架数据）· official.normal（第一个 mod）
 tools/
 ├─ serve.mjs        本地服务 + 全部接口（advanceTo 产帧）
 ├─ client/

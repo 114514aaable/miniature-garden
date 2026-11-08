@@ -1,0 +1,30 @@
+[
+  {
+    "id": "rat",
+    "components": {
+      "core.health": {
+        "max": 6,
+        "hp": 6
+      },
+      "core.melee": {
+        "damage": 1,
+        "windup": 2
+      },
+      "core.disposition": {
+        "value": "hostile"
+      },
+      "core.locomotion": {
+        "surfaces": [
+          "ground"
+        ]
+      },
+      "core.solid": {},
+      "core.intent": {
+        "kind": "melee",
+        "tiles": [],
+        "damage": 0,
+        "resolveAt": 0
+      }
+    }
+  }
+]

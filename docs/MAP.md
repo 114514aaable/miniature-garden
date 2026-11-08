@@ -444,6 +444,11 @@ game/systems/render/*（投影成画面数据）
   - `interface PlaceSpec`
   - `interface Placement`
   - `interface SpawnRequest`
+- **`game/engine/core/src/worldgen/variants.ts`**（52 行）
+  开局选生成器：世界包提供一组「生成方案」，玩家在开始菜单里挑。
+  - `pickPipeline(generation: GenerationConfig, generator: string | undefined,) → PickedPipeline`
+  - `interface GenerationConfig`
+  - `interface PickedPipeline`
 
 ### 系统 game/systems
 
@@ -696,7 +701,7 @@ game/systems/render/*（投影成画面数据）
 - **`tools/client/hud/status.js`**（32 行）
   左下区域：状态（血量条 + 计数 + 可否行动）。
   - `renderStatus(state)`
-- **`tools/client/launcher.js`**（469 行）
+- **`tools/client/launcher.js`**（476 行）
   import { modal, col, row, text, button, input, field } from '/web/game/systems/ui/spec.js';
 - **`tools/client/shared.js`**（35 行）
   页面共用：错误提示 + API 调用。

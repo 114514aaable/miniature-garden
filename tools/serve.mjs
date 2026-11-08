@@ -51,6 +51,7 @@ import { advanceTo as hostAdvanceTo } from "../game/systems/host/advance.ts";
 import { captureEntities, diffEntities } from "../game/systems/host/frames.ts";
 import { clampSize } from "../game/engine/core/src/worldgen/generators/generate.ts";
 import { createSandbox, runPipeline } from "../game/engine/core/src/worldgen/pipeline.ts";
+import { pickPipeline } from "../game/engine/core/src/worldgen/variants.ts";
 import { loadStructures } from "./worldgen-structures.mjs";
 import { offsetsOf } from "../game/engine/core/src/traversal/shapes.ts";
 import { cellsOf } from "../game/engine/core/src/traversal/resolve.ts";
@@ -210,12 +211,11 @@ function withGeneratedSpace(merged, loaded, seed, options, worldId) {
 
   let generated;
   try {
-    if (!Array.isArray(generation.pipeline) || generation.pipeline.length === 0) {
-      throw new Error("世界的 generation 缺少 pipeline（生成器只走流水线）");
-    }
+    const generator = typeof options?.generator === "string" ? options.generator : undefined;
+    const picked = pickPipeline(generation, generator);
 
     generated = runPipelineToTerrain(
-      generation.pipeline,
+      picked.steps,
       seed,
       clampSize(Math.max(width, needWidth)),
       clampSize(Math.max(height, needHeight)),

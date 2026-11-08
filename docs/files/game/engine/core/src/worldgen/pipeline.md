@@ -106,4 +106,5 @@ type Step = | { readonly op: "overworld"; readonly fields?: Record<string, Field
 ## 被引用
 
 - [`game/engine/core/src/worldgen/populate.ts`](game/engine/core/src/worldgen/populate.md)
+- [`game/engine/core/src/worldgen/variants.ts`](game/engine/core/src/worldgen/variants.md)
 - [`tools/serve.mjs`](tools/serve.md)

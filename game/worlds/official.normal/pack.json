@@ -3,7 +3,7 @@
   "kind": "overlay",
   "version": "0.1.0",
   "name": "默认世界：灰港码头",
-  "description": "示例世界：一张生成的地图（40×20）。",
+  "description": "第一个 mod：开局自选生成方式，默认 80×60。",
   "license": "CC-BY-SA-4.0",
   "engine": ">=0.1.0",
   "extends": "official.base@0.1.0",
@@ -18,7 +18,8 @@
       "spaces/field.json"
     ],
     "templates": [
-      "templates/people.json"
+      "templates/people.json",
+      "templates/monsters.json"
     ],
     "groups": [
       "groups/camp.json"
