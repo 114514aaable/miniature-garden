@@ -3,9 +3,9 @@
 > 由 `node tools/gen-pack-graph.mjs` 生成，不要手改。
 > 与 [dependency-tree.md](dependency-tree.md) 互补：那边是代码 import，这边是数据引用。
 
-## official.normal
+## normal
 
-包：official.base + official.normal
+包：base + normal
 
 | 种类 | 数量 |
 |---|---|
@@ -21,7 +21,7 @@
 
 ```mermaid
 graph LR
-  subgraph "official.base"
+  subgraph "base"
     template_pc["你"]
     template_prop_crate["木箱"]
     template_item_lamp["油灯"]
@@ -52,7 +52,7 @@ graph LR
     biome_swamp["湿地"]
     biome_dry["旱地"]
   end
-  subgraph "official.normal"
+  subgraph "normal"
     space_field["field"]
     template_npc_salt["盐商"]
     template_item_potion["药水"]

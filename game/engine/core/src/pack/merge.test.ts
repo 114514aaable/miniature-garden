@@ -27,14 +27,14 @@ function content(
 
 test("单包合并：定义进池子，记来源", () => {
   const world = mergePacks([
-    content("official.base", [{ kind: "template", id: "npc_guard", data: { hp: 10 } }]),
+    content("base", [{ kind: "template", id: "npc_guard", data: { hp: 10 } }]),
   ]);
 
   const def = world.definitions.get(keyOf("template", "npc_guard"));
-  assert.equal(def?.origin, "official.base");
+  assert.equal(def?.origin, "base");
   assert.deepEqual(def?.data, { hp: 10 });
   assert.deepEqual(world.provenance, [
-    { action: "add", kind: "template", id: "npc_guard", pack: "official.base" },
+    { action: "add", kind: "template", id: "npc_guard", pack: "base" },
   ]);
 });
 
@@ -69,19 +69,19 @@ test("不同 kind 同名不算冲突", () => {
 
 test("补丁 replace 生效，并记录谁改的", () => {
   const world = mergePacks([
-    content("official.base", [{ kind: "template", id: "npc_guard", data: { hp: 10 } }]),
+    content("base", [{ kind: "template", id: "npc_guard", data: { hp: 10 } }]),
     content("player.noir", [], [{ op: "replace", kind: "template", id: "npc_guard", data: { hp: 20 } }]),
   ]);
 
   const def = world.definitions.get(keyOf("template", "npc_guard"));
   assert.deepEqual(def?.data, { hp: 20 });
-  assert.equal(def?.origin, "official.base");
+  assert.equal(def?.origin, "base");
   assert.deepEqual(def?.patchedBy, ["player.noir"]);
 });
 
 test("两个包都打补丁：后者赢，两个都记账", () => {
   const world = mergePacks([
-    content("official.base", [{ kind: "template", id: "x", data: 1 }]),
+    content("base", [{ kind: "template", id: "x", data: 1 }]),
     content("a.one", [], [{ op: "replace", kind: "template", id: "x", data: 2 }]),
     content("b.two", [], [{ op: "replace", kind: "template", id: "x", data: 3 }]),
   ]);
@@ -100,7 +100,7 @@ test("补丁找不到目标就报错", () => {
 
 test("补丁 remove 生效", () => {
   const world = mergePacks([
-    content("official.base", [{ kind: "template", id: "x", data: 1 }]),
+    content("base", [{ kind: "template", id: "x", data: 1 }]),
     content("a.one", [], [{ op: "remove", kind: "template", id: "x" }]),
   ]);
   assert.equal(world.definitions.size, 0);
@@ -134,7 +134,7 @@ test("内容变了，哈希就变", () => {
 });
 
 test("补丁历史也进哈希", () => {
-  const base = content("official.base", [{ kind: "template", id: "x", data: 1 }]);
+  const base = content("base", [{ kind: "template", id: "x", data: 1 }]);
   const a = mergePacks([base]);
   const b = mergePacks([base, content("a.one", [], [{ op: "replace", kind: "template", id: "x", data: 1 }])]);
   assert.notEqual(a.hash, b.hash, "内容一样，但改过就是不同的世界");

@@ -7,7 +7,7 @@
 
 ```
 启动器    选世界包 → 开始弹窗（生成方式 + 种子 + 宽高）→ 进游戏
-世界包    official.base（框架）· official.normal（第一个 mod）
+世界包    base（框架）· normal（第一个 mod）
 生成方式  开始菜单里自由选：
           噪声地表 / 洞穴 / 迷宫 / 房间 / 拼贴 / 散落 / 洞穴地表
 地图      4..200 任选尺寸，开局现场生成；存档按 seed + 尺寸 + 方案复现
@@ -43,7 +43,7 @@ populate     实体图投放（房间标签 / 走廊 / 死胡同，出生点留�
 game/
 ├─ engine/core/     内核 + 规则实现（store / space / event / pack / rules / worldgen）
 ├─ systems/         render · camera · ui · i18n · input · log · config · intel · scene · rules
-└─ worlds/          official.base（框架数据）· official.normal（第一个 mod）
+└─ worlds/          base（框架数据）· normal（第一个 mod）
 tools/
 ├─ serve.mjs        本地服务 + 全部接口（advanceTo 产帧）
 ├─ client/

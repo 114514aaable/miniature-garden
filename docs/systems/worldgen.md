@@ -374,7 +374,7 @@ anchors    门：坐标 + 朝向
 
 门不需要额外对齐：两格都开同一条边，门就在边界上重合。
 
-**测试件**：`game/worlds/official.base/worldgen/tiles.json`，由
+**测试件**：`game/worlds/base/worldgen/tiles.json`，由
 `tools/gen-tiles.mjs` 生成 7 张（十字 / 单间 / 北厅 / 对角 / 三间 / 大厅 / 带柱大厅），
 每张四边带门，内部用 3×3 象限做出不同形状。
 

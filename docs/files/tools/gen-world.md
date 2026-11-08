@@ -8,7 +8,7 @@
 生成参数  <world>/world.json 的 generation 块
 地形名    <pack>/terrains.json（名字 → 号）
 用法：
-node tools/gen-world.mjs --world official.normal --seed 42 --size 40x20
+node tools/gen-world.mjs --world normal --seed 42 --size 40x20
 node tools/gen-world.mjs --seed 42 --size 40x20 --out spaces/field.json
 
 行数：136

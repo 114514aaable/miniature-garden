@@ -20,7 +20,7 @@ import { orderPacks } from "../game/engine/core/src/pack/order.ts";
 import { RULE_TABLE } from "../game/systems/rules/index.ts";
 import { DEFAULT_CLOCK } from "../game/engine/core/src/rules/clock.ts";
 
-const worldId = process.argv[2] ?? "official.normal";
+const worldId = process.argv[2] ?? "normal";
 
 function loadPacks(id) {
   const root = readPack("game/worlds/" + id);

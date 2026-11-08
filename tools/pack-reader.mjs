@@ -17,7 +17,7 @@
  *   patches/*.json     补丁数组
  *
  * 用法：
- *   node tools/pack-reader.mjs game/worlds/official.normal
+ *   node tools/pack-reader.mjs game/worlds/normal
  */
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";

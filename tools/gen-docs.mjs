@@ -87,11 +87,11 @@ for (const rule of RULE_TABLE) {
 }
 
 // ── 组件 ──────────────────────────────────────────────
-for (const component of readJson("game/worlds/official.base")) {
+for (const component of readJson("game/worlds/base")) {
   void component;
 }
 
-const componentsJson = JSON.parse(readFileSync("game/worlds/official.base/components.json", "utf8"));
+const componentsJson = JSON.parse(readFileSync("game/worlds/base/components.json", "utf8"));
 for (const component of componentsJson) {
   const name = label("component", component.id);
   const desc = describe("component", component.id);
@@ -104,7 +104,7 @@ for (const component of componentsJson) {
 }
 
 // ── 预制件 ────────────────────────────────────────────
-for (const dir of ["game/worlds/official.normal/groups"]) {
+for (const dir of ["game/worlds/normal/groups"]) {
   let files = [];
   try {
     files = readdirSync(dir);
@@ -132,7 +132,7 @@ for (const dir of ["game/worlds/official.normal/groups"]) {
 }
 
 // ── 模板（base + normal）──────────────────────────────
-const templatesDirs = ["game/worlds/official.base/templates", "game/worlds/official.normal/templates"];
+const templatesDirs = ["game/worlds/base/templates", "game/worlds/normal/templates"];
 for (const dir of templatesDirs) {
   let files = [];
   try {

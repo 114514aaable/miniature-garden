@@ -20,9 +20,14 @@ test("合法的 base 包", () => {
   assert.equal(m.kind, "base");
 });
 
-test("包 id 必须带命名空间", () => {
-  assert.throws(() => parseManifest(base({ id: "greyharbor" })), /id 非法/);
+test("包 id 允许顶级名（base / normal），但必须小写字母、数字、连字符", () => {
+  assert.equal(parseManifest(base({ id: "base" })).id, "base");
+  assert.equal(parseManifest(base({ id: "normal" })).id, "normal");
+  assert.equal(parseManifest(base({ id: "player.ww114" })).id, "player.ww114");
+
   assert.throws(() => parseManifest(base({ id: "Official.Grey" })), /id 非法/);
+  assert.throws(() => parseManifest(base({ id: "-bad" })), /id 非法/);
+  assert.throws(() => parseManifest(base({ id: "a..b" })), /id 非法/);
 });
 
 test("版本必须是 x.y.z", () => {

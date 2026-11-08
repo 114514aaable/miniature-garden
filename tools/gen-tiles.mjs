@@ -86,6 +86,6 @@ function makeTile(variant) {
 }
 
 const tiles = VARIANTS.map(makeTile);
-writeFileSync("game/worlds/official.base/worldgen/tiles.json", JSON.stringify(tiles, null, 2) + "\n", "utf8");
+writeFileSync("game/worlds/base/worldgen/tiles.json", JSON.stringify(tiles, null, 2) + "\n", "utf8");
 
 for (const tile of tiles) console.log(tile.id + "\n" + tile.map.join("\n") + "\n");

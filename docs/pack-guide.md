@@ -37,7 +37,7 @@ myworld/
   "description": "示例：一间房、一个人、一堵墙。",
   "license": "CC-BY-SA-4.0",
   "engine": ">=0.1.0",
-  "requires": { "official.base": "^0.1.0" },
+  "requires": { "base": "^0.1.0" },
   "files": {
     "terrains": ["terrains.json"],
     "components": ["components.json"],
@@ -79,7 +79,7 @@ myworld/
 ]
 ```
 
-基础组件在 `official.base` 里已经定义好了——**overlay 包通常不需要写这一节**，直接用 `core.health` 等即可。
+基础组件在 `base` 里已经定义好了——**overlay 包通常不需要写这一节**，直接用 `core.health` 等即可。
 
 ### spaces/room.json —— 地图
 
@@ -150,7 +150,7 @@ myworld/
 
 ```bash
 # 加载并打印世界（最快）
-node tools/play.mjs game/worlds/official.base worlds/myworld
+node tools/play.mjs game/worlds/base worlds/myworld
 
 # 起调试台，浏览器里玩
 node tools/serve.mjs
@@ -254,7 +254,7 @@ node tools/serve.mjs
 ## 7. 目录速查
 
 ```
-game/worlds/official.base/     基础：地形、组件、通用模板
-game/worlds/official.normal/   示例世界：港口 8×6、一个 NPC、一盏灯
+game/worlds/base/     基础：地形、组件、通用模板
+game/worlds/normal/   示例世界：港口 8×6、一个 NPC、一盏灯
 docs/modules/             模块契约（自动生成）
 ```

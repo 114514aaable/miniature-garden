@@ -1,14 +1,14 @@
 {
-  "id": "official.normal",
+  "id": "normal",
   "kind": "overlay",
   "version": "0.1.0",
   "name": "默认世界：灰港码头",
   "description": "第一个 mod：开局自选生成方式，默认 80×60。",
   "license": "CC-BY-SA-4.0",
   "engine": ">=0.1.0",
-  "extends": "official.base@0.1.0",
+  "extends": "base@0.1.0",
   "requires": {
-    "official.base": "^0.1.0"
+    "base": "^0.1.0"
   },
   "files": {
     "world": [

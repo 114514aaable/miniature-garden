@@ -10,7 +10,7 @@
  *   地形名    <pack>/terrains.json（名字 → 号）
  *
  * 用法：
- *   node tools/gen-world.mjs --world official.normal --seed 42 --size 40x20
+ *   node tools/gen-world.mjs --world normal --seed 42 --size 40x20
  *   node tools/gen-world.mjs --seed 42 --size 40x20 --out spaces/field.json
  */
 
@@ -28,7 +28,7 @@ function arg(name, fallback) {
   return index >= 0 ? process.argv[index + 1] : fallback;
 }
 
-const worldId = String(arg("world", "official.normal"));
+const worldId = String(arg("world", "normal"));
 const seed = Number(arg("seed", "1"));
 const [width, height] = String(arg("size", "48x32")).split("x").map(Number);
 const out = arg("out", null);

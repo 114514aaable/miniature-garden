@@ -18,7 +18,7 @@ const HEALTH = {
   schema: { t: "object", fields: { max: { t: "int" }, hp: { t: "int" } }, optional: ["hp"] },
 };
 
-function manifest(id = "official.base"): PackManifest {
+function manifest(id = "base"): PackManifest {
   return { id, kind: "base", version: "1.0.0" };
 }
 

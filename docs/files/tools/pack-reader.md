@@ -14,7 +14,7 @@ terrains/*.json    { id: "0", name, passable }           kind = terrain
 world/*.json       { start, rules, onConflict }          kind = world（id 固定 main）
 patches/*.json     补丁数组
 用法：
-node tools/pack-reader.mjs game/worlds/official.normal
+node tools/pack-reader.mjs game/worlds/normal
 
 行数：148
 

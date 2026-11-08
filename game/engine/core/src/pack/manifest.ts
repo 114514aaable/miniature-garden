@@ -17,7 +17,7 @@
 import { type JsonValue } from "../time.ts";
 import { SchemaError, type Schema, validate } from "../event/schema.ts";
 
-export const PACK_ID_PATTERN = /^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*){1,3}$/;
+export const PACK_ID_PATTERN = /^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*){0,3}$/;
 const VERSION_PATTERN = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 
 export type PackKind = "base" | "overlay" | "bridge";
@@ -28,7 +28,7 @@ export interface PackFiles {
   readonly templates?: readonly string[];
   readonly entities?: readonly string[];
   readonly terrains?: readonly string[];
-  /** 组件定义：名字 + schema。RPG 的组件在 official.base，别的玩法可以在自己包里定义。 */
+  /** 组件定义：名字 + schema。RPG 的组件在 base，别的玩法可以在自己包里定义。 */
   readonly components?: readonly string[];
   /** 预制件：一组实体 + 相对偏移。 */
   readonly groups?: readonly string[];
@@ -128,7 +128,7 @@ export function parseManifest(raw: unknown): PackManifest {
   const manifest = raw as PackManifest;
 
   if (!PACK_ID_PATTERN.test(manifest.id)) {
-    throw new SchemaError("$.id", `包 id 非法："${manifest.id}"，应形如 "official.grey-harbor"`);
+    throw new SchemaError("$.id", `包 id 非法："${manifest.id}"，应形如 "base" / "normal" / "official.grey-harbor"`);
   }
   if (!VERSION_PATTERN.test(manifest.version)) {
     throw new SchemaError("$.version", `版本必须是 x.y.z，收到 "${manifest.version}"`);
