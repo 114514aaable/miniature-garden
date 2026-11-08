@@ -124,9 +124,8 @@ function openStartDialog(world, preset = null) {
       for (const value of item.values || []) {
         const node = button(String(value), () => {
           values[item.key] = value;
-          for (const other of buttons) {
-            other.style.border = other === node ? '2px solid #8ab4f8' : '1px solid #2a303c';
-          }
+          // 已经挂到 DOM 的按钮改 style 不会生效：直接带着当前值重画整个弹窗
+          openStartDialog(world, { ...values });
         });
         node.style.border = String(initial) === String(value) ? '2px solid #8ab4f8' : '1px solid #2a303c';
         buttons.push(node);
