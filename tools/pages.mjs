@@ -28,6 +28,7 @@ const CSS = `
   .world .packs { color: #7f8794; font-size: 12px; }
   .world .error { color: #e06c75; font-size: 12px; }
   .world.bad button { opacity: 0.4; cursor: not-allowed; }
+  .world.dep { opacity: 0.55; }
   .stage { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
   #map { display: block; background: #0d0f13; border-radius: 8px;
          image-rendering: pixelated; width: 480px; height: 360px; cursor: crosshair; }

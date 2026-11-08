@@ -101,8 +101,8 @@
   "rule.base.sweep.desc": "打自己周围一圈里所有活着的目标。",
   "component.core.pending.name": "挂起",
   "component.core.pending.desc": "过几回合才结算的动作（蓄力、延迟陷阱）。",
-  "world.normal.name": "盐港",
-  "world.normal.desc": "第一个 mod：开局自选生成方式（地表 / 洞穴 / 迷宫 / 房间 / 拼贴 / 散落 / 洞穴地表）。",
+  "world.normal.name": "normal",
+  "world.normal.desc": "第一个 mod：依赖 base，开局自选生成方式。",
   "biome.temperate.name": "温带",
   "biome.temperate.desc": "草多、树多、适合住人。",
   "biome.swamp.name": "湿地",
@@ -123,5 +123,7 @@
   "rule.base.death.name": "致死",
   "rule.base.death.desc": "血量归零时广播；默认把实体移出世界。",
   "component.core.rest.name": "休息配置",
-  "component.core.rest.desc": "休息几回合、每次回多少血；模板可以覆盖。"
+  "component.core.rest.desc": "休息几回合、每次回多少血；模板可以覆盖。",
+  "world.base.name": "base",
+  "world.base.desc": "框架包：组件 / 地形 / 结构 / 生成算法。"
 }

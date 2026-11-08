@@ -143,29 +143,42 @@ function scanWorlds() {
     }
   }
 
-  const roots = contents.filter((content) => !required.has(content.pack.id));
-  const worlds = roots.map((root) => {
+  const packs = contents.map((content) => {
+    const id = content.pack.id;
+    const isRoot = !required.has(id);
+    const requires = Object.keys(content.pack.requires ?? {});
+    const label = {
+      id,
+      version: content.pack.version,
+      kind: content.pack.kind,
+      requires,
+      root: isRoot,
+      // 启动器直接显示名字，不再查语言包
+      name: MESSAGES["world." + id + ".name"] ?? id,
+      description: MESSAGES["world." + id + ".desc"] ?? "",
+    };
+
+    if (!isRoot) return { ...label, ok: true };
+
     try {
-      const ordered = closureOf(root.pack.id, byId);
+      const ordered = closureOf(id, byId);
       const loaded = loadWorld(mergePacks(ordered));
       return {
-        id: root.pack.id,
-        version: root.pack.version,
-        // 启动器直接显示中文名，不用再查语言包
-        name: MESSAGES["world." + root.pack.id + ".name"] ?? root.pack.id,
-        description: MESSAGES["world." + root.pack.id + ".desc"] ?? "",
+        ...label,
         startMenu: loaded.world.startMenu ?? { fields: [{ key: "seed", label: "种子", type: "number", default: 0 }] },
-        packs: ordered.map((content) => `${content.pack.id}@${content.pack.version}`),
+        packs: ordered.map((pack) => `${pack.pack.id}@${pack.pack.version}`),
         ok: true,
       };
     } catch (error) {
-      return { id: root.pack.id, version: root.pack.version, ok: false, error: messageOf(error) };
+      return { ...label, ok: false, error: messageOf(error) };
     }
   });
 
-  return { worlds, errors };
-}
+  // 依赖在前、可玩的根包在后
+  packs.sort((a, b) => (a.root === b.root ? 0 : a.root ? 1 : -1));
 
+  return { worlds: packs, errors };
+}
 // ── 会话：一个正在运行的世界 ──────────────────────────────
 
 let session = null;

@@ -27,7 +27,7 @@ function renderWorlds() {
 
   for (const world of worlds) {
     const row = document.createElement('div');
-    row.className = 'world' + (world.id === activeWorld ? ' picked' : '') + (world.ok ? '' : ' bad');
+    row.className = 'world' + (world.id === activeWorld ? ' picked' : '') + (world.ok ? '' : ' bad') + (world.root ? '' : ' dep');
 
     const info = document.createElement('div');
     if (world.description) {
@@ -38,11 +38,14 @@ function renderWorlds() {
     }
     const name = document.createElement('div');
     name.className = 'name';
-    name.textContent = (world.name || world.id) + '  @' + world.version;
+    const needs = (world.requires || []).length > 0 ? '  →  需要 ' + world.requires.join(' + ') : '';
+    name.textContent = (world.name || world.id) + '  @' + world.version + needs;
     info.appendChild(name);
     const packs = document.createElement('div');
     packs.className = 'packs';
-    packs.textContent = (world.packs || []).join(' + ');
+    packs.textContent = world.root
+      ? (world.packs || []).join(' + ')
+      : '依赖包（不能单独开始）';
     info.appendChild(packs);
     if (!world.ok) {
       const error = document.createElement('div');
@@ -53,15 +56,17 @@ function renderWorlds() {
     row.appendChild(info);
 
     const actions = document.createElement('div');
-    const pick = document.createElement('button');
-    pick.textContent = world.id === activeWorld ? '已选' : '选择';
-    pick.disabled = !world.ok;
-    pick.addEventListener('click', () => {
-      activeWorld = world.id;
-      localStorage.setItem('nw.world', world.id);
-      renderWorlds();
-    });
-    actions.appendChild(pick);
+    if (world.root) {
+      const pick = document.createElement('button');
+      pick.textContent = world.id === activeWorld ? '已选' : '选择';
+      pick.disabled = !world.ok;
+      pick.addEventListener('click', () => {
+        activeWorld = world.id;
+        localStorage.setItem('nw.world', world.id);
+        renderWorlds();
+      });
+      actions.appendChild(pick);
+    }
 
     const graph = document.createElement('button');
     graph.textContent = '结构';
@@ -352,6 +357,12 @@ document.getElementById('m-start').addEventListener('click', async () => {
       localStorage.setItem('nw.off', JSON.stringify(saved.off));
     }
   }
+  const chosen = worlds.find((item) => item.id === activeWorld);
+  if (chosen !== undefined && chosen.root === false) {
+    document.getElementById('meta').textContent = '「' + activeWorld + '」是依赖包，不能单独开始；请选一个可玩的包。';
+    return;
+  }
+
   if (!activeWorld) {
     document.getElementById('meta').textContent = '还没有选择世界，先去「世界包」里选一个。';
     show('packs');
@@ -467,7 +478,7 @@ document.getElementById('quit-back').textContent = '← 返回';
 api('/api/worlds').then((state) => {
   worlds = state.worlds || [];
   if (!activeWorld && worlds.length > 0) {
-    const usable = worlds.find((world) => world.ok);
+    const usable = worlds.find((world) => world.ok && world.root);
     if (usable) activeWorld = usable.id;
   }
   renderWorlds();
