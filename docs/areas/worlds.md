@@ -48,7 +48,7 @@ game/worlds/<id>/
 ## 验证
 
 ```bash
-node tools/play.mjs game/worlds/official.base game/worlds/official.normal
+node tools/play.mjs game/worlds/base game/worlds/normal
 node tools/serve.mjs     # 启动器里选世界，开一局
 ```
 

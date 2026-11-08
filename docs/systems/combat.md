@@ -80,7 +80,7 @@ enemy_strike → 读 intent.tiles，看玩家在不在里面 → 在就扣血
 
 ```bash
 node --test --test-isolation=none
-node tools/play.mjs game/worlds/official.base game/worlds/official.normal
+node tools/play.mjs game/worlds/base game/worlds/normal
 ```
 实机：跑起来 → 走到敌人旁边 → 点它，看血量变化与日志。
 

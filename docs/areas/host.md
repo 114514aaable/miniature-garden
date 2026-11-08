@@ -68,7 +68,7 @@ POST /api/load {slot?}
 ## 验证
 
 ```bash
-node tools/play.mjs game/worlds/official.base game/worlds/official.normal
+node tools/play.mjs game/worlds/base game/worlds/normal
 node tools/serve.mjs
 node tools/typecheck.mjs && node --test --test-isolation=none
 ```
