@@ -38,6 +38,9 @@
     "schema": {
       "t": "object",
       "fields": {
+        "plan": {
+          "t": "str"
+        },
         "parts": {
           "t": "array",
           "of": {
@@ -46,16 +49,7 @@
               "id": {
                 "t": "str"
               },
-              "name": {
-                "t": "str"
-              },
               "hp": {
-                "t": "int"
-              },
-              "max": {
-                "t": "int"
-              },
-              "armor": {
                 "t": "int"
               },
               "state": {
@@ -69,12 +63,14 @@
             },
             "optional": [
               "hp",
-              "armor",
               "state"
             ]
           }
         }
-      }
+      },
+      "optional": [
+        "parts"
+      ]
     }
   },
   {

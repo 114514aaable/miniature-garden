@@ -16,7 +16,7 @@ patches/*.json     补丁数组
 用法：
 node tools/pack-reader.mjs game/worlds/normal
 
-行数：148
+行数：150
 
 ## 接口
 

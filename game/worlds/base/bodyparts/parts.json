@@ -1,0 +1,37 @@
+[
+  { "id": "human.torso", "name": "躯干", "hp": 40, "coverage": 30, "vital": true,
+    "armor": 1, "tags": ["core"], "slots": ["armor"] },
+
+  { "id": "human.head", "name": "头", "hp": 20, "coverage": 10, "vital": true,
+    "tags": ["core"], "slots": ["head"] },
+
+  { "id": "human.neck", "name": "脖子", "hp": 10, "coverage": 5 },
+
+  { "id": "human.eye", "name": "眼睛", "hp": 3, "coverage": 1,
+    "tags": ["sense"], "grants": { "sight": 1 }, "slots": ["eye"] },
+
+  { "id": "human.ear", "name": "耳朵", "hp": 3, "coverage": 1,
+    "tags": ["sense"], "grants": { "hearing": 1 }, "slots": ["ear"] },
+
+  { "id": "human.mouth", "name": "嘴", "hp": 5, "coverage": 1,
+    "grants": { "speech": 1 }, "slots": ["mouth"] },
+
+  { "id": "human.upper_arm", "name": "上臂", "hp": 15, "coverage": 10,
+    "slots": ["arm"] },
+
+  { "id": "human.hand", "name": "手", "hp": 8, "coverage": 6,
+    "grants": { "manipulator": 1 }, "slots": ["hand"] },
+
+  { "id": "human.thigh", "name": "大腿", "hp": 16, "coverage": 8,
+    "grants": { "mover": 1 }, "slots": ["legs"] },
+
+  { "id": "human.shin", "name": "小腿", "hp": 12, "coverage": 6 },
+
+  { "id": "human.foot", "name": "脚", "hp": 8, "coverage": 4,
+    "slots": ["feet"] },
+
+  { "id": "tentacle", "name": "触手", "hp": 8, "coverage": 6,
+    "tags": ["limb"], "grants": { "manipulator": 1 }, "slots": ["grip"] },
+
+  { "id": "slime.core", "name": "核心", "hp": 30, "coverage": 1, "vital": true }
+]

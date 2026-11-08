@@ -37,6 +37,14 @@ import {
 import { type MergedWorld } from "./merge.ts";
 import { parseTraversal, type TraversalSpec } from "../traversal/shapes.ts";
 import { parseBiomeDef, type BiomeDef } from "./definitions.ts";
+import {
+  parseBodyPart,
+  parseBodyPlan,
+  resolveBodyPlans,
+  type BodyPartDef,
+  type BodyPlanDef,
+  type ResolvedBodyPlan,
+} from "../body/body.ts";
 
 /** 引擎额外提供的组件。组件现在由包定义，这里一般是空的。 */
 export interface ComponentSpec {
@@ -73,12 +81,28 @@ export interface LoadedWorld {
   readonly biomes: readonly BiomeDef[];
   /** 预制件：一组实体 + 相对偏移，供 stamp 使用。 */
   readonly groups: ReadonlyMap<string, GroupDef>;
+  /** 部位目录：id → 定义。 */
+  readonly bodyParts: ReadonlyMap<string, BodyPartDef>;
+  /** 身体蓝图：id → 展开后的树。 */
+  readonly bodyPlans: ReadonlyMap<string, ResolvedBodyPlan>;
   readonly onConflict: ConflictPolicy;
   readonly world: WorldDef;
   readonly hash: string;
 }
 
-const KNOWN_KINDS = new Set(["biome", "traversal", "space", "template", "entity", "terrain", "component", "group", "world"]);
+const KNOWN_KINDS = new Set([
+  "biome",
+  "traversal",
+  "space",
+  "template",
+  "entity",
+  "terrain",
+  "component",
+  "group",
+  "world",
+  "bodypart",
+  "bodyplan",
+]);
 
 export function loadWorld(
   merged: MergedWorld,
@@ -92,6 +116,8 @@ export function loadWorld(
   const componentDefs: ComponentDef[] = [];
   const groupDefs: GroupDef[] = [];
   const biomeDefs: BiomeDef[] = [];
+  const bodyPartDefs: BodyPartDef[] = [];
+  const bodyPlanDefs: BodyPlanDef[] = [];
   let traversalSpec: TraversalSpec = { shapes: {}, filters: {} };
 
   for (const [key, def] of merged.definitions) {
@@ -128,6 +154,12 @@ export function loadWorld(
       case "world":
         worldDefs.push(parseWorldDef(def.data, `$world.${def.id}`));
         break;
+      case "bodypart":
+        bodyPartDefs.push(parseBodyPart(def.data, def.id));
+        break;
+      case "bodyplan":
+        bodyPlanDefs.push(parseBodyPlan(def.data, def.id));
+        break;
     }
   }
 
@@ -163,6 +195,10 @@ export function loadWorld(
     templates.defineTemplate(def);
   }
 
+  // 部位：先建目录，再展开蓝图（继承 / repeat / delete 都在这一步）
+  const bodyParts = new Map(bodyPartDefs.map((def) => [def.id, def]));
+  const bodyPlans = resolveBodyPlans(new Map(bodyPlanDefs.map((def) => [def.id, def])), bodyParts);
+
   const world = worldDefs[0];
   const entities = entityDefs.map((def, index) =>
     normalizeEntity(def, index, spaceIds, spaces, templates, terrains),
@@ -184,6 +220,8 @@ export function loadWorld(
       sweepEvery: world.persistence?.sweepEvery ?? 50,
     },
     groups: new Map(groupDefs.map((def) => [def.id, def])),
+    bodyParts,
+    bodyPlans,
     traversal: traversalSpec,
     biomes: biomeDefs,
     onConflict: world.onConflict ?? "error",

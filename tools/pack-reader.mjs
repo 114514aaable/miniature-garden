@@ -36,6 +36,8 @@ const KIND_BY_FOLDER = {
   traversal: "traversal",
   biomes: "biome",
   world: "world",
+  bodyparts: "bodypart",
+  bodyplans: "bodyplan",
 };
 
 export function readPack(dir) {

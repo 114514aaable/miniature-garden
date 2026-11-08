@@ -10,7 +10,7 @@
 4. 整体校验：引用闭合、坐标合法、地形都已声明、出生点能站；
 5. 收集世界启用的规则标签——包负责选，宿主负责实现。
 
-行数：307
+行数：345
 
 ## 接口
 
@@ -51,9 +51,9 @@ interface LoadedWorld {
   readonly traversal: TraversalSpec;
   readonly biomes: readonly BiomeDef[];
   readonly groups: ReadonlyMap<string, GroupDef>;
+  readonly bodyParts: ReadonlyMap<string, BodyPartDef>;
+  readonly bodyPlans: ReadonlyMap<string, ResolvedBodyPlan>;
   readonly onConflict: ConflictPolicy;
-  readonly world: WorldDef;
-  readonly hash: string;
 }
 ```
 
@@ -65,6 +65,7 @@ function loadWorld( merged: MergedWorld, components: readonly ComponentSpec[] = 
 
 ## 依赖
 
+- [`game/engine/core/src/body/body.ts`](game/engine/core/src/body/body.md)
 - [`game/engine/core/src/entity/template.ts`](game/engine/core/src/entity/template.md)
 - [`game/engine/core/src/event/schema.ts`](game/engine/core/src/event/schema.md)
 - [`game/engine/core/src/pack/definitions.ts`](game/engine/core/src/pack/definitions.md)

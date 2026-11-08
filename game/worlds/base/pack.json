@@ -21,6 +21,12 @@
     ],
     "biomes": [
       "biomes.json"
+    ],
+    "bodyparts": [
+      "bodyparts/parts.json"
+    ],
+    "bodyplans": [
+      "bodyplans/plans.json"
     ]
   }
 }

@@ -4,11 +4,12 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 117 个文件。
+共 118 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
 | `game/engine/core/src/bind.ts` | 「对接」：两边各自声明自己能接什么，再算谁和谁接得上。 | [md](game/engine/core/src/bind.md) |
+| `game/engine/core/src/body/body.ts` | 部位：目录（可复用定义）+ 蓝图（一棵树）+ 运行时实例。 | [md](game/engine/core/src/body/body.md) |
 | `game/engine/core/src/entity/entity.ts` | 实体：世界里「一个东西」的最小记录。 | [md](game/engine/core/src/entity/entity.md) |
 | `game/engine/core/src/entity/merge.ts` | 合并：模板默认值 + 实例覆盖 = 这个实体此刻的完整数据。 | [md](game/engine/core/src/entity/merge.md) |
 | `game/engine/core/src/entity/place.ts` | 位置：内核唯一保留的组件名。 | [md](game/engine/core/src/entity/place.md) |

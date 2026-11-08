@@ -36,6 +36,10 @@ export interface PackFiles {
   readonly traversal?: readonly string[];
   /** 群系定义。 */
   readonly biomes?: readonly string[];
+  /** 部位目录：可复用的部件定义。 */
+  readonly bodyparts?: readonly string[];
+  /** 身体蓝图：部件组成的树。 */
+  readonly bodyplans?: readonly string[];
   /** 世界的出生点与规则清单。base 包可以没有。 */
   readonly world?: readonly string[];
   readonly patches?: readonly string[];
@@ -94,10 +98,25 @@ const MANIFEST_SCHEMA: Schema = {
         groups: FILE_LIST,
         traversal: FILE_LIST,
         biomes: FILE_LIST,
+    bodyparts: FILE_LIST,
+    bodyplans: FILE_LIST,
         world: FILE_LIST,
         patches: FILE_LIST,
       },
-      optional: ["spaces", "templates", "entities", "terrains", "components", "groups", "traversal", "biomes", "world", "patches"],
+      optional: [
+          "spaces",
+          "templates",
+          "entities",
+          "terrains",
+          "components",
+          "groups",
+          "traversal",
+          "biomes",
+          "bodyparts",
+          "bodyplans",
+          "world",
+          "patches",
+        ],
     },
     generator: {
       t: "object",

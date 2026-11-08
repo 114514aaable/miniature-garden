@@ -11,9 +11,11 @@
 |---|---|
 | component | 17 |
 | rule | 16 |
+| bodypart | 13 |
 | template | 6 |
 | terrain | 5 |
 | biome | 3 |
+| bodyplan | 3 |
 | traversal | 1 |
 | space | 1 |
 | group | 1 |
@@ -51,6 +53,22 @@ graph LR
     biome_temperate["温带"]
     biome_swamp["湿地"]
     biome_dry["旱地"]
+    bodypart_human_torso["human.torso"]
+    bodypart_human_head["human.head"]
+    bodypart_human_neck["human.neck"]
+    bodypart_human_eye["human.eye"]
+    bodypart_human_ear["human.ear"]
+    bodypart_human_mouth["human.mouth"]
+    bodypart_human_upper_arm["human.upper_arm"]
+    bodypart_human_hand["human.hand"]
+    bodypart_human_thigh["human.thigh"]
+    bodypart_human_shin["human.shin"]
+    bodypart_human_foot["human.foot"]
+    bodypart_tentacle["tentacle"]
+    bodypart_slime_core["slime.core"]
+    bodyplan_humanoid["humanoid"]
+    bodyplan_tentacle_beast["tentacle_beast"]
+    bodyplan_slime["slime"]
   end
   subgraph "normal"
     space_field["field"]

@@ -10,7 +10,7 @@ bridge  把两个以上的世界接起来。requires 至少两个。
 id 是身份，永远不改。合并时合并的是「内容池」，不是名字。
 这个文件只做「解析 + 校验」，不读磁盘——core 不认识文件系统。
 
-行数：206
+行数：225
 
 ## 接口
 
@@ -38,6 +38,8 @@ interface PackFiles {
   readonly groups?: readonly string[];
   readonly traversal?: readonly string[];
   readonly biomes?: readonly string[];
+  readonly bodyparts?: readonly string[];
+  readonly bodyplans?: readonly string[];
   readonly world?: readonly string[];
   readonly patches?: readonly string[];
 }

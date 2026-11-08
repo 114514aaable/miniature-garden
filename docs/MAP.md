@@ -42,6 +42,16 @@ game/systems/render/*（投影成画面数据）
   - `connectDeclarations(left: readonly Declaration[], right: readonly Declaration[], vocabulary?: readonly string[],) → Connection`
   - `interface Declaration`
   - `interface Connection`
+- **`game/engine/core/src/body/body.ts`**（258 行）
+  部位：目录（可复用定义）+ 蓝图（一棵树）+ 运行时实例。
+  - `parseBodyPart(raw: unknown, idKey: string) → BodyPartDef`
+  - `parseBodyPlan(raw: unknown, idKey: string) → BodyPlanDef`
+  - `resolveBodyPlans(plans: ReadonlyMap<string, BodyPlanDef>, parts: ReadonlyMap<string, BodyPartDef>,) → Map<string, ResolvedBodyPlan>`
+  - `capabilityOf(plan: ResolvedBodyPlan, ability: string) → number`
+  - `interface BodyPartDef`
+  - `interface BodyPlanPart`
+  - `interface BodyPlanDef`
+  - `interface ResolvedBodyPlan`
 - **`game/engine/core/src/entity/entity.ts`**（168 行）
   实体：世界里「一个东西」的最小记录。
   - `makeHandle(index: number, generation: number) → Handle`
@@ -141,13 +151,13 @@ game/systems/render/*（投影成画面数据）
 - **`game/engine/core/src/pack/init.ts`**（73 行）
   开局初始化：世界建好之后，按顺序执行世界包声明的 init。
   - `applyInit(store: Store, loaded: LoadedWorld) → void`
-- **`game/engine/core/src/pack/load.ts`**（307 行）
+- **`game/engine/core/src/pack/load.ts`**（345 行）
   加载器：把合并后的内容池变成运行时对象。
   - `loadWorld(merged: MergedWorld, components: readonly ComponentSpec[] = [],) → LoadedWorld`
   - `interface ComponentSpec`
   - `interface LoadedEntity`
   - `interface LoadedWorld`
-- **`game/engine/core/src/pack/manifest.ts`**（206 行）
+- **`game/engine/core/src/pack/manifest.ts`**（225 行）
   包清单（pack.json）：一个内容包的自述。
   - `parseManifest(raw: unknown) → PackManifest`
   - `isManifest(raw: JsonValue) → boolean`
@@ -740,7 +750,7 @@ game/systems/render/*（投影成画面数据）
 - **`tools/import-csv.mjs`**（144 行）
   CSV → 模板 JSON（宿主侧工具）。
   - `csvToTemplates(text)`
-- **`tools/pack-reader.mjs`**（148 行）
+- **`tools/pack-reader.mjs`**（150 行）
   读包工具（宿主侧）：把文件夹变成 PackContent。
   - `readPack(dir)`
 - **`tools/pages.mjs`**（334 行）

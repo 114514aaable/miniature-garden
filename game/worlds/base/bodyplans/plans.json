@@ -1,0 +1,47 @@
+[
+  {
+    "id": "humanoid",
+    "vital": "marked",
+    "parts": [
+      { "id": "torso", "part": "human.torso" },
+
+      { "id": "neck", "part": "human.neck", "parent": "torso" },
+      { "id": "head", "part": "human.head", "parent": "neck" },
+
+      { "id": "eye", "part": "human.eye", "parent": "head", "repeat": 2 },
+      { "id": "ear", "part": "human.ear", "parent": "head", "repeat": 2 },
+      { "id": "mouth", "part": "human.mouth", "parent": "head" },
+
+      { "id": "upper_arm_l", "part": "human.upper_arm", "parent": "torso" },
+      { "id": "upper_arm_r", "part": "human.upper_arm", "parent": "torso" },
+      { "id": "hand_l", "part": "human.hand", "parent": "upper_arm_l" },
+      { "id": "hand_r", "part": "human.hand", "parent": "upper_arm_r" },
+
+      { "id": "thigh_l", "part": "human.thigh", "parent": "torso" },
+      { "id": "thigh_r", "part": "human.thigh", "parent": "torso" },
+      { "id": "shin_l", "part": "human.shin", "parent": "thigh_l" },
+      { "id": "shin_r", "part": "human.shin", "parent": "thigh_r" },
+      { "id": "foot_l", "part": "human.foot", "parent": "shin_l" },
+      { "id": "foot_r", "part": "human.foot", "parent": "shin_r" }
+    ]
+  },
+
+  {
+    "id": "tentacle_beast",
+    "extends": "humanoid",
+    "vital": "marked",
+    "parts": [
+      { "id": "upper_arm_l", "delete": true },
+      { "id": "upper_arm_r", "delete": true },
+      { "id": "hand_l", "delete": true },
+      { "id": "hand_r", "delete": true },
+      { "id": "tentacle", "part": "tentacle", "parent": "torso", "repeat": 8 }
+    ]
+  },
+
+  {
+    "id": "slime",
+    "vital": "all",
+    "parts": [{ "id": "core", "part": "slime.core" }]
+  }
+]
