@@ -91,6 +91,27 @@ tools/
 16 投放密度没有总预算：40 间房能撒出 100+ 箱子
 ```
 
+
+## 最近的修复与体检（2026-11-08）
+
+```
+出生点被木箱占住 → 动不了
+  根因：ensurePlayerOnWalkable 用 place/remove 效果（只动索引、不动实体坐标）
+        实体位置和占位索引分叉，一移动就报「索引不一致」
+  修复：改用 patch core.place 一次性移动实体 + 索引
+  验证：散落/房间/迷宫多个种子，出生点不再与实体同格，四个方向可走
+
+生成方式按钮点了没反应
+  根因：按钮挂载后改的是 UiNode 描述对象，DOM 不会更新
+  修复：点击后 openStartDialog(world, {...values}) 重画
+
+隐藏漏洞检查
+  旧包 id（official.base / official.normal）→ 存档/链接兼容别名 normalizePackId
+  启动器 localStorage 里失效的 activeWorld → 自动重置到第一个可玩根包
+  依赖包 base 出现在列表但不可开始；开始前二次校验
+  gen-world / check-data / check-locale 在改名后实测通过
+```
+
 ## 下一步候选
 
 ```

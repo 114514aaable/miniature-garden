@@ -476,9 +476,11 @@ document.getElementById('quit-back').textContent = '← 返回';
 
 api('/api/worlds').then((state) => {
   worlds = state.worlds || [];
-  if (!activeWorld && worlds.length > 0) {
-    const usable = worlds.find((world) => world.ok && world.root);
-    if (usable) activeWorld = usable.id;
+  const firstRoot = worlds.find((world) => world.ok && world.root);
+  const current = worlds.find((world) => world.id === activeWorld);
+  if (current === undefined || current.root !== true) {
+    activeWorld = firstRoot ? firstRoot.id : null;
+    if (activeWorld !== null) localStorage.setItem('nw.world', activeWorld);
   }
   renderWorlds();
   document.getElementById('meta').textContent = '选择一个世界开始';

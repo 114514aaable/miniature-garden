@@ -2,7 +2,7 @@
 
 > 由 `node tools/gen-docs.mjs` 生成。**不要手改**——改语言包或代码。
 
-规则 16 条 · 组件 17 个 · 模板 5 个
+规则 16 条 · 组件 17 个 · 模板 6 个
 
 | 类型 | 名字 | id | 说明 |
 |---|---|---|---|
@@ -38,10 +38,11 @@
 | 组件 | [存在感](component-core.persistence.md) | `core.persistence` | 锚定 / 普通 / 短暂：决定离得远时要不要继续留在世界里。 |
 | 组件 | [近战](component-core.melee.md) | `core.melee` | 伤害与起手回合数：写在模板里，规则读它。 |
 | 组件 | [行动方式](component-core.locomotion.md) | `core.locomotion` | 能贴哪些面：ground（地面）、liquid（水里）、solid、air。 |
-| 组件 | [core.rest](component-core.rest.md) | `core.rest` |  |
+| 组件 | [休息配置](component-core.rest.md) | `core.rest` | 休息几回合、每次回多少血；模板可以覆盖。 |
 | 预制件 | camp | `camp` | 4 个实体 |
 | 模板 | [你](template-pc.md) | `pc` | 玩家角色。 |
 | 模板 | [木箱](template-prop_crate.md) | `prop_crate` | 实心障碍，挡路。 |
 | 模板 | [油灯](template-item_lamp.md) | `item_lamp` | 一盏可以捡起来的灯。 |
+| 模板 | [洞鼠](template-rat.md) | `rat` | 会咬人的小东西。 |
 | 模板 | [盐商](template-npc_salt.md) | `npc_salt` | 会靠近并起手打人的敌人。 |
 | 模板 | [药水](template-item_potion.md) | `item_potion` | 喝下去回点血。 |

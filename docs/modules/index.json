@@ -756,8 +756,8 @@
     {
       "kind": "component",
       "id": "core.rest",
-      "name": "core.rest",
-      "desc": "",
+      "name": "休息配置",
+      "desc": "休息几回合、每次回多少血；模板可以覆盖。",
       "file": "component-core.rest.md",
       "schema": {
         "t": "object",
@@ -841,6 +841,22 @@
       "extends": null,
       "components": [
         "core.item"
+      ]
+    },
+    {
+      "kind": "template",
+      "id": "rat",
+      "name": "洞鼠",
+      "desc": "会咬人的小东西。",
+      "file": "template-rat.md",
+      "extends": null,
+      "components": [
+        "core.health",
+        "core.melee",
+        "core.disposition",
+        "core.locomotion",
+        "core.solid",
+        "core.intent"
       ]
     },
     {

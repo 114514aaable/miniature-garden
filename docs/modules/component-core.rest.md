@@ -1,6 +1,6 @@
-# core.rest
+# 休息配置
 
-`core.rest`
+`core.rest` — 休息几回合、每次回多少血；模板可以覆盖。
 
 ## Schema
 ```json

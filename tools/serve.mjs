@@ -111,6 +111,13 @@ function collectPacks() {
 }
 
 /** 从某个包出发，把它的依赖闭包按加载顺序排好。 */
+/** 老存档/老链接里的 official.xxx → 现在的 xxx（包改名兼容）。 */
+function normalizePackId(id, byId) {
+  if (byId.has(id)) return id;
+  const stripped = String(id).replace(/^official\./, "");
+  return byId.has(stripped) ? stripped : id;
+}
+
 function closureOf(rootId, byId) {
   const ordered = [];
   const seen = new Set();
@@ -972,8 +979,13 @@ function ensurePlayerOnWalkable() {
     return;
   }
 
-  session.store.inject({ kind: "remove", space: player.space, cell: player.pos, handle: session.playerHandle });
-  session.store.inject({ kind: "place", space: player.space, cell: target, handle: session.playerHandle });
+  // 位置必须用 core.place 写：place/remove 效果只动索引、不动实体坐标
+  session.store.inject({
+    kind: "patch",
+    handle: session.playerHandle,
+    component: "core.place",
+    data: { space: player.space, x: target.x, y: target.y },
+  });
   session.notice = "脚下的地不能站，被挪到了 (" + target.x + ", " + target.y + ")";
 }
 
@@ -1625,7 +1637,8 @@ function loadGame(id, name) {
   let ordered;
   try {
     const { byId } = collectPacks();
-    ordered = closureOf(meta.pack, byId);
+    const packId = normalizePackId(meta.pack, byId);
+  ordered = closureOf(packId, byId);
   } catch (error) {
     return { ok: false, error: "存档要的世界包找不到了：" + messageOf(error) };
   }
@@ -1639,7 +1652,7 @@ function loadGame(id, name) {
     meta.options ?? {},
   );
 
-  session.world = meta.pack;
+  session.world = normalizePackId(meta.pack, byId);
   session.worldId = meta.id;
   session.worldName = meta.name;
   session.seed = meta.seed;
@@ -1933,7 +1946,7 @@ const server = createServer(async (request, response) => {
             return;
           }
         }
-        const packId = reused !== null ? reused.pack : String(id);
+        const packId = normalizePackId(reused !== null ? reused.pack : String(id), byId);
         const worldSeed = reused !== null ? Number(reused.seed) || 0 : Number(seed) || 0;
         const worldOptions =
           reused !== null
