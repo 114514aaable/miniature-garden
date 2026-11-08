@@ -54,19 +54,19 @@
 | `game/engine/core/src/traversal/select.ts` | 选定核心：从一组格子里挑出「符合条件的目标」。 | [md](game/engine/core/src/traversal/select.md) |
 | `game/engine/core/src/traversal/shapes.ts` | 命名形状与命名条件：把 base 的 traversal.json 变成可用的东西。 | [md](game/engine/core/src/traversal/shapes.md) |
 | `game/engine/core/src/traversal/transform.ts` | 偏移 → 偏移：形状的组合就是靠这几个变换。 | [md](game/engine/core/src/traversal/transform.md) |
-| `game/engine/core/src/worldgen/caves.ts` | 元胞地牢：元胞自动机（cellular automata）挖洞穴。 | [md](game/engine/core/src/worldgen/caves.md) |
-| `game/engine/core/src/worldgen/generate.ts` | 生成一片地形：种子 + 尺寸 + 场参数 + 群系 → 地形号数组。 | [md](game/engine/core/src/worldgen/generate.md) |
-| `game/engine/core/src/worldgen/layout.ts` | 布局：在 meta 网格上摆「房间」和「走廊」，边决定门口。 | [md](game/engine/core/src/worldgen/layout.md) |
-| `game/engine/core/src/worldgen/maze.ts` | 迷宫生成（迭代回溯 + 可选编织）。 | [md](game/engine/core/src/worldgen/maze.md) |
+| `game/engine/core/src/worldgen/generators/caves.ts` | 元胞地牢：元胞自动机（cellular automata）挖洞穴。 | [md](game/engine/core/src/worldgen/generators/caves.md) |
+| `game/engine/core/src/worldgen/generators/generate.ts` | 生成一片地形：种子 + 尺寸 + 场参数 + 群系 → 地形号数组。 | [md](game/engine/core/src/worldgen/generators/generate.md) |
+| `game/engine/core/src/worldgen/generators/layout.ts` | 布局：在 meta 网格上摆「房间」和「走廊」，边决定门口。 | [md](game/engine/core/src/worldgen/generators/layout.md) |
+| `game/engine/core/src/worldgen/generators/maze.ts` | 迷宫生成（迭代回溯 + 可选编织）。 | [md](game/engine/core/src/worldgen/generators/maze.md) |
+| `game/engine/core/src/worldgen/generators/rooms.ts` | 房间布局：BSP 摆房间 → 门当顶点 → 修走廊把门连起来。 | [md](game/engine/core/src/worldgen/generators/rooms.md) |
+| `game/engine/core/src/worldgen/generators/select.ts` | 选：把「若干场」翻译成「群系」，再把群系翻译成「地形」。 | [md](game/engine/core/src/worldgen/generators/select.md) |
+| `game/engine/core/src/worldgen/generators/sprawl.ts` | 散落地牢：房间自由摆放 + 房间图 + 绕路 + 走廊加宽。 | [md](game/engine/core/src/worldgen/generators/sprawl.md) |
+| `game/engine/core/src/worldgen/generators/tiles.ts` | 拼贴：把 7×7 的房间件按「门口」贴成一张图。 | [md](game/engine/core/src/worldgen/generators/tiles.md) |
 | `game/engine/core/src/worldgen/noise.ts` | 噪声：把「种子 + 坐标」变成 0..1 的值。 | [md](game/engine/core/src/worldgen/noise.md) |
 | `game/engine/core/src/worldgen/pipeline.ts` | 生成流水线：把生成算法拆成「一步一个算子」，串起来跑。 | [md](game/engine/core/src/worldgen/pipeline.md) |
 | `game/engine/core/src/worldgen/populate.ts` | 实体投放：按「房间 / 走廊 / 死胡同」的规则往实体图里放东西。 | [md](game/engine/core/src/worldgen/populate.md) |
 | `game/engine/core/src/worldgen/random.ts` | 生成器共用的小随机：只依赖种子，不读时钟。 | [md](game/engine/core/src/worldgen/random.md) |
-| `game/engine/core/src/worldgen/rooms.ts` | 房间布局：BSP 摆房间 → 门当顶点 → 修走廊把门连起来。 | [md](game/engine/core/src/worldgen/rooms.md) |
-| `game/engine/core/src/worldgen/select.ts` | 选：把「若干场」翻译成「群系」，再把群系翻译成「地形」。 | [md](game/engine/core/src/worldgen/select.md) |
-| `game/engine/core/src/worldgen/sprawl.ts` | 散落地牢：房间自由摆放 + 房间图 + 绕路 + 走廊加宽。 | [md](game/engine/core/src/worldgen/sprawl.md) |
 | `game/engine/core/src/worldgen/structures.ts` | 结构：带图例的字符画，摆进生成出来的地图里。 | [md](game/engine/core/src/worldgen/structures.md) |
-| `game/engine/core/src/worldgen/tiles.ts` | 拼贴：把 7×7 的房间件按「门口」贴成一张图。 | [md](game/engine/core/src/worldgen/tiles.md) |
 | `game/engine/core/types/node-shim.d.ts` | 临时的 node 类型声明。 | [md](game/engine/core/types/node-shim.d.md) |
 | `game/systems/camera/camera.ts` | 相机：把「看哪儿」从渲染里拆出来。 | [md](game/systems/camera/camera.md) |
 | `game/systems/config/config.ts` | 界面配置：所有「可能想调」的东西集中在这里。 | [md](game/systems/config/config.md) |

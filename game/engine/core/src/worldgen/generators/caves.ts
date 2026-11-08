@@ -12,7 +12,7 @@
  * 确定性：初始撒点用 cellRandom(seed, x, y)，不用顺序随机。
  */
 
-import { cellRandom } from "./noise.ts";
+import { cellRandom } from "../noise.ts";
 
 export interface CavesOptions {
   readonly seed: number;

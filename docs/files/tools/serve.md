@@ -34,7 +34,7 @@ node tools/serve.mjs worlds/a worlds/b   # 直接进某个世界（开发用）
 - [`game/engine/core/src/traversal/resolve.ts`](game/engine/core/src/traversal/resolve.md)
 - [`game/engine/core/src/traversal/select.ts`](game/engine/core/src/traversal/select.md)
 - [`game/engine/core/src/traversal/shapes.ts`](game/engine/core/src/traversal/shapes.md)
-- [`game/engine/core/src/worldgen/generate.ts`](game/engine/core/src/worldgen/generate.md)
+- [`game/engine/core/src/worldgen/generators/generate.ts`](game/engine/core/src/worldgen/generators/generate.md)
 - [`game/engine/core/src/worldgen/pipeline.ts`](game/engine/core/src/worldgen/pipeline.md)
 - [`game/systems/host/advance.ts`](game/systems/host/advance.md)
 - [`game/systems/host/base-rules.ts`](game/systems/host/base-rules.md)

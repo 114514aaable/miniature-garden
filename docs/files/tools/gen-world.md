@@ -21,8 +21,8 @@ node tools/gen-world.mjs --seed 42 --size 40x20 --out spaces/field.json
 - [`game/engine/core/src/pack/load.ts`](game/engine/core/src/pack/load.md)
 - [`game/engine/core/src/pack/merge.ts`](game/engine/core/src/pack/merge.md)
 - [`game/engine/core/src/pack/order.ts`](game/engine/core/src/pack/order.md)
+- [`game/engine/core/src/worldgen/generators/select.ts`](game/engine/core/src/worldgen/generators/select.md)
 - [`game/engine/core/src/worldgen/noise.ts`](game/engine/core/src/worldgen/noise.md)
-- [`game/engine/core/src/worldgen/select.ts`](game/engine/core/src/worldgen/select.md)
 - [`tools/pack-reader.mjs`](tools/pack-reader.md)
 
 ## 被引用

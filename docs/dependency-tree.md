@@ -90,34 +90,34 @@ tools/serve.mjs
     └─ game/engine/core/src/time.ts  (已展开)
     └─ game/engine/core/src/traversal/filter.ts  (已展开)
   └─ game/engine/core/src/traversal/shapes.ts  (已展开)
-  └─ game/engine/core/src/worldgen/generate.ts
+  └─ game/engine/core/src/worldgen/generators/generate.ts
+    └─ game/engine/core/src/worldgen/generators/select.ts
     └─ game/engine/core/src/worldgen/noise.ts
-    └─ game/engine/core/src/worldgen/select.ts
   └─ game/engine/core/src/worldgen/pipeline.ts
-    └─ game/engine/core/src/worldgen/caves.ts
+    └─ game/engine/core/src/worldgen/generators/caves.ts
       └─ game/engine/core/src/worldgen/noise.ts  (已展开)
-    └─ game/engine/core/src/worldgen/generate.ts  (已展开)
-    └─ game/engine/core/src/worldgen/layout.ts
-      └─ game/engine/core/src/worldgen/random.ts
-      └─ game/engine/core/src/worldgen/structures.ts
-        └─ game/engine/core/src/worldgen/noise.ts  (已展开)
-      └─ game/engine/core/src/worldgen/tiles.ts
-        └─ game/engine/core/src/worldgen/random.ts  (已展开)
-        └─ game/engine/core/src/worldgen/structures.ts  (已展开)
-    └─ game/engine/core/src/worldgen/maze.ts
+    └─ game/engine/core/src/worldgen/generators/generate.ts  (已展开)
+    └─ game/engine/core/src/worldgen/generators/layout.ts
+      └─ game/engine/core/src/worldgen/generators/tiles.ts
+        └─ game/engine/core/src/worldgen/random.ts
+        └─ game/engine/core/src/worldgen/structures.ts
+          └─ game/engine/core/src/worldgen/noise.ts  (已展开)
+      └─ game/engine/core/src/worldgen/random.ts  (已展开)
+      └─ game/engine/core/src/worldgen/structures.ts  (已展开)
+    └─ game/engine/core/src/worldgen/generators/maze.ts
+    └─ game/engine/core/src/worldgen/generators/rooms.ts
+      └─ game/engine/core/src/worldgen/random.ts  (已展开)
+      └─ game/engine/core/src/worldgen/structures.ts  (已展开)
+    └─ game/engine/core/src/worldgen/generators/select.ts  (已展开)
+    └─ game/engine/core/src/worldgen/generators/sprawl.ts
+      └─ game/engine/core/src/worldgen/generators/tiles.ts  (已展开)
+      └─ game/engine/core/src/worldgen/random.ts  (已展开)
+      └─ game/engine/core/src/worldgen/structures.ts  (已展开)
+    └─ game/engine/core/src/worldgen/generators/tiles.ts  (已展开)
     └─ game/engine/core/src/worldgen/populate.ts
       └─ game/engine/core/src/worldgen/pipeline.ts  ⟲ 环
       └─ game/engine/core/src/worldgen/random.ts  (已展开)
-    └─ game/engine/core/src/worldgen/rooms.ts
-      └─ game/engine/core/src/worldgen/random.ts  (已展开)
-      └─ game/engine/core/src/worldgen/structures.ts  (已展开)
-    └─ game/engine/core/src/worldgen/select.ts  (已展开)
-    └─ game/engine/core/src/worldgen/sprawl.ts
-      └─ game/engine/core/src/worldgen/random.ts  (已展开)
-      └─ game/engine/core/src/worldgen/structures.ts  (已展开)
-      └─ game/engine/core/src/worldgen/tiles.ts  (已展开)
     └─ game/engine/core/src/worldgen/structures.ts  (已展开)
-    └─ game/engine/core/src/worldgen/tiles.ts  (已展开)
   └─ game/systems/host/advance.ts
     └─ game/systems/host/frames.ts
       └─ game/systems/render/project.ts
@@ -305,7 +305,7 @@ tools/build-web.mjs
 | `game/engine/core/src/store.ts` | 16 处：`tools/play.mjs`, `tools/serve.mjs`, `game/engine/core/src/event/effects.test.ts`, `game/engine/core/src/event/effects.ts` … |
 | `game/engine/core/src/event/evaluate.ts` | 15 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/rules/ai.ts`, `game/engine/core/src/rules/aim.ts` … |
 | `game/engine/core/src/event/view.ts` | 11 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/event/evaluate.ts`, `game/engine/core/src/event/view.test.ts` … |
-| `game/engine/core/src/worldgen/structures.ts` | 11 处：`tools/worldgen-structures.mjs`, `game/engine/core/src/worldgen/layout.test.ts`, `game/engine/core/src/worldgen/layout.ts`, `game/engine/core/src/worldgen/pipeline.ts` … |
+| `game/engine/core/src/worldgen/structures.ts` | 11 处：`tools/worldgen-structures.mjs`, `game/engine/core/src/worldgen/generators/layout.test.ts`, `game/engine/core/src/worldgen/generators/layout.ts`, `game/engine/core/src/worldgen/generators/rooms.test.ts` … |
 | `game/engine/core/src/entity/entity.ts` | 11 处：`game/engine/core/src/entity/entity.test.ts`, `game/engine/core/src/entity/place.ts`, `game/engine/core/src/event/view.ts`, `game/engine/core/src/rules/ai.test.ts` … |
 | `game/engine/core/src/entity/template.ts` | 11 处：`game/engine/core/src/entity/template.test.ts`, `game/engine/core/src/event/view.ts`, `game/engine/core/src/pack/load.ts`, `game/engine/core/src/rules/ai.test.ts` … |
 | `game/engine/core/src/pack/merge.ts` | 10 处：`tools/check-data.mjs`, `tools/gen-pack-graph.mjs`, `tools/gen-world.mjs`, `tools/play.mjs` … |
@@ -317,8 +317,8 @@ tools/build-web.mjs
 | `game/engine/core/src/pack/load.ts` | 6 处：`tools/check-data.mjs`, `tools/gen-world.mjs`, `tools/play.mjs`, `tools/serve.mjs` … |
 | `game/engine/core/src/pack/order.ts` | 6 处：`tools/check-data.mjs`, `tools/gen-pack-graph.mjs`, `tools/gen-world.mjs`, `tools/play.mjs` … |
 | `tools/pack-reader.mjs` | 6 处：`tools/check-data.mjs`, `tools/gen-pack-graph.mjs`, `tools/gen-world.mjs`, `tools/play.mjs` … |
-| `game/engine/core/src/worldgen/select.ts` | 6 处：`tools/gen-world.mjs`, `game/engine/core/src/worldgen/generate.test.ts`, `game/engine/core/src/worldgen/generate.ts`, `game/engine/core/src/worldgen/pipeline.test.ts` … |
-| `game/engine/core/src/worldgen/noise.ts` | 5 处：`tools/gen-world.mjs`, `game/engine/core/src/worldgen/caves.ts`, `game/engine/core/src/worldgen/generate.ts`, `game/engine/core/src/worldgen/structures.ts` … |
+| `game/engine/core/src/worldgen/generators/select.ts` | 6 处：`tools/gen-world.mjs`, `game/engine/core/src/worldgen/generators/generate.test.ts`, `game/engine/core/src/worldgen/generators/generate.ts`, `game/engine/core/src/worldgen/generators/worldgen.test.ts` … |
+| `game/engine/core/src/worldgen/noise.ts` | 5 处：`tools/gen-world.mjs`, `game/engine/core/src/worldgen/generators/caves.ts`, `game/engine/core/src/worldgen/generators/generate.ts`, `game/engine/core/src/worldgen/generators/worldgen.test.ts` … |
 
 ## 没有被引用的文件
 

@@ -21,7 +21,7 @@ import { loadWorld } from "../game/engine/core/src/pack/load.ts";
 import { mergePacks } from "../game/engine/core/src/pack/merge.ts";
 import { orderPacks } from "../game/engine/core/src/pack/order.ts";
 import { noiseOf } from "../game/engine/core/src/worldgen/noise.ts";
-import { pickBiome, terrainFor } from "../game/engine/core/src/worldgen/select.ts";
+import { pickBiome, terrainFor } from "../game/engine/core/src/worldgen/generators/select.ts";
 
 function arg(name, fallback) {
   const index = process.argv.indexOf("--" + name);

@@ -1,4 +1,4 @@
-# `game/engine/core/src/worldgen/maze.ts`
+# `game/engine/core/src/worldgen/generators/maze.ts`
 
 ## 内容
 

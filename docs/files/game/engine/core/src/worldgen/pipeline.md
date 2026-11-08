@@ -92,16 +92,16 @@ type Step = | { readonly op: "overworld"; readonly fields?: Record<string, Field
 
 ## 依赖
 
-- [`game/engine/core/src/worldgen/caves.ts`](game/engine/core/src/worldgen/caves.md)
-- [`game/engine/core/src/worldgen/generate.ts`](game/engine/core/src/worldgen/generate.md)
-- [`game/engine/core/src/worldgen/layout.ts`](game/engine/core/src/worldgen/layout.md)
-- [`game/engine/core/src/worldgen/maze.ts`](game/engine/core/src/worldgen/maze.md)
+- [`game/engine/core/src/worldgen/generators/caves.ts`](game/engine/core/src/worldgen/generators/caves.md)
+- [`game/engine/core/src/worldgen/generators/generate.ts`](game/engine/core/src/worldgen/generators/generate.md)
+- [`game/engine/core/src/worldgen/generators/layout.ts`](game/engine/core/src/worldgen/generators/layout.md)
+- [`game/engine/core/src/worldgen/generators/maze.ts`](game/engine/core/src/worldgen/generators/maze.md)
+- [`game/engine/core/src/worldgen/generators/rooms.ts`](game/engine/core/src/worldgen/generators/rooms.md)
+- [`game/engine/core/src/worldgen/generators/select.ts`](game/engine/core/src/worldgen/generators/select.md)
+- [`game/engine/core/src/worldgen/generators/sprawl.ts`](game/engine/core/src/worldgen/generators/sprawl.md)
+- [`game/engine/core/src/worldgen/generators/tiles.ts`](game/engine/core/src/worldgen/generators/tiles.md)
 - [`game/engine/core/src/worldgen/populate.ts`](game/engine/core/src/worldgen/populate.md)
-- [`game/engine/core/src/worldgen/rooms.ts`](game/engine/core/src/worldgen/rooms.md)
-- [`game/engine/core/src/worldgen/select.ts`](game/engine/core/src/worldgen/select.md)
-- [`game/engine/core/src/worldgen/sprawl.ts`](game/engine/core/src/worldgen/sprawl.md)
 - [`game/engine/core/src/worldgen/structures.ts`](game/engine/core/src/worldgen/structures.md)
-- [`game/engine/core/src/worldgen/tiles.ts`](game/engine/core/src/worldgen/tiles.md)
 
 ## 被引用
 

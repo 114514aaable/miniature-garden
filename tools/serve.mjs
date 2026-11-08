@@ -49,7 +49,7 @@ import { applyWriteRules } from "../game/systems/host/writes.ts";
 import { baseWriteRules } from "../game/systems/host/base-rules.ts";
 import { advanceTo as hostAdvanceTo } from "../game/systems/host/advance.ts";
 import { captureEntities, diffEntities } from "../game/systems/host/frames.ts";
-import { clampSize } from "../game/engine/core/src/worldgen/generate.ts";
+import { clampSize } from "../game/engine/core/src/worldgen/generators/generate.ts";
 import { createSandbox, runPipeline } from "../game/engine/core/src/worldgen/pipeline.ts";
 import { loadStructures } from "./worldgen-structures.mjs";
 import { offsetsOf } from "../game/engine/core/src/traversal/shapes.ts";

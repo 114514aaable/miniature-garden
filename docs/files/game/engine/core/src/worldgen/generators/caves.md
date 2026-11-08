@@ -1,4 +1,4 @@
-# `game/engine/core/src/worldgen/caves.ts`
+# `game/engine/core/src/worldgen/generators/caves.ts`
 
 ## 内容
 

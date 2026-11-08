@@ -12,8 +12,8 @@
  * 门连接是自动的：相邻两格都开同一条边，门就在边界上对齐。
  */
 
-import { makeRandom } from "./random.ts";
-import { stampStructure, type SpawnRequest, type StructureDef } from "./structures.ts";
+import { makeRandom } from "../random.ts";
+import { stampStructure, type SpawnRequest, type StructureDef } from "../structures.ts";
 
 /** 四方向。 */
 const SIDES = ["north", "east", "south", "west"] as const;

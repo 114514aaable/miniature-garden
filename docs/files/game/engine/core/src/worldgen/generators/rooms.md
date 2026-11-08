@@ -1,4 +1,4 @@
-# `game/engine/core/src/worldgen/rooms.ts`
+# `game/engine/core/src/worldgen/generators/rooms.ts`
 
 ## 内容
 

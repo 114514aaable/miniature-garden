@@ -1,4 +1,4 @@
-# `game/engine/core/src/worldgen/tiles.ts`
+# `game/engine/core/src/worldgen/generators/tiles.ts`
 
 ## 内容
 
@@ -61,6 +61,6 @@ interface TilePlacement {
 
 ## 被引用
 
-- [`game/engine/core/src/worldgen/layout.ts`](game/engine/core/src/worldgen/layout.md)
+- [`game/engine/core/src/worldgen/generators/layout.ts`](game/engine/core/src/worldgen/generators/layout.md)
+- [`game/engine/core/src/worldgen/generators/sprawl.ts`](game/engine/core/src/worldgen/generators/sprawl.md)
 - [`game/engine/core/src/worldgen/pipeline.ts`](game/engine/core/src/worldgen/pipeline.md)
-- [`game/engine/core/src/worldgen/sprawl.ts`](game/engine/core/src/worldgen/sprawl.md)

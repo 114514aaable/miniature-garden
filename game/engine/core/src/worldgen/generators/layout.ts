@@ -12,9 +12,9 @@
  * 这样大房间（2×2、3×2）和走廊能混在一张图里。
  */
 
-import { makeRandom } from "./random.ts";
+import { makeRandom } from "../random.ts";
 import { bestRotation } from "./tiles.ts";
-import { stampStructure, type SpawnRequest, type StructureDef } from "./structures.ts";
+import { stampStructure, type SpawnRequest, type StructureDef } from "../structures.ts";
 
 export interface LayoutSpec {
   /** 走廊格可用的 7×7 件。 */

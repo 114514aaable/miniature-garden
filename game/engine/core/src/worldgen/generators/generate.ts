@@ -10,7 +10,7 @@
  * 尺寸上限 200×200——再大就不是「故事地图」而是沙盒了。
  */
 
-import { noiseOf, type NoiseKind } from "./noise.ts";
+import { noiseOf, type NoiseKind } from "../noise.ts";
 import { pickBiome, terrainFor, type Biome } from "./select.ts";
 
 export const MAX_SIZE = 200;

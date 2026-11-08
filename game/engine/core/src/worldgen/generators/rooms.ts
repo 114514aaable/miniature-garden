@@ -18,8 +18,8 @@
  * 大房间不是「占 2×2 格」，而是「一个带 N 扇门的节点」。
  */
 
-import { makeRandom } from "./random.ts";
-import { stampStructure, type SpawnRequest, type StructureDef } from "./structures.ts";
+import { makeRandom } from "../random.ts";
+import { stampStructure, type SpawnRequest, type StructureDef } from "../structures.ts";
 
 export interface Rect {
   readonly x: number;

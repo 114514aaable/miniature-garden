@@ -9,7 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { placeLayout } from "./layout.ts";
-import { parseStructure, resolveStructures, type RawStructure, type StructureDef } from "./structures.ts";
+import { parseStructure, resolveStructures, type RawStructure, type StructureDef } from "../structures.ts";
 
 const IDS = new Map([
   ["wall", 1],

@@ -13,9 +13,9 @@
  * 和 rooms/layout 的区别：那两个贴网格，这个完全不贴。
  */
 
-import { makeRandom } from "./random.ts";
+import { makeRandom } from "../random.ts";
 import { rotateStructure } from "./tiles.ts";
-import { stampStructure, type SpawnRequest, type StructureDef } from "./structures.ts";
+import { stampStructure, type SpawnRequest, type StructureDef } from "../structures.ts";
 
 export interface SprawlSpec {
   /** 候选房间件（role = room，尺寸随意）。 */

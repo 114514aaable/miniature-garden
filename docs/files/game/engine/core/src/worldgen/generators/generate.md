@@ -1,4 +1,4 @@
-# `game/engine/core/src/worldgen/generate.ts`
+# `game/engine/core/src/worldgen/generators/generate.ts`
 
 ## 内容
 
@@ -73,8 +73,8 @@ const MIN_SIZE
 
 ## 依赖
 
+- [`game/engine/core/src/worldgen/generators/select.ts`](game/engine/core/src/worldgen/generators/select.md)
 - [`game/engine/core/src/worldgen/noise.ts`](game/engine/core/src/worldgen/noise.md)
-- [`game/engine/core/src/worldgen/select.ts`](game/engine/core/src/worldgen/select.md)
 
 ## 被引用
 

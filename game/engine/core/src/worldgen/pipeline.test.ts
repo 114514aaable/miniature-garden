@@ -9,7 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { CAVE_LAYER, createSandbox, runPipeline, type Step } from "./pipeline.ts";
-import type { Biome } from "./select.ts";
+import type { Biome } from "./generators/select.ts";
 
 const IDS = new Map([
   ["floor", 3],

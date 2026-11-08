@@ -14,16 +14,16 @@
  *   - 全部纯函数 + 确定性，同一份输入永远同一张图。
  */
 
-import { generateCaves } from "./caves.ts";
-import { generateMaze } from "./maze.ts";
+import { generateCaves } from "./generators/caves.ts";
+import { generateMaze } from "./generators/maze.ts";
 import { placeStructures, type SpawnRequest, type StructureDef } from "./structures.ts";
-import { placeRooms } from "./rooms.ts";
-import { placeTiles } from "./tiles.ts";
-import { placeLayout } from "./layout.ts";
-import { placeSprawl } from "./sprawl.ts";
+import { placeRooms } from "./generators/rooms.ts";
+import { placeTiles } from "./generators/tiles.ts";
+import { placeLayout } from "./generators/layout.ts";
+import { placeSprawl } from "./generators/sprawl.ts";
 import { populate } from "./populate.ts";
-import { generateTerrain, type FieldConfig } from "./generate.ts";
-import type { Biome } from "./select.ts";
+import { generateTerrain, type FieldConfig } from "./generators/generate.ts";
+import type { Biome } from "./generators/select.ts";
 
 export interface Sandbox {
   readonly seed: number;

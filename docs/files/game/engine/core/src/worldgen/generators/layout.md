@@ -1,4 +1,4 @@
-# `game/engine/core/src/worldgen/layout.ts`
+# `game/engine/core/src/worldgen/generators/layout.ts`
 
 ## 内容
 
@@ -55,9 +55,9 @@ function placeLayout( terrain: number[], width: number, height: number, defs: Re
 
 ## 依赖
 
+- [`game/engine/core/src/worldgen/generators/tiles.ts`](game/engine/core/src/worldgen/generators/tiles.md)
 - [`game/engine/core/src/worldgen/random.ts`](game/engine/core/src/worldgen/random.md)
 - [`game/engine/core/src/worldgen/structures.ts`](game/engine/core/src/worldgen/structures.md)
-- [`game/engine/core/src/worldgen/tiles.ts`](game/engine/core/src/worldgen/tiles.md)
 
 ## 被引用
 

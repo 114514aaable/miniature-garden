@@ -414,7 +414,7 @@ anchors    门：坐标 + 朝向
 
 - 整张图先填墙，再由房间和走廊挖出来；
 - 连通性有测试（洪水填充必须走到每个房间）；
-- 实现：`worldgen/rooms.ts`，流水线 `rooms` 阶段。
+- 实现：`worldgen/generators/rooms.ts`，流水线 `rooms` 阶段。
 
 ### 迷宫（maze）
 
@@ -426,7 +426,7 @@ anchors    门：坐标 + 朝向
 - `braid`：死胡同被打通的比例（0 = 完美迷宫，1 = 处处环路）；
 - 保证连通：任何一格都能走到任何一格（有测试，洪水填充验证）；
 - 确定性：随机只来自 `(seed, 偏移)`；
-- 实现：`worldgen/maze.ts`，流水线 `maze` 阶段；
+- 实现：`worldgen/generators/maze.ts`，流水线 `maze` 阶段；
 - 迷宫通道窄，`place` 的结构（5×5）几乎放不下——要放结构得先有房间。
 
 ### 结构已经可以摆了（第一批）

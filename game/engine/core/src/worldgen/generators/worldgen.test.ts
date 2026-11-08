@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { fbm, NOISE_KINDS, noiseOf, ridged, valueNoise } from "./noise.ts";
+import { fbm, NOISE_KINDS, noiseOf, ridged, valueNoise } from "../noise.ts";
 import { matchesRange, pickBiome, terrainFor, type Biome } from "./select.ts";
 
 test("同样的输入永远同样的值", () => {

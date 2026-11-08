@@ -348,12 +348,12 @@ game/systems/render/*（投影成画面数据）
   - `mirror(offsets: readonly Offset[], axis: "x" | "y" | "both" = "x") → Offset[]`
   - `translate(offsets: readonly Offset[], dx: number, dy: number) → Offset[]`
   - `keep(offsets: readonly Offset[], predicate: (offset: Offset) => boolean) → Offset[]`
-- **`game/engine/core/src/worldgen/caves.ts`**（244 行）
+- **`game/engine/core/src/worldgen/generators/caves.ts`**（244 行）
   元胞地牢：元胞自动机（cellular automata）挖洞穴。
   - `generateCaves(options: CavesOptions) → CavesResult`
   - `interface CavesOptions`
   - `interface CavesResult`
-- **`game/engine/core/src/worldgen/generate.ts`**（106 行）
+- **`game/engine/core/src/worldgen/generators/generate.ts`**（106 行）
   生成一片地形：种子 + 尺寸 + 场参数 + 群系 → 地形号数组。
   - `clampSize(value: number) → number`
   - `generateTerrain(options: GenerateOptions) → GenerateResult`
@@ -362,16 +362,46 @@ game/systems/render/*（投影成画面数据）
   - `interface GenerateResult`
   - `const MAX_SIZE`
   - `const MIN_SIZE`
-- **`game/engine/core/src/worldgen/layout.ts`**（379 行）
+- **`game/engine/core/src/worldgen/generators/layout.ts`**（379 行）
   布局：在 meta 网格上摆「房间」和「走廊」，边决定门口。
   - `placeLayout(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, spec: LayoutSpec, seed: number, terrainIdByCode: ReadonlyMap<string, number>,) → LayoutResult`
   - `interface LayoutSpec`
   - `interface LayoutRoom`
   - `interface LayoutResult`
-- **`game/engine/core/src/worldgen/maze.ts`**（136 行）
+- **`game/engine/core/src/worldgen/generators/maze.ts`**（136 行）
   迷宫生成（迭代回溯 + 可选编织）。
   - `generateMaze(config: MazeConfig) → number[]`
   - `interface MazeConfig`
+- **`game/engine/core/src/worldgen/generators/rooms.ts`**（414 行）
+  房间布局：BSP 摆房间 → 门当顶点 → 修走廊把门连起来。
+  - `partition(width: number, height: number, minSize: readonly [number, number], seed: number, inset = 1,) → Rect[]`
+  - `placeRooms(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, spec: RoomSpec, seed: number, terrainIdByCode: ReadonlyMap<string, number>, codeOfTerrain: (terrainId: number) => string | undefined,)`
+  - `interface Rect`
+  - `interface RoomDoor`
+  - `interface RoomSpec`
+  - `interface RoomPlacement`
+- **`game/engine/core/src/worldgen/generators/select.ts`**（74 行）
+  选：把「若干场」翻译成「群系」，再把群系翻译成「地形」。
+  - `matchesRange(range: BiomeRange, sample: Sample) → boolean`
+  - `pickBiome(biomes: readonly Biome[], sample: Sample) → Biome | null`
+  - `terrainFor(biome: Biome, height: number, levels: TerrainLevels = {}) → string | null`
+  - `interface BiomeRange`
+  - `interface Biome`
+  - `interface TerrainLevels`
+  - `type Sample`
+- **`game/engine/core/src/worldgen/generators/sprawl.ts`**（350 行）
+  散落地牢：房间自由摆放 + 房间图 + 绕路 + 走廊加宽。
+  - `placeSprawl(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, spec: SprawlSpec, seed: number, terrainIdByCode: ReadonlyMap<string, number>,)`
+  - `interface SprawlSpec`
+  - `interface SprawlRoom`
+- **`game/engine/core/src/worldgen/generators/tiles.ts`**（289 行）
+  拼贴：把 7×7 的房间件按「门口」贴成一张图。
+  - `rotateStructure(def: StructureDef) → StructureDef`
+  - `portsOf(def: StructureDef) → Set<Side>`
+  - `findRotation(def: StructureDef, required: ReadonlySet<Side>, boundary: ReadonlySet<Side> = new Set(),) → StructureDef | null`
+  - `bestRotation(def: StructureDef, required: ReadonlySet<Side>, boundary: ReadonlySet<Side> = new Set(),)`
+  - `placeTiles(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, ids: readonly string[], seed: number, terrainIdByCode: ReadonlyMap<string, number>,)`
+  - `interface TilePlacement`
 - **`game/engine/core/src/worldgen/noise.ts`**（112 行）
   噪声：把「种子 + 坐标」变成 0..1 的值。
   - `cellRandom(seed: number, x: number, y: number) → number`
@@ -401,28 +431,6 @@ game/systems/render/*（投影成画面数据）
   生成器共用的小随机：只依赖种子，不读时钟。
   - `makeRandom(seed: number) → () => number`
   - `randomInt(rand: () => number, min: number, max: number) → number`
-- **`game/engine/core/src/worldgen/rooms.ts`**（414 行）
-  房间布局：BSP 摆房间 → 门当顶点 → 修走廊把门连起来。
-  - `partition(width: number, height: number, minSize: readonly [number, number], seed: number, inset = 1,) → Rect[]`
-  - `placeRooms(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, spec: RoomSpec, seed: number, terrainIdByCode: ReadonlyMap<string, number>, codeOfTerrain: (terrainId: number) => string | undefined,)`
-  - `interface Rect`
-  - `interface RoomDoor`
-  - `interface RoomSpec`
-  - `interface RoomPlacement`
-- **`game/engine/core/src/worldgen/select.ts`**（74 行）
-  选：把「若干场」翻译成「群系」，再把群系翻译成「地形」。
-  - `matchesRange(range: BiomeRange, sample: Sample) → boolean`
-  - `pickBiome(biomes: readonly Biome[], sample: Sample) → Biome | null`
-  - `terrainFor(biome: Biome, height: number, levels: TerrainLevels = {}) → string | null`
-  - `interface BiomeRange`
-  - `interface Biome`
-  - `interface TerrainLevels`
-  - `type Sample`
-- **`game/engine/core/src/worldgen/sprawl.ts`**（350 行）
-  散落地牢：房间自由摆放 + 房间图 + 绕路 + 走廊加宽。
-  - `placeSprawl(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, spec: SprawlSpec, seed: number, terrainIdByCode: ReadonlyMap<string, number>,)`
-  - `interface SprawlSpec`
-  - `interface SprawlRoom`
 - **`game/engine/core/src/worldgen/structures.ts`**（496 行）
   结构：带图例的字符画，摆进生成出来的地图里。
   - `parseStructure(raw: unknown, idKey: string) → RawStructure`
@@ -436,14 +444,6 @@ game/systems/render/*（投影成画面数据）
   - `interface PlaceSpec`
   - `interface Placement`
   - `interface SpawnRequest`
-- **`game/engine/core/src/worldgen/tiles.ts`**（289 行）
-  拼贴：把 7×7 的房间件按「门口」贴成一张图。
-  - `rotateStructure(def: StructureDef) → StructureDef`
-  - `portsOf(def: StructureDef) → Set<Side>`
-  - `findRotation(def: StructureDef, required: ReadonlySet<Side>, boundary: ReadonlySet<Side> = new Set(),) → StructureDef | null`
-  - `bestRotation(def: StructureDef, required: ReadonlySet<Side>, boundary: ReadonlySet<Side> = new Set(),)`
-  - `placeTiles(terrain: number[], width: number, height: number, defs: ReadonlyMap<string, StructureDef>, ids: readonly string[], seed: number, terrainIdByCode: ReadonlyMap<string, number>,)`
-  - `interface TilePlacement`
 
 ### 系统 game/systems
 
