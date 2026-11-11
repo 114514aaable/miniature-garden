@@ -482,9 +482,8 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
     writeRules: [...baseWriteRules],
     scenes,
     devlog: new DevLog(),
+    generationNote,
   };
-
-  session.generationNote = generationNote;
 }
 
 // ── 快照 ────────────────────────────────────────────────
@@ -746,7 +745,7 @@ function sceneCommand(command) {
     else if (next.op === "replace" && typeof next.id === "string") session.scenes.replace(next.id, next.params ?? {});
   }
 
-  applyEffects(session.store, result.effects ?? [], { source: "scene" }, session.effectInterceptors, resolveEntityWrite);
+  applyEffects(session.store, result.effects ?? [], { source: "scene" }, session.effectInterceptors, resolveEntityWrite, readComponentForWrite);
 
   return { ok: true };
 }
@@ -774,6 +773,16 @@ function resolveDeath(handle) {
   }
 
   return [{ kind: "despawn", handle }];
+}
+
+/** 给写规则读 before：实体没了就按 null 处理。 */
+function readComponentForWrite(handle, component) {
+  try {
+    const value = currentView().entity(handle).components[component];
+    return value ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function resolveEntityWrite(write) {
@@ -1236,7 +1245,7 @@ function run(tag, params, costKey) {
   }
 
   const effects = collectEffects(result.value);
-  applyEffects(session.store, effects, { source: "skill", tag, actor: session.playerHandle ?? undefined }, session.effectInterceptors, resolveEntityWrite);
+  applyEffects(session.store, effects, { source: "skill", tag, actor: session.playerHandle ?? undefined }, session.effectInterceptors, resolveEntityWrite, readComponentForWrite);
 
   // 动作生效，然后世界推进到玩家下次能行动为止（敌人会在这段里行动）。
   // 注意：成本不看「有没有效果」——等待就是不产生效果但照样花时间。
@@ -1368,6 +1377,7 @@ function resolvePending() {
         { source: "pending", tag: String(pending.tag), target: entity.handle },
         session.effectInterceptors,
         resolveEntityWrite,
+        readComponentForWrite,
       );
     }
 
@@ -1440,6 +1450,7 @@ function enemyAct(handle) {
       { source: "enemy", tag: next.tag, actor: handle, target: session.playerHandle ?? undefined },
       session.effectInterceptors,
       resolveEntityWrite,
+      readComponentForWrite,
     );
   } else {
     session.devlog.action(session.store.now(), `敌人 ${handle} 动不了`, {
