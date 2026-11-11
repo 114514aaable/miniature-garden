@@ -31,7 +31,7 @@ import { clampCost, costOf, DEFAULT_CLOCK, MAX_ACTION_COST } from "../game/engin
 import { MAX_SEQUENCE_TICKS } from "../game/engine/core/src/event/registry.ts";
 import { Scheduler } from "../game/engine/core/src/rules/scheduler.ts";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, unlinkSync, writeFileSync } from "node:fs";
-import { extname, resolve } from "node:path";
+import { extname, isAbsolute, relative, resolve } from "node:path";
 import { createProjector } from "../game/systems/render/project.ts";
 import { buildGraph } from "../game/engine/core/src/pack/graph.ts";
 import { DevLog, formatLine } from "../game/systems/log/devlog.ts";
@@ -706,6 +706,7 @@ function sceneView() {
 
 /** 读一个对话脚本（世界包里的 dialogs/*.json）。 */
 function loadDialogScript(scriptId) {
+  if (!/^[a-z0-9_-]+$/.test(scriptId)) throw new Error("对话脚本 id 非法");
   const world = session.world ?? "";
   const path = "game/worlds/" + world + "/dialogs/" + scriptId + ".json";
   const raw = JSON.parse(readFileSync(path, "utf8"));
@@ -1521,7 +1522,18 @@ function listWorlds() {
   );
 }
 
+/** 只允许落在 root 里的相对路径（防 %5C 逃逸到同前缀目录）。 */
+function resolveInside(root, parts) {
+  const file = resolve(root, ...parts);
+  const rel = relative(root, file);
+  if (rel === "" || rel.startsWith("..") || isAbsolute(rel)) {
+    throw new Error("forbidden");
+  }
+  return file;
+}
+
 function readWorld(id) {
+  if (!/^[a-z0-9]{1,32}$/.test(String(id))) return null;
   try {
     return JSON.parse(readFileSync(worldDir(id) + "/world.json", "utf8"));
   } catch {
@@ -1767,10 +1779,22 @@ function messageOf(error) {
   return error instanceof Error ? error.message : String(error);
 }
 
+const MAX_BODY = 1024 * 1024;
+
 function readBody(request) {
   return new Promise((resolve, reject) => {
     let body = "";
+    let size = 0;
     request.on("data", (chunk) => {
+      size += chunk.length;
+      if (size > MAX_BODY) {
+        const error = new Error("请求体超过 1MB");
+        error.status = 413;
+        reject(error);
+        request.removeAllListeners("data");
+        request.resume();
+        return;
+      }
       body += chunk;
     });
     request.on("end", () => {
@@ -1786,6 +1810,22 @@ function readBody(request) {
 
 const server = createServer(async (request, response) => {
   try {
+    if (request.method === "POST") {
+      const type = String(request.headers["content-type"] ?? "").toLowerCase();
+      if (!type.startsWith("application/json")) {
+        response.writeHead(415);
+        response.end("json required");
+        return;
+      }
+
+      const origin = request.headers.origin;
+      const host = request.headers.host;
+      if (origin !== undefined && host !== undefined && !origin.endsWith("//" + host)) {
+        response.writeHead(403);
+        response.end("cross-origin blocked");
+        return;
+      }
+    }
     if (request.url === "/") {
       response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
       response.end(renderPage(LAUNCHER_PAGE));
@@ -1928,9 +1968,10 @@ const server = createServer(async (request, response) => {
         return;
       }
 
-      const root = resolve("game/worlds", pack, "art");
-      const file = resolve(root, ...rest);
-      if (!file.startsWith(root)) {
+      let file;
+      try {
+        file = resolveInside(resolve("game/worlds", pack, "art"), rest);
+      } catch {
         response.writeHead(403);
         response.end("forbidden");
         return;
@@ -1981,9 +2022,10 @@ const server = createServer(async (request, response) => {
     if (request.url.startsWith("/web/")) {
       // 构建产物每次重启都可能变，别让浏览器吃旧缓存
       const relative = request.url.slice("/web/".length).split("?")[0];
-      const root = resolve("web");
-      const file = resolve(root, relative);
-      if (!file.startsWith(root)) {
+      let file;
+      try {
+        file = resolveInside(resolve("web"), [relative]);
+      } catch {
         response.writeHead(403);
         response.end("forbidden");
         return;
@@ -2161,7 +2203,8 @@ const server = createServer(async (request, response) => {
     response.end("not found");
   } catch (error) {
     console.error(error);
-    response.writeHead(500, { "content-type": "application/json; charset=utf-8" });
+    const status = typeof error?.status === "number" ? error.status : 500;
+    response.writeHead(status, { "content-type": "application/json; charset=utf-8" });
     response.end(JSON.stringify({ error: messageOf(error) }));
   }
 });
