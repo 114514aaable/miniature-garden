@@ -43,8 +43,11 @@ node tools/serve.mjs            # 启动器：列出 worlds/ 下的世界
 **测试与类型检查**：
 
 ```bash
-node --test --test-isolation=none         # 259 个测试（仓库根目录）
-node tools/typecheck.mjs                  # 0 个错误；需要 TSC_PATH 指向 typescript
+npm install                     # 只装 devDependency：typescript
+npm test                        # 642 个测试
+npm run typecheck               # 0 个错误
+npm run check                   # 类型 + 测试 + 客户端 + 数据 + 语言 + 构建
+npm run smoke                   # 真起服务：开局 → 动作 → 存档 → 读档 → 继续
 ```
 
 Node 24 能直接运行 `.ts`，不需要编译，引擎零依赖。

@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 119 个文件。
+共 122 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -76,6 +76,7 @@
 | `game/systems/host/base-rules.ts` | 基础数据写规则：核心血量的 hp 夹在 0..max，写到 0 视为致死。 | [md](game/systems/host/base-rules.md) |
 | `game/systems/host/effects.ts` | 宿主的「效果入口」：规则 / 场景产出的效果，统一从这里落进 store。 | [md](game/systems/host/effects.md) |
 | `game/systems/host/frames.ts` | 帧：把「这一 tick 的投影实体」和「上一 tick」做 diff。 | [md](game/systems/host/frames.md) |
+| `game/systems/host/rules.ts` | 世界声明哪些规则，就只启用哪些规则。 | [md](game/systems/host/rules.md) |
 | `game/systems/host/writes.ts` | 数据写规则：按「参数名 + 变化方式」描述，而不是写死某个血量。 | [md](game/systems/host/writes.md) |
 | `game/systems/i18n/i18n.ts` | i18n：界面文字走 key，不写死在代码里。 | [md](game/systems/i18n/i18n.md) |
 | `game/systems/input/bindings.ts` | 按键映射：`event.code` → 命令字符串。 | [md](game/systems/input/bindings.md) |
@@ -101,6 +102,7 @@
 | `game/systems/ui/spec.ts` | UI 描述：一组纯数据，能单测，不碰 DOM。 | [md](game/systems/ui/spec.md) |
 | `tools/build-web.mjs` | 把 TS 转成浏览器能跑的 JS（构建产物放 web/）。 | [md](tools/build-web.md) |
 | `tools/check-client.mjs` | 页面脚本的「有没有调用不存在的函数」检查。 | [md](tools/check-client.md) |
+| `tools/check-client.test.mjs` | 客户端检查器的自测：CSS / 正则不算函数调用，真缺失要报。 | [md](tools/check-client.test.md) |
 | `tools/check-data.mjs` | 数据体检：数据化之后，规则要的字段，包里到底有没有。 | [md](tools/check-data.md) |
 | `tools/check-locale.mjs` | 语言包体检：包里每个 id 都应该有名字。 | [md](tools/check-locale.md) |
 | `tools/client/game.js` |  | [md](tools/client/game.md) |
@@ -125,5 +127,6 @@
 | `tools/pages.mjs` | 两个页面：启动器和游戏。 | [md](tools/pages.md) |
 | `tools/play.mjs` | 从文件夹加载一个世界并画出来（宿主侧）。 | [md](tools/play.md) |
 | `tools/serve.mjs` | 调试台 / 启动器（宿主侧）。 | [md](tools/serve.md) |
+| `tools/smoke.mjs` | HTTP 冒烟：真实起一个 serve，走「开局 → 动作 → 存档 → 读档 → 继续」。 | [md](tools/smoke.md) |
 | `tools/typecheck.mjs` | 离线类型检查。 | [md](tools/typecheck.md) |
 | `tools/worldgen-structures.mjs` | 读一个世界的「结构」定义（生成期数据，不进运行时加载）。 | [md](tools/worldgen-structures.md) |

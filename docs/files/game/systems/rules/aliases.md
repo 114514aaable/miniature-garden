@@ -37,4 +37,6 @@ function resolveTags(tags: readonly string[]): string[]
 
 ## 被引用
 
+- [`game/systems/config/config.ts`](game/systems/config/config.md)
+- [`game/systems/host/rules.ts`](game/systems/host/rules.md)
 - [`tools/serve.mjs`](tools/serve.md)

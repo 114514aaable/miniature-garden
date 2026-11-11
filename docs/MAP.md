@@ -151,7 +151,7 @@ game/systems/render/*（投影成画面数据）
 - **`game/engine/core/src/pack/init.ts`**（73 行）
   开局初始化：世界建好之后，按顺序执行世界包声明的 init。
   - `applyInit(store: Store, loaded: LoadedWorld) → void`
-- **`game/engine/core/src/pack/load.ts`**（345 行）
+- **`game/engine/core/src/pack/load.ts`**（348 行）
   加载器：把合并后的内容池变成运行时对象。
   - `loadWorld(merged: MergedWorld, components: readonly ComponentSpec[] = [],) → LoadedWorld`
   - `interface ComponentSpec`
@@ -231,7 +231,7 @@ game/systems/render/*（投影成画面数据）
   - `strikeHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
   - `const windupSignature`
   - `const strikeSignature`
-- **`game/engine/core/src/rules/inventory.ts`**（113 行）
+- **`game/engine/core/src/rules/inventory.ts`**（117 行）
   物品栏规则：捡起、放下。
   - `takeHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
   - `dropHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
@@ -304,7 +304,7 @@ game/systems/render/*（投影成画面数据）
   - `line(dx: number, dy: number, length: number) → Offset[]`
   - `const ORTHOGONAL`
   - `const DIAGONAL`
-- **`game/engine/core/src/store.ts`**（445 行）
+- **`game/engine/core/src/store.ts`**（465 行）
   Store：世界状态的唯一写入口。
   - `interface WorldState`
   - `interface TemplateSource`
@@ -472,7 +472,7 @@ game/systems/render/*（投影成画面数据）
   - `interface Viewport`
   - `interface MapSize`
   - `type CameraMode`
-- **`game/systems/config/config.ts`**（161 行）
+- **`game/systems/config/config.ts`**（165 行）
   界面配置：所有「可能想调」的东西集中在这里。
   - `clampFrameMs(value: number) → number`
   - `clampChargeMs(value: number) → number`
@@ -494,9 +494,9 @@ game/systems/render/*（投影成画面数据）
 - **`game/systems/host/base-rules.ts`**（23 行）
   基础数据写规则：核心血量的 hp 夹在 0..max，写到 0 视为致死。
   - `const baseWriteRules`
-- **`game/systems/host/effects.ts`**（105 行）
+- **`game/systems/host/effects.ts`**（109 行）
   宿主的「效果入口」：规则 / 场景产出的效果，统一从这里落进 store。
-  - `applyEffects(sink: EffectSink, effects: readonly Effect[], meta: EffectMeta = { source: "system" }, interceptors: readonly EffectInterceptor[] = [], resolveWrite: WriteResolver | null = null,) → void`
+  - `applyEffects(sink: EffectSink, effects: readonly Effect[], meta: EffectMeta = { source: "system" }, interceptors: readonly EffectInterceptor[] = [], resolveWrite: WriteResolver | null = null, readBefore: BeforeReader | null = null,) → void`
   - `interface EffectSink`
   - `interface EffectMeta`
   - `interface EntityWrite`
@@ -504,6 +504,7 @@ game/systems/render/*（投影成画面数据）
   - `type EffectSource`
   - `type EffectInterceptor`
   - `type WriteResolver`
+  - `type BeforeReader`
 - **`game/systems/host/frames.ts`**（77 行）
   帧：把「这一 tick 的投影实体」和「上一 tick」做 diff。
   - `captureEntities(projector: Projector, source: ProjectionSource, tick: number,) → Map<number, unknown>`
@@ -511,6 +512,9 @@ game/systems/render/*（投影成画面数据）
   - `interface Frame`
   - `interface FrameEvent`
   - `interface ProjectionSource`
+- **`game/systems/host/rules.ts`**（42 行）
+  世界声明哪些规则，就只启用哪些规则。
+  - `interface RuleLike`
 - **`game/systems/host/writes.ts`**（100 行）
   数据写规则：按「参数名 + 变化方式」描述，而不是写死某个血量。
   - `applyWriteRules(rules: readonly WriteRule[], write: EntityWrite,) → WriteOutcome | null`
@@ -568,7 +572,7 @@ game/systems/render/*（投影成画面数据）
   - `frameOf(atlas: Atlas, name: string) → AtlasFrame | undefined`
   - `interface AtlasFrame`
   - `interface Atlas`
-- **`game/systems/render/browser.ts`**（315 行）
+- **`game/systems/render/browser.ts`**（321 行）
   浏览器侧的渲染器：拿快照、自己跑 60fps、自己插值。
   - `attach(canvas: HTMLCanvasElement, options: ClientOptions) → Renderer`
   - `interface ClientState`
@@ -690,7 +694,7 @@ game/systems/render/*（投影成画面数据）
 
 ### 页面脚本 tools/client
 
-- **`tools/client/game.js`**（967 行）
+- **`tools/client/game.js`**（986 行）
   import { api } from '/client/shared.js';
 - **`tools/client/hud/aim.js`**（62 行）
   瞄准高亮：记住「鼠标在哪、当前选了什么技能」，随时可以重算。
@@ -711,7 +715,7 @@ game/systems/render/*（投影成画面数据）
 - **`tools/client/hud/status.js`**（32 行）
   左下区域：状态（血量条 + 计数 + 可否行动）。
   - `renderStatus(state)`
-- **`tools/client/launcher.js`**（488 行）
+- **`tools/client/launcher.js`**（506 行）
   import { modal, col, row, text, button, input, field } from '/web/game/systems/ui/spec.js';
 - **`tools/client/shared.js`**（35 行）
   页面共用：错误提示 + API 调用。
@@ -727,8 +731,13 @@ game/systems/render/*（投影成画面数据）
 
 - **`tools/build-web.mjs`**（87 行）
   把 TS 转成浏览器能跑的 JS（构建产物放 web/）。
-- **`tools/check-client.mjs`**（108 行）
+- **`tools/check-client.mjs`**（230 行）
   页面脚本的「有没有调用不存在的函数」检查。
+  - `stripNonCode(source)`
+  - `scanSource(source)`
+  - `const FILES`
+- **`tools/check-client.test.mjs`**（57 行）
+  客户端检查器的自测：CSS / 正则不算函数调用，真缺失要报。
 - **`tools/check-data.mjs`**（147 行）
   数据体检：数据化之后，规则要的字段，包里到底有没有。
 - **`tools/check-locale.mjs`**（99 行）
@@ -762,8 +771,10 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（2164 行）
+- **`tools/serve.mjs`**（2236 行）
   调试台 / 启动器（宿主侧）。
+- **`tools/smoke.mjs`**（160 行）
+  HTTP 冒烟：真实起一个 serve，走「开局 → 动作 → 存档 → 读档 → 继续」。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。
 - **`tools/worldgen-structures.mjs`**（71 行）

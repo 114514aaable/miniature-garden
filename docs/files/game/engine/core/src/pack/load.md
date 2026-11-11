@@ -10,7 +10,7 @@
 4. 整体校验：引用闭合、坐标合法、地形都已声明、出生点能站；
 5. 收集世界启用的规则标签——包负责选，宿主负责实现。
 
-行数：345
+行数：348
 
 ## 接口
 
@@ -46,6 +46,7 @@ interface LoadedWorld {
   readonly startWarning?: string;
   readonly spaceIds: ReadonlyMap<string, SpaceId>;
   readonly rules: readonly string[];
+  readonly rulesExplicit: boolean;
   readonly init: readonly JsonValue[];
   readonly persistence: { readonly activeRadius: number; readonly sweepEvery: number };
   readonly traversal: TraversalSpec;
@@ -53,7 +54,6 @@ interface LoadedWorld {
   readonly groups: ReadonlyMap<string, GroupDef>;
   readonly bodyParts: ReadonlyMap<string, BodyPartDef>;
   readonly bodyPlans: ReadonlyMap<string, ResolvedBodyPlan>;
-  readonly onConflict: ConflictPolicy;
 }
 ```
 

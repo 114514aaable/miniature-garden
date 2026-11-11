@@ -9,7 +9,7 @@
 - 以后加设置项，只改这个文件 + 设置面板的一行。
 这里只放**表现层**的东西。玩法参数（时钟成本、伤害公式）在世界包里，不放这。
 
-行数：161
+行数：165
 
 ## 接口
 
@@ -106,7 +106,8 @@ function withConfig(config: Config, patch: Partial<Config>): Config
 
 ## 依赖
 
-（无）
+- [`game/systems/input/bindings.ts`](game/systems/input/bindings.md)
+- [`game/systems/rules/aliases.ts`](game/systems/rules/aliases.md)
 
 ## 被引用
 

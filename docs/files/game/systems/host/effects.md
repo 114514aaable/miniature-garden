@@ -13,14 +13,20 @@
 2  数据写拦截器：实体某个属性组要被写时，问一句「谁接管」
 —— 接管方标记 consume，然后给出替代写；替代写直接落库，不再拦
 
-行数：105
+行数：109
 
 ## 接口
 
 ### 函数 `applyEffects`
 
 ```ts
-function applyEffects( sink: EffectSink, effects: readonly Effect[], meta: EffectMeta = { source: "system" }, interceptors: readonly EffectInterceptor[] = [], resolveWrite: WriteResolver | null = null, ): void
+function applyEffects( sink: EffectSink, effects: readonly Effect[], meta: EffectMeta = { source: "system" }, interceptors: readonly EffectInterceptor[] = [], resolveWrite: WriteResolver | null = null, readBefore: BeforeReader | null = null, ): void
+```
+
+### 类型 `BeforeReader`
+
+```ts
+type BeforeReader = (handle: number, component: string) => unknown
 ```
 
 ### 类型 `EffectInterceptor`

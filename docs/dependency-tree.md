@@ -6,9 +6,9 @@
 
 | 层 | 文件数 |
 |---|---|
-| 内核 | 110 |
-| 系统 | 51 |
-| 宿主工具 | 18 |
+| 内核 | 113 |
+| 系统 | 53 |
+| 宿主工具 | 21 |
 | 页面脚本 | 9 |
 
 ## tools/serve.mjs
@@ -55,6 +55,7 @@ tools/serve.mjs
     └─ game/engine/core/src/time.ts  (已展开)
   └─ game/engine/core/src/pack/init.ts
     └─ game/engine/core/src/pack/load.ts
+      └─ game/engine/core/src/body/body.ts
       └─ game/engine/core/src/entity/template.ts  (已展开)
       └─ game/engine/core/src/event/schema.ts  (已展开)
       └─ game/engine/core/src/pack/definitions.ts
@@ -136,11 +137,13 @@ tools/serve.mjs
         └─ game/engine/core/src/store.ts  (已展开)
   └─ game/systems/host/effects.ts  (已展开)
   └─ game/systems/host/frames.ts  (已展开)
+  └─ game/systems/host/rules.ts
+    └─ game/systems/rules/aliases.ts
   └─ game/systems/host/writes.ts  (已展开)
   └─ game/systems/log/devlog.ts
     └─ game/engine/core/src/time.ts  (已展开)
   └─ game/systems/render/project.ts  (已展开)
-  └─ game/systems/rules/aliases.ts
+  └─ game/systems/rules/aliases.ts  (已展开)
   └─ game/systems/rules/index.ts
     └─ game/engine/core/src/rules/ai.ts
       └─ game/engine/core/src/event/evaluate.ts  (已展开)
@@ -226,7 +229,9 @@ tools/serve.mjs
 ```
 tools/client/game.js
   └─ game/systems/config/config.ts
-  └─ game/systems/input/bindings.ts
+    └─ game/systems/input/bindings.ts
+    └─ game/systems/rules/aliases.ts  (已展开)
+  └─ game/systems/input/bindings.ts  (已展开)
   └─ game/systems/render/browser.ts
     └─ game/systems/camera/camera.ts
     └─ game/systems/intel/facts.ts
@@ -302,9 +307,9 @@ tools/build-web.mjs
 | 文件 | 被引用 |
 |---|---|
 | `game/engine/core/src/time.ts` | 42 处：`game/engine/core/src/entity/entity.ts`, `game/engine/core/src/entity/merge.test.ts`, `game/engine/core/src/entity/merge.ts`, `game/engine/core/src/entity/template.ts` … |
-| `game/engine/core/src/space.ts` | 25 处：`tools/serve.mjs`, `game/engine/core/src/entity/entity.ts`, `game/engine/core/src/event/effects.test.ts`, `game/engine/core/src/event/effects.ts` … |
+| `game/engine/core/src/space.ts` | 26 处：`tools/serve.mjs`, `game/engine/core/src/entity/entity.ts`, `game/engine/core/src/event/effects.test.ts`, `game/engine/core/src/event/effects.ts` … |
 | `game/engine/core/src/event/registry.ts` | 18 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/event/evaluate.ts`, `game/engine/core/src/event/registry.test.ts` … |
-| `game/engine/core/src/store.ts` | 16 处：`tools/play.mjs`, `tools/serve.mjs`, `game/engine/core/src/event/effects.test.ts`, `game/engine/core/src/event/effects.ts` … |
+| `game/engine/core/src/store.ts` | 17 处：`tools/play.mjs`, `tools/serve.mjs`, `game/engine/core/src/event/effects.test.ts`, `game/engine/core/src/event/effects.ts` … |
 | `game/engine/core/src/event/evaluate.ts` | 15 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/rules/ai.ts`, `game/engine/core/src/rules/aim.ts` … |
 | `game/engine/core/src/event/view.ts` | 11 处：`tools/serve.mjs`, `game/engine/core/src/event/evaluate.test.ts`, `game/engine/core/src/event/evaluate.ts`, `game/engine/core/src/event/view.test.ts` … |
 | `game/engine/core/src/worldgen/structures.ts` | 11 处：`tools/worldgen-structures.mjs`, `game/engine/core/src/worldgen/generators/layout.test.ts`, `game/engine/core/src/worldgen/generators/layout.ts`, `game/engine/core/src/worldgen/generators/rooms.test.ts` … |
@@ -324,9 +329,10 @@ tools/build-web.mjs
 
 ## 没有被引用的文件
 
-- `tools/check-client.mjs`
+- `tools/check-client.test.mjs`
 - `tools/check-data.mjs`
 - `tools/check-locale.mjs`
+- `tools/gen-body-art.mjs`
 - `tools/gen-docs.mjs`
 - `tools/gen-file-docs.mjs`
 - `tools/gen-map.mjs`
@@ -335,7 +341,8 @@ tools/build-web.mjs
 - `tools/gen-tree.mjs`
 - `tools/gen-world.mjs`
 - `tools/import-csv.mjs`
+- `tools/smoke.mjs`
 - `tools/typecheck.mjs`
 - `game/engine/core/types/node-shim.d.ts`
 
-> 共 117 个源文件（另有 71 个测试），411 条引用。
+> 共 122 个源文件（另有 74 个测试），421 条引用。

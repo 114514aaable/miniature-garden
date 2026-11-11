@@ -112,6 +112,31 @@ tools/
   gen-world / check-data / check-locale 在改名后实测通过
 ```
 
+## 代码审计修复（2026-11-11）
+
+```
+来源    对接池/代码审计报告.md（外部审计，62 页）+ 修复任务书
+基线    aa9ade8（626 tests / typecheck 红 / check-client 红 / 读档 500）
+
+F1  读档 byId 作用域                  ✅ /api/load 不再 500
+F2  显示名与文件名分离                ✅ 带 / : ? 的存档名也能自动读
+F8  HTTP 冒烟 tools/smoke.mjs         ✅ 先红后绿，覆盖 开局→动作→存→读→继续
+F6  根 package.json + tsconfig        ✅ typecheck 0 errors（本地 typescript）
+F7  check-client 剥字符串/注释/正则   ✅ CSS filter 与正则不再误报
+F3  回滚后重建占用索引                ✅ 同格移动 + 后续失败不再留幽灵
+F4  world.rules 真正生效              ✅ 缺省=全部 / 显式空=无 / 未知 tag 报错
+F5  默认键位单一来源                  ✅ F=base.attack；R 的 x/y 可选；旧 tag 自动迁移
+F9  HTTP 安全                         ✅ 415 / 413 / 403 / 对话脚本白名单
+F10 客户端健壮性                      ✅ 多删、坏 localStorage、换行、instance 启动顺序
+F11 applyEffects 的 before 契约        ✅ 写规则默认路径不再静默失效
+F12 generationNote 死代码              ✅ 生成失败提示能显示
+
+仍未做（需要单独排期）
+F13 渲染裁剪 + 实体-only 快照（O(面积)）
+F14 许可矩阵 / README 数字 / CI（LICENSING 需要作者拍板）
+G1  假导演生成循环
+```
+
 ## 部位立绘（进行中）
 
 ```

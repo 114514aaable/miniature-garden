@@ -76,4 +76,5 @@ function unbind(bindings: Bindings, code: string): Bindings
 
 ## 被引用
 
+- [`game/systems/config/config.ts`](game/systems/config/config.md)
 - [`tools/client/game.js`](tools/client/game.md)
