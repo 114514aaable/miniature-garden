@@ -13,5 +13,5 @@
     "skipLibCheck": true,
     "types": []
   },
-  "include": ["game/engine/core/src", "engine/core/types", "systems"]
+  "include": ["game/engine/core/src", "game/engine/core/types", "game/systems", "game/worlds"]
 }

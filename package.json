@@ -1,0 +1,23 @@
+{
+  "name": "hakoniwa",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "箱庭：导演驱动的生成式世界引擎",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --test --test-isolation=none",
+    "typecheck": "node tools/typecheck.mjs",
+    "check:client": "node tools/check-client.mjs",
+    "check:data": "node tools/check-data.mjs",
+    "check:locale": "node tools/check-locale.mjs",
+    "build:web": "node tools/build-web.mjs",
+    "smoke": "node tools/smoke.mjs",
+    "check": "npm run typecheck && npm test && npm run check:client && npm run check:data && npm run check:locale && npm run build:web"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3"
+  }
+}
