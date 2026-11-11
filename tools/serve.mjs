@@ -1577,13 +1577,14 @@ function listSnapshots(id) {
       try {
         const data = JSON.parse(readFileSync(dir + "/" + file, "utf8"));
         out.push({
+          file: file.slice(0, -5),
           name: data.name ?? file.slice(0, -5),
           savedAt: data.savedAt ?? null,
           tick: data.engine?.tick ?? 0,
           bytes: statSync(dir + "/" + file).size,
         });
       } catch {
-        out.push({ name: file.slice(0, -5), broken: true });
+        out.push({ file: file.slice(0, -5), name: file.slice(0, -5), broken: true });
       }
     }
   } catch {
@@ -1595,7 +1596,9 @@ function listSnapshots(id) {
 /** 找最新的一份快照文件（启动器「继续」用）。 */
 function latestSnapshot(id) {
   const list = listSnapshots(id);
-  return list.length > 0 ? list[0].name : null;
+  if (list.length === 0) return null;
+  const item = list[0];
+  return { name: item.name, file: item.file ?? snapshotFile(item.name) };
 }
 
 /** 存档：生成一份新的阶段快照。给名字就同名覆盖，不给就自动编号。 */
@@ -1644,7 +1647,10 @@ function loadGame(id, name) {
   const meta = worldId === null ? null : readWorld(worldId);
   if (meta === null) return { ok: false, error: "没有这个存档" };
 
-  const file = typeof name === "string" && name.length > 0 ? snapshotFile(name) : latestSnapshot(meta.id);
+  const latest = latestSnapshot(meta.id);
+  const file = typeof name === "string" && name.length > 0
+    ? snapshotFile(name)
+    : latest?.file ?? null;
   if (file === null) return { ok: false, error: "这个存档还没存过进度" };
 
   let data;
@@ -1654,11 +1660,13 @@ function loadGame(id, name) {
     return { ok: false, error: "找不到这份快照：" + file };
   }
 
+  let byId;
+  let packId;
   let ordered;
   try {
-    const { byId } = collectPacks();
-    const packId = normalizePackId(meta.pack, byId);
-  ordered = closureOf(packId, byId);
+    ({ byId } = collectPacks());
+    packId = normalizePackId(meta.pack, byId);
+    ordered = closureOf(packId, byId);
   } catch (error) {
     return { ok: false, error: "存档要的世界包找不到了：" + messageOf(error) };
   }
@@ -1672,7 +1680,7 @@ function loadGame(id, name) {
     meta.options ?? {},
   );
 
-  session.world = normalizePackId(meta.pack, byId);
+  session.world = packId;
   session.worldId = meta.id;
   session.worldName = meta.name;
   session.seed = meta.seed;
@@ -2156,7 +2164,16 @@ if (dirs.length > 0) {
 }
 
 server.listen(PORT, "127.0.0.1", () => {
-  console.log(`箱庭 · 调试台：http://127.0.0.1:${PORT}`);
+  const address = server.address();
+  const actual = typeof address === "object" && address !== null ? address.port : PORT;
+  console.log(`箱庭 · 调试台：http://127.0.0.1:${actual}`);
+  if (process.env.PORT_FILE) {
+    try {
+      writeFileSync(process.env.PORT_FILE, String(actual), "utf8");
+    } catch {
+      // 写不了就退回控制台
+    }
+  }
 });
 
 // ── 页面 ────────────────────────────────────────────────
