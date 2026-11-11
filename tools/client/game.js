@@ -47,9 +47,18 @@ const startOptions = (() => {
   }
 })();
 const offFromUrl = (params.get('off') || '').split(',').filter(Boolean);
-const off = offFromUrl.length > 0
-  ? offFromUrl
-  : (JSON.parse(localStorage.getItem('nw.off') || '[]'));
+
+/** 坏掉的 nw.off 不应该让整页在初始化时崩掉。 */
+function readStoredOff() {
+  try {
+    const value = JSON.parse(localStorage.getItem('nw.off') || '[]');
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+
+const off = offFromUrl.length > 0 ? offFromUrl : readStoredOff();
 const seed = Number(params.get('seed') || '0') || 0;
 
 let renderer = null;
@@ -266,7 +275,7 @@ function formatDebug(debug) {
       lines.push('      意图：打 ' + tiles + '  伤害 ' + actor.intent.damage + '  结算 @' + actor.intent.resolveAt);
     }
   }
-  return lines.join('\\n');
+  return lines.join('\n');
 }
 
 function render(state) {
@@ -304,8 +313,8 @@ function render(state) {
 
   if (state.dead) showDeath();
   document.getElementById('message').textContent = state.message;
-  document.getElementById('logbox').textContent = (state.events || []).slice(-5).join('\\n');
-  document.getElementById('devlog').textContent = (state.devlog || []).join('\\n');
+  document.getElementById('logbox').textContent = (state.events || []).slice(-5).join('\n');
+  document.getElementById('devlog').textContent = (state.devlog || []).join('\n');
   document.getElementById('debug').textContent = formatDebug(state.debug);
 
   renderHotbar(state);
@@ -576,7 +585,12 @@ function showDeath() {
     text('你倒下了。', { policy: 'fixed' }),
     row({ gap: 8, justify: 'end' },
       button('读档', async () => { await api('/api/load', {}); location.reload(); }),
-      button('重开', () => { location.href = '/game?world=' + encodeURIComponent(worldId) + '&seed=' + seed; }),
+      button('重开', () => {
+        const restart = (lastState && lastState.worldId) || worldId;
+        location.href = restart
+          ? '/game?world=' + encodeURIComponent(restart) + '&seed=' + seed
+          : '/';
+      }),
     ),
   );
 
@@ -603,23 +617,20 @@ async function act(dir) {
 }
 /** 把一帧按 handle 合并进状态（整条记录覆盖，不挑字段）。 */
 function applyFrame(state, frame) {
-  const entities = (state.snapshot.entities || []).map((entity) => ({ ...entity }));
-  const at = new Map(entities.map((entity, index) => [entity.handle, index]));
+  const byHandle = new Map(
+    (state.snapshot.entities || []).map((entity) => [entity.handle, { ...entity }]),
+  );
 
   for (const record of frame.entities || []) {
-    const index = at.get(record.handle);
-    if (index === undefined) {
-      at.set(record.handle, entities.length);
-      entities.push(record);
-    } else {
-      entities[index] = record;
-    }
+    byHandle.set(record.handle, record);
   }
 
+  // 同一帧删多个实体：按 handle 删，不能用会失效的下标
   for (const handle of frame.removed || []) {
-    const index = at.get(handle);
-    if (index !== undefined) entities.splice(index, 1);
+    byHandle.delete(handle);
   }
+
+  const entities = [...byHandle.values()];
 
   // 血条/名字从玩家实体上取，不依赖 state.hud 的旧值
   const player = entities.find((entity) => entity.handle === state.playerHandle);
@@ -742,7 +753,7 @@ function showTooltip(info, clientX, clientY) {
     if (entity.description) lines.push('  ' + entity.description);
   }
 
-  tip.textContent = lines.join('\\n');
+  tip.textContent = lines.join('\n');
   tip.style.left = Math.min(clientX + 16, window.innerWidth - 340) + 'px';
   tip.style.top = Math.min(clientY + 16, window.innerHeight - 120) + 'px';
   tip.hidden = false;
@@ -938,6 +949,14 @@ window.addEventListener('blur', () => stopHoldRepeat(''));
   // ?instance=xxx：沿用已有的世界实例（最近的世界 → 继续）
   if (instanceId !== null && instanceId !== '') {
     const resumed = await api('/api/start', { instanceId });
+    if (!resumed || resumed.launcher) {
+      document.getElementById('errbar').hidden = false;
+      document.getElementById('errbar').textContent = '世界载入失败：' + (resumed && resumed.errors && resumed.errors[0] ? resumed.errors[0].error : '未知');
+      return;
+    }
+    hotbarItems = (await api('/api/inventory')).items || [];
+    refreshHud();
+    await loadArt();
     render(resumed);
     applySettings();
     applyPortraitCollapsed();

@@ -9,6 +9,7 @@ const KIND_ORDER = [
 ];
 
 let worlds = [];
+let worldErrors = [];
 let activeWorld = localStorage.getItem('nw.world') || null;
 let inspecting = null;
 
@@ -80,7 +81,12 @@ function renderWorlds() {
 
   const errors = document.getElementById('errors');
   errors.textContent = '';
-  for (const bad of [] ) { void bad; }
+  for (const bad of worldErrors) {
+    const line = document.createElement('div');
+    line.className = 'error';
+    line.textContent = (bad.id ? bad.id + '：' : '') + (bad.error || '未知错误');
+    errors.appendChild(line);
+  }
 }
 
 /**
@@ -230,7 +236,10 @@ function buildTree(root, nodes) {
     const packBox = document.createElement('details');
     packBox.open = true;
     const summary = document.createElement('summary');
-    summary.innerHTML = '<b>' + origin + '</b> · ' + list.length + ' 项';
+    const originName = document.createElement('b');
+    originName.textContent = origin;
+    summary.appendChild(originName);
+    summary.appendChild(document.createTextNode(' · ' + list.length + ' 项'));
     packBox.appendChild(summary);
 
     const byKind = new Map();
@@ -391,7 +400,15 @@ document.getElementById('graphclose').addEventListener('click', () => { document
 function renderSettings() {
   const speeds = [5, 10, 20];
   const current = Number(localStorage.getItem('nw.speed') || '10');
-  const bindings = JSON.parse(localStorage.getItem('nw.bindings') || '{}');
+  let bindings = {};
+  try {
+    const savedConfig = JSON.parse(localStorage.getItem('nw.config') || '{}');
+    if (savedConfig && typeof savedConfig.bindings === 'object' && savedConfig.bindings !== null) {
+      bindings = savedConfig.bindings;
+    }
+  } catch {
+    bindings = {};
+  }
   const lines = Object.entries(bindings).map(([code, command]) => code + ' → ' + command);
 
   const speedButtons = speeds.map((speed) =>
@@ -476,6 +493,7 @@ document.getElementById('quit-back').textContent = '← 返回';
 
 api('/api/worlds').then((state) => {
   worlds = state.worlds || [];
+  worldErrors = Array.isArray(state.errors) ? state.errors : [];
   const firstRoot = worlds.find((world) => world.ok && world.root);
   const current = worlds.find((world) => world.id === activeWorld);
   if (current === undefined || current.root !== true) {

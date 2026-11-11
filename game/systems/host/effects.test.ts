@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { applyEffects, type EffectInterceptor } from "./effects.ts";
+import { applyEffects, type EffectInterceptor, type EntityWrite } from "./effects.ts";
 import type { Effect } from "../../engine/core/src/store.ts";
 
 function sink() {
@@ -149,10 +149,10 @@ test("数据写：位置写（core.place）不拦", () => {
 
 test("readBefore：写规则能拿到旧值，并按契约接管", () => {
   const store = sink();
-  let captured = null;
-  const patch = { kind: "patch", handle: 7, component: "core.health", data: { hp: -5 } };
-  const resolver = (write) => {
-    captured = write;
+  const captures: EntityWrite[] = [];
+  const patch: Effect = { kind: "patch", handle: 7, component: "core.health", data: { hp: -5 } };
+  const resolver = (write: EntityWrite) => {
+    captures.push(write);
     return { consume: true, effects: [] };
   };
   applyEffects(
@@ -164,6 +164,7 @@ test("readBefore：写规则能拿到旧值，并按契约接管", () => {
     (handle, component) => (handle === 7 && component === "core.health" ? { hp: 5, max: 10 } : null),
   );
 
-  assert.deepEqual(captured.before, { hp: 5, max: 10 });
+  assert.equal(captures.length, 1);
+  assert.deepEqual(captures[0].before, { hp: 5, max: 10 });
   assert.equal(store.seen.length, 0, "被接管后原写法不落库");
 });

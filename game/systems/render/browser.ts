@@ -73,6 +73,12 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
 
   function setState(next: ClientState): void {
     state = next;
+
+    // 长时间 spawn/despawn 后，已经不在快照里的视觉缓存要清掉
+    const alive = new Set((next.snapshot.entities || []).map((entity) => entity.handle));
+    for (const handle of visuals.keys()) {
+      if (!alive.has(handle)) visuals.delete(handle);
+    }
     if (next.atlas !== undefined && next.atlas !== null) {
       atlas = parseAtlas(next.atlas);
     }
