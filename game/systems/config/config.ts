@@ -12,6 +12,9 @@
  * 这里只放**表现层**的东西。玩法参数（时钟成本、伤害公式）在世界包里，不放这。
  */
 
+import { DEFAULT_BINDINGS } from "../input/bindings.ts";
+import { resolveTag } from "../rules/aliases.ts";
+
 /** 一个点击动作：要么是技能，要么是内置动作。 */
 export interface ClickAction {
   readonly kind: "skill" | "builtin";
@@ -76,21 +79,22 @@ export const DEFAULT_CONFIG: Config = {
   chargeTickMs: 400,
   frameMs: 90,
   devMode: false,
-  bindings: {
-    KeyW: "move:w",
-    KeyA: "move:a",
-    KeyS: "move:s",
-    KeyD: "move:d",
-    KeyE: "ui:talk",
-    KeyR: "skill:core.drop",
-    KeyF: "skill:core.attack",
-    Space: "skill:core.wait",
-    Escape: "ui:settings",
-    KeyI: "ui:inventory",
-  },
+  bindings: DEFAULT_BINDINGS,
 };
 
 const STORAGE_KEY = "nw.config";
+
+/** 把命令里的旧 skill tag 换成新 tag（core.attack → base.attack）。 */
+function migrateCommand(command: string): string {
+  if (command.startsWith("skill:")) return "skill:" + resolveTag(command.slice("skill:".length));
+  return command;
+}
+
+function migrateBindings(bindings: Readonly<Record<string, string>>): Readonly<Record<string, string>> {
+  return Object.fromEntries(
+    Object.entries(bindings).map(([code, command]) => [code, migrateCommand(command)]),
+  );
+}
 
 /** 读配置：默认值 + 用户改动。坏数据一律退回默认。 */
 export function loadConfig(storage: Pick<Storage, "getItem"> = localStorage): Config {
@@ -101,7 +105,7 @@ export function loadConfig(storage: Pick<Storage, "getItem"> = localStorage): Co
     return {
       ...DEFAULT_CONFIG,
       ...saved,
-      bindings: { ...DEFAULT_CONFIG.bindings, ...(saved.bindings ?? {}) },
+      bindings: migrateBindings({ ...DEFAULT_CONFIG.bindings, ...(saved.bindings ?? {}) }),
       clickPolicy: {
         hostile: normalizeAction(saved.clickPolicy?.hostile, DEFAULT_CONFIG.clickPolicy.hostile),
         neutral: normalizeAction(saved.clickPolicy?.neutral, DEFAULT_CONFIG.clickPolicy.neutral),
@@ -128,7 +132,7 @@ export function withConfig(config: Config, patch: Partial<Config>): Config {
 export function withBinding(config: Config, code: string, command: string | null): Config {
   const bindings = { ...config.bindings };
   if (command === null) delete bindings[code];
-  else bindings[code] = command;
+  else bindings[code] = migrateCommand(command);
   return { ...config, bindings };
 }
 

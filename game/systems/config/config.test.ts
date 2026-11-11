@@ -30,6 +30,15 @@ function fakeStorage(initial: Record<string, string> = {}) {
   };
 }
 
+test("旧配置里的 core.attack 自动迁移到 base.attack", () => {
+  const storage = fakeStorage({
+    "nw.config": JSON.stringify({ bindings: { KeyF: "skill:core.attack", KeyE: "ui:talk" } }),
+  });
+  const config = loadConfig(storage);
+  assert.equal(config.bindings.KeyF, "skill:base.attack");
+  assert.equal(config.bindings.KeyE, "ui:talk");
+});
+
 test("没有存档时返回默认", () => {
   assert.deepEqual(loadConfig(fakeStorage()), DEFAULT_CONFIG);
 });
@@ -59,8 +68,9 @@ test("坏数据退回默认", () => {
 });
 
 test("改键与解绑", () => {
+  // withBinding 也会迁移旧 tag（core.cast → base.cast）
   const rebound = withBinding(DEFAULT_CONFIG, "KeyQ", "skill:core.cast");
-  assert.equal(rebound.bindings.KeyQ, "skill:core.cast");
+  assert.equal(rebound.bindings.KeyQ, "skill:base.cast");
   assert.equal(rebound.bindings.KeyW, "move:w");
 
   const cleared = withBinding(rebound, "KeyQ", null);

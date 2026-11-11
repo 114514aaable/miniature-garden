@@ -23,7 +23,7 @@ export const DEFAULT_BINDINGS: Bindings = {
   KeyD: "move:d",
   KeyE: "skill:core.take",
   KeyR: "skill:core.drop",
-  KeyF: "skill:core.attack",
+  KeyF: "skill:base.attack",
   Space: "skill:core.wait",
   Escape: "ui:settings",
   KeyI: "ui:inventory",

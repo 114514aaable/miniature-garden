@@ -32,6 +32,7 @@ export const dropSignature: Signature = {
   params: {
     t: "object",
     fields: { actor: { t: "int" }, x: { t: "int" }, y: { t: "int" } },
+    optional: ["x", "y"],
   },
   result: ANY,
   returnsEffects: true,
@@ -96,7 +97,10 @@ export function dropHandler(params: JsonValue, context: EvaluateContext): JsonVa
     return { ok: false, reason: "物品栏是空的" };
   }
 
-  const target = { x: p.x, y: p.y };
+  const target = {
+    x: typeof p.x === "number" ? p.x : actor.pos.x,
+    y: typeof p.y === "number" ? p.y : actor.pos.y,
+  };
   if (!context.view.space(actor.space).passableAt(target)) {
     return { ok: false, reason: "那里放不下" };
   }
