@@ -71,6 +71,8 @@ export interface LoadedWorld {
   readonly spaceIds: ReadonlyMap<string, SpaceId>;
   /** 这个世界启用哪些规则（标签），由宿主对到实现。 */
   readonly rules: readonly string[];
+  /** world.json 是否显式写了 rules（决定「缺省=全部」还是「空=无」）。 */
+  readonly rulesExplicit: boolean;
   /** 开局一次性效果（世界包声明，宿主按顺序应用）。 */
   readonly init: readonly JsonValue[];
   /** 存在感策略（世界声明，宿主使用）。 */
@@ -214,6 +216,7 @@ export function loadWorld(
     ...(start.warning === undefined ? {} : { startWarning: start.warning }),
     spaceIds,
     rules: world.rules ?? [],
+    rulesExplicit: world.rules !== undefined,
     init: world.init ?? [],
     persistence: {
       activeRadius: world.persistence?.activeRadius ?? 25,

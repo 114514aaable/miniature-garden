@@ -46,6 +46,7 @@ import { nearestWhere } from "../game/engine/core/src/space.ts";
 import { buildPassage } from "../game/systems/rules/passage.ts";
 import { applyEffects } from "../game/systems/host/effects.ts";
 import { applyWriteRules } from "../game/systems/host/writes.ts";
+import { selectActiveRules } from "../game/systems/host/rules.ts";
 import { baseWriteRules } from "../game/systems/host/base-rules.ts";
 import { advanceTo as hostAdvanceTo } from "../game/systems/host/advance.ts";
 import { captureEntities, diffEntities } from "../game/systems/host/frames.ts";
@@ -405,7 +406,7 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
   }
 
   const registry = new Registry();
-  const active = RULE_TABLE.filter((rule) => !disabled.has(rule.signature.tag));
+  const active = selectActiveRules(RULE_TABLE, loaded.rules, loaded.rulesExplicit, disabled);
   for (const rule of active) {
     registry.define(rule.signature);
   }
