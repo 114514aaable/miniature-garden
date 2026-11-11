@@ -64,6 +64,9 @@ export interface WriteResult {
 /** 数据写拦截器：null = 没人接管，原样写。 */
 export type WriteResolver = (write: EntityWrite) => WriteResult | null;
 
+/** 读某个实体当前的组件值（写规则需要 before 才能 clamp）。 */
+export type BeforeReader = (handle: number, component: string) => unknown;
+
 /**
  * 把效果交给 store。
  *
@@ -76,6 +79,7 @@ export function applyEffects(
   meta: EffectMeta = { source: "system" },
   interceptors: readonly EffectInterceptor[] = [],
   resolveWrite: WriteResolver | null = null,
+  readBefore: BeforeReader | null = null,
 ): void {
   let list: readonly Effect[] = effects;
 
@@ -88,7 +92,7 @@ export function applyEffects(
       const taken = resolveWrite({
         handle: effect.handle,
         component: effect.component,
-        before: undefined,
+        before: readBefore === null ? undefined : readBefore(effect.handle, effect.component),
         after: effect.data,
         meta,
       });

@@ -145,3 +145,25 @@ test("数据写：位置写（core.place）不拦", () => {
   assert.equal(called, false);
   assert.deepEqual(store.seen, [place]);
 });
+
+
+test("readBefore：写规则能拿到旧值，并按契约接管", () => {
+  const store = sink();
+  let captured = null;
+  const patch = { kind: "patch", handle: 7, component: "core.health", data: { hp: -5 } };
+  const resolver = (write) => {
+    captured = write;
+    return { consume: true, effects: [] };
+  };
+  applyEffects(
+    store,
+    [patch],
+    { source: "skill" },
+    [],
+    resolver,
+    (handle, component) => (handle === 7 && component === "core.health" ? { hp: 5, max: 10 } : null),
+  );
+
+  assert.deepEqual(captured.before, { hp: 5, max: 10 });
+  assert.equal(store.seen.length, 0, "被接管后原写法不落库");
+});
