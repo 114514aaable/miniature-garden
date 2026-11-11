@@ -215,6 +215,7 @@ export class Store {
         this.applyRaw(undos[i]);
       }
       this.entities.restore(entitySnapshot);
+      this.rebuildOccupancy();
       throw error;
     }
 
@@ -235,6 +236,7 @@ export class Store {
       applied = this.applyOne(effect);
     } catch (error) {
       this.entities.restore(entitySnapshot);
+      this.rebuildOccupancy();
       throw error;
     }
     try {
@@ -244,6 +246,7 @@ export class Store {
         this.applyRaw(applied.undo[i]);
       }
       this.entities.restore(entitySnapshot);
+      this.rebuildOccupancy();
       throw error;
     }
   }
@@ -340,6 +343,18 @@ export class Store {
    * 它是虚拟组件——对外是 `components["core.place"]`，对内还是实体的 space/pos。
    * 这样规则看到的是统一的数据，存储也不用搬一次家。
    */
+  /** 失败路径专用：按实体表重建占用索引，兜住所有 undo 顺序错误。 */
+  private rebuildOccupancy(): void {
+    for (const space of this.spaces.values()) {
+      space.clearOccupants();
+    }
+    for (const entity of this.entities.all()) {
+      if (entity.space !== null && entity.pos !== null) {
+        this.space(entity.space).addOccupant(entity.pos, entity.handle);
+      }
+    }
+  }
+
   private applyPlace(entity: Entity, data: JsonValue): Applied {
     const from =
       entity.space !== null && entity.pos !== null ? { space: entity.space, cell: entity.pos } : null;
@@ -365,6 +380,11 @@ export class Store {
 
     const target = this.space(spaceId);
     target.index({ x, y }); // 越界先抛，别改了实体才发现
+
+    // 写回原格：实体坐标和索引都没变化，undo 只会互相抵消（见回滚测试）
+    if (from !== null && from.space === spaceId && from.cell.x === x && from.cell.y === y) {
+      return { undo: [] };
+    }
 
     this.entities.move(entity.handle, spaceId, { x, y });
     if (from !== null && !this.space(from.space).removeOccupant(from.cell, entity.handle)) {
