@@ -62,3 +62,7 @@ artdrop/rejected/*
 !artdrop/rejected/.gitkeep
 artdrop/refs/*
 !artdrop/refs/README.md
+
+# artdrop 备份（编码器会写）
+artdrop/backups/*
+!artdrop/backups/.gitkeep

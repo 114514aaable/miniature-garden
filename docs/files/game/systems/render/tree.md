@@ -84,4 +84,6 @@ interface TreeLeaf {
 
 ## 被引用
 
+- [`tools/encode-assets.mjs`](tools/encode-assets.md)
+- [`tools/encode-assets.test.mjs`](tools/encode-assets.test.md)
 - [`tools/serve.mjs`](tools/serve.md)

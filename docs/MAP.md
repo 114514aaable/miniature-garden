@@ -751,6 +751,12 @@ game/systems/render/*（投影成画面数据）
   数据体检：数据化之后，规则要的字段，包里到底有没有。
 - **`tools/check-locale.mjs`**（99 行）
   语言包体检：包里每个 id 都应该有名字。
+- **`tools/encode-assets.mjs`**（353 行）
+  编码器：把 artdrop 里的「树形文件夹」编译成 assets.tree.json + 页图。
+  - `encodeTree(inputDir, options = {})`
+  - `applyEncoded(encoded, packDir, options = {})`
+- **`tools/encode-assets.test.mjs`**（89 行）
+  编码器：SVG 拼页、PNG 原样复制、写盘备份与恢复。
 - **`tools/gen-atlas-fixture.mjs`**（83 行）
   生成 F0 的测试图集：一张 SVG 图集 + TexturePacker JSON hash + assets 清单。
 - **`tools/gen-body-art.mjs`**（97 行）

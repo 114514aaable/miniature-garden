@@ -221,13 +221,41 @@ UI/<Name>.png
 - 校验：page 引用存在、页内矩形不越界、路径唯一、`w/h` 为正整数。
 - 地形 id 仍然是 `terrain.<code>`；实体贴图走 `entity.<template id>`。
 
-编码器（未实现，`tools/encode-assets.mjs`）负责：
+### 4.7 编码器（已实现）
+
+源码目录（外部 AI 只写这里）：
 
 ```
-扫描 artdrop 树 → 分页 → 生成 page 图 + 本树文件
-file 叶子 → 写入图集 → 改写成页内叶子
-输出到包根目录，原子替换
+artdrop/tree/
+├─ terrain/floor.svg
+├─ entity/rat/idle-1.svg
+├─ entity/rat/idle-2.svg
+└─ ui/potion.png
 ```
+
+```bash
+# 只报告，不写盘
+node tools/encode-assets.mjs artdrop/tree --check
+
+# 写入 base 包
+node tools/encode-assets.mjs artdrop/tree --pack base --apply
+```
+
+编码器做这些事：
+
+1. 扫描目录，`<group>/…/name` 变成路径 `<group>.<name>`。
+2. SVG：读 `width/height/viewBox`，按货架算法分页，**矢量拼接**成页 SVG（不栅格化）。
+3. 一个 group 装得下一页 → 该目录是 `page`；装不下 → `branch` + `part-1…N` 子页。
+4. PNG：**原样复制**到 `art/assets/`，先作为 `file` 叶子（不栅格化、不重新编码）。
+5. 自检：生成的树必须通过 `parseAssetTree`（越界、引用、路径）。
+6. `--apply` 前备份现有 `assets.tree.json` + `art/pages/` 到 `artdrop/backups/encode-<时间>/`；
+   写盘失败自动恢复；成功后写 `report.json`。
+
+当前边界：
+
+- SVG 里的 `id`（渐变、defs）跨文件可能重名，编码器暂不重命名——同一个 group 里避免重复 id。
+- 页大小上限 2048；超过会拆页。
+- PNG 只做透传，不拼页（以后可以加栅格化/拼接）。
 
 ---
 

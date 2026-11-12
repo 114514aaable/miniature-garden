@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 126 个文件。
+共 128 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -115,6 +115,8 @@
 | `tools/client/shared.js` | 页面共用：错误提示 + API 调用。 | [md](tools/client/shared.md) |
 | `tools/client/windows/inventory.js` | 背包窗口。 | [md](tools/client/windows/inventory.md) |
 | `tools/client/windows/settings.js` | 设置窗口（窗口层）。 | [md](tools/client/windows/settings.md) |
+| `tools/encode-assets.mjs` | 编码器：把 artdrop 里的「树形文件夹」编译成 assets.tree.json + 页图。 | [md](tools/encode-assets.md) |
+| `tools/encode-assets.test.mjs` | 编码器：SVG 拼页、PNG 原样复制、写盘备份与恢复。 | [md](tools/encode-assets.test.md) |
 | `tools/gen-atlas-fixture.mjs` | 生成 F0 的测试图集：一张 SVG 图集 + TexturePacker JSON hash + assets 清单。 | [md](tools/gen-atlas-fixture.md) |
 | `tools/gen-body-art.mjs` | 一次性脚本：生成人形立绘的占位部件（SVG）+ rig 布局。 | [md](tools/gen-body-art.md) |
 | `tools/gen-docs.mjs` | 从代码与语言包生成模块文档（docs/modules/）。 | [md](tools/gen-docs.md) |
