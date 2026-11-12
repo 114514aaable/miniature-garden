@@ -2,6 +2,7 @@
 
 这个目录是**外部 AI 的地盘**：它只在这里写文件，引擎和游戏目录不归它管。
 
+**怎么用（自包含）：[`USAGE.md`](USAGE.md)**
 完整协议：[`docs/base/assets-protocol.md`](../docs/base/assets-protocol.md)
 
 ## 一条最短路径
