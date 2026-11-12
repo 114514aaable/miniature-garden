@@ -165,6 +165,20 @@ export function buildFrame(snapshot: FrameSnapshot, spec: FrameSpec): readonly D
       );
     });
 
+  // 同一格的多件物品散开一点，最上面那件（最后放下的）留在中心
+  const SCATTER: ReadonlyArray<readonly [number, number]> = [
+    [-0.24, 0.18], [0.24, 0.18], [-0.24, -0.18], [0.24, -0.18],
+    [0, 0.28], [0, -0.28], [0.28, 0], [-0.28, 0],
+  ];
+  const cellItems = new Map<string, number[]>();
+  for (const entity of visibleEntities) {
+    if (entity.components["core.item"] === undefined) continue;
+    const key = `${entity.x},${entity.y}`;
+    const list = cellItems.get(key) ?? [];
+    list.push(entity.handle);
+    cellItems.set(key, list);
+  }
+
   for (const entity of visibleEntities) {
     const screenX = originX + (entity.x as number) * spec.tile;
     const screenY = originY + (entity.y as number) * spec.tile;
@@ -172,10 +186,25 @@ export function buildFrame(snapshot: FrameSnapshot, spec: FrameSpec): readonly D
       continue;
     }
 
+    let itemX = 0;
+    let itemY = 0;
+    const itemsHere = entity.components["core.item"] === undefined
+      ? undefined
+      : cellItems.get(`${entity.x},${entity.y}`);
+    if (itemsHere !== undefined && itemsHere.length > 1) {
+      const order = itemsHere.indexOf(entity.handle);
+      const isTop = order === itemsHere.length - 1;
+      if (!isTop) {
+        const offset = SCATTER[order % SCATTER.length];
+        itemX = offset[0] * spec.tile;
+        itemY = offset[1] * spec.tile;
+      }
+    }
+
     const style = spec.style.templates[entity.template ?? ""] ?? spec.style.fallback;
     const size = Math.round(spec.tile * (style.scale ?? 0.7));
-    const centerX = round(screenX + (style.corner === true ? spec.tile * 0.72 : spec.tile / 2));
-    const centerY = round(screenY + (style.corner === true ? spec.tile * 0.72 : spec.tile / 2));
+    const centerX = round(screenX + itemX + (style.corner === true ? spec.tile * 0.72 : spec.tile / 2));
+    const centerY = round(screenY + itemY + (style.corner === true ? spec.tile * 0.72 : spec.tile / 2));
 
     // 有图集、组件里也点了名 → 画贴图；否则退回字符。
     const sprite = entity.sprite as { frame?: unknown; frames?: unknown; fps?: unknown } | undefined;
@@ -185,8 +214,8 @@ export function buildFrame(snapshot: FrameSnapshot, spec: FrameSpec): readonly D
       if (frame !== undefined) {
         commands.push({
           kind: "sprite",
-          x: round(screenX),
-          y: round(screenY),
+          x: round(screenX + itemX),
+          y: round(screenY + itemY),
           w: spec.tile,
           h: spec.tile,
           image: spec.atlas.image,

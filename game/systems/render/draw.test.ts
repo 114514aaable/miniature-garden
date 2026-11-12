@@ -149,3 +149,21 @@ test("什么都没有返回 undefined（退回字符）", () => {
 test("fps 缺省 4，非法值也被夹住", () => {
   assert.equal(frameNameOf({ frames: ["a.png", "b.png"], fps: 0 }, 250), "b.png");
 });
+
+
+test("同格多件物品散开，最上面那件留在中心", () => {
+  const entities = [
+    { handle: 0, x: 0, y: 0, template: "item_lamp", components: { "core.item": { stack: 1 } } },
+    { handle: 1, x: 0, y: 0, template: "item_lamp", components: { "core.item": { stack: 1 } } },
+  ];
+  const commands = buildFrame(snapshot({ entities }), spec()).filter(
+    (command) => command.kind === "text" && command.text === "i",
+  );
+  assert.equal(commands.length, 2);
+  assert.notEqual(
+    commands[0].kind === "text" ? commands[0].x : -1,
+    commands[1].kind === "text" ? commands[1].x : -2,
+  );
+  // 第二件（handle 1）是最后放下的，画在 corner 位置
+  assert.equal(commands[1].kind === "text" ? commands[1].x : -1, 23);
+});

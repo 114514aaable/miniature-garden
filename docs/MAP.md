@@ -231,7 +231,7 @@ game/systems/render/*（投影成画面数据）
   - `strikeHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
   - `const windupSignature`
   - `const strikeSignature`
-- **`game/engine/core/src/rules/inventory.ts`**（117 行）
+- **`game/engine/core/src/rules/inventory.ts`**（123 行）
   物品栏规则：捡起、放下。
   - `takeHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
   - `dropHandler(params: JsonValue, context: EvaluateContext) → JsonValue`
@@ -587,7 +587,7 @@ game/systems/render/*（投影成画面数据）
   - `type EntityField`
   - `const MAX_COMPONENTS`
   - `const MAX_UI`
-- **`game/systems/render/draw.ts`**（240 行）
+- **`game/systems/render/draw.ts`**（269 行）
   绘制指令：把快照翻译成「画什么」。
   - `buildFrame(snapshot: FrameSnapshot, spec: FrameSpec) → readonly DrawCommand[]`
   - `frameNameOf(sprite: { frame?: unknown; frames?: unknown; fps?: unknown } | undefined, nowMs: number,) → string | undefined`
@@ -771,7 +771,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（2236 行）
+- **`tools/serve.mjs`**（2237 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/smoke.mjs`**（160 行）
   HTTP 冒烟：真实起一个 serve，走「开局 → 动作 → 存档 → 读档 → 继续」。

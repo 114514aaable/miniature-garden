@@ -68,9 +68,15 @@ export function takeHandler(params: JsonValue, context: EvaluateContext): JsonVa
   }
 
   const here = context.view.space(actor.space).occupantsAt(actor.pos);
-  const item = here.find(
-    (handle) => handle !== actorHandle && context.view.entity(handle).components["core.item"] !== undefined,
-  );
+  // 同格多件时取「最上面」= 最后放进格子的一件（LIFO）
+  let item;
+  for (let index = here.length - 1; index >= 0; index -= 1) {
+    const handle = here[index];
+    if (handle !== actorHandle && context.view.entity(handle).components["core.item"] !== undefined) {
+      item = handle;
+      break;
+    }
+  }
   if (item === undefined) {
     return { ok: false, reason: "这里没有可以捡的东西" };
   }
