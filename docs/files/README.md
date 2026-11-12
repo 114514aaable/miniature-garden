@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 123 个文件。
+共 125 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -123,6 +123,8 @@
 | `tools/gen-tiles.mjs` | 一次性脚本：生成 7 张 7×7 测试件。 | [md](tools/gen-tiles.md) |
 | `tools/gen-tree.mjs` | 扫源码里的 import，画一张引用树。 | [md](tools/gen-tree.md) |
 | `tools/gen-world.mjs` | 生成一张地图（MVP：噪声 → 群系 → 地形号）。 | [md](tools/gen-world.md) |
+| `tools/import-assets.mjs` | 资产导入器：把 artdrop 里的一批交付校验并合并进世界包。 | [md](tools/import-assets.md) |
+| `tools/import-assets.test.mjs` | 资产导入器：示例批次通过、缺帧/旋转帧被拒、apply 写出正确清单。 | [md](tools/import-assets.test.md) |
 | `tools/import-csv.mjs` | CSV → 模板 JSON（宿主侧工具）。 | [md](tools/import-csv.md) |
 | `tools/pack-reader.mjs` | 读包工具（宿主侧）：把文件夹变成 PackContent。 | [md](tools/pack-reader.md) |
 | `tools/pages.mjs` | 两个页面：启动器和游戏。 | [md](tools/pages.md) |

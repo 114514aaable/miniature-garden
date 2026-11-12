@@ -50,3 +50,15 @@ web/
 
 # 调研与拆解资料（本地参考，不发布）
 对接池/
+
+# artdrop：外部绘图 AI 的交接目录（只保留骨架与示例）
+artdrop/inbox/*
+!artdrop/inbox/README.md
+!artdrop/inbox/_example/
+!artdrop/inbox/_example/**
+artdrop/processed/*
+!artdrop/processed/.gitkeep
+artdrop/rejected/*
+!artdrop/rejected/.gitkeep
+artdrop/refs/*
+!artdrop/refs/README.md

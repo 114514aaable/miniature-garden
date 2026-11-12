@@ -137,6 +137,18 @@ F14 许可矩阵 / README 数字 / CI（LICENSING 需要作者拍板）
 G1  假导演生成循环
 ```
 
+## 资产协议（artdrop v1，2026-11-13）
+
+```
+协议    docs/base/assets-protocol.md
+目录    artdrop/{requests,inbox,refs,processed,rejected}
+导入    node tools/import-assets.mjs <batch> --check
+        node tools/import-assets.mjs <batch> --pack base --apply
+校验    protocol / license / 图集帧 / 帧尺寸 / 地形 code / id 冲突
+限制    旋转帧、路径逃逸、单文件 32MB、一批 256 个资产
+原则    外部 AI 只写 artdrop；运行时不调模型、不联网
+```
+
 ## 精灵贴图系统（F0，2026-11-12）
 
 ```

@@ -760,6 +760,13 @@ game/systems/render/*（投影成画面数据）
   扫源码里的 import，画一张引用树。
 - **`tools/gen-world.mjs`**（136 行）
   生成一张地图（MVP：噪声 → 群系 → 地形号）。
+- **`tools/import-assets.mjs`**（397 行）
+  资产导入器：把 artdrop 里的一批交付校验并合并进世界包。
+  - `validateBatch(batchDir, options = {})`
+  - `applyBatch(result, packDir, packId)`
+  - `archiveBatch(batchDir, outcome, reason)`
+- **`tools/import-assets.test.mjs`**（77 行）
+  资产导入器：示例批次通过、缺帧/旋转帧被拒、apply 写出正确清单。
 - **`tools/import-csv.mjs`**（144 行）
   CSV → 模板 JSON（宿主侧工具）。
   - `csvToTemplates(text)`

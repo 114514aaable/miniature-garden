@@ -40,6 +40,15 @@ node tools/serve.mjs            # 启动器：列出 worlds/ 下的世界
 
 或者双击 `启动游戏(浏览器).bat`（它会先构建）。
 
+**贴图交接**（外部绘图 AI）：
+
+```bash
+node tools/import-assets.mjs artdrop/inbox/<batch> --check
+node tools/import-assets.mjs artdrop/inbox/<batch> --pack base --apply
+```
+
+协议见 [`docs/base/assets-protocol.md`](docs/base/assets-protocol.md)。
+
 **测试与类型检查**：
 
 ```bash

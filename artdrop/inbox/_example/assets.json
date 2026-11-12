@@ -1,0 +1,45 @@
+{
+  "protocol": 1,
+  "batch": "_example",
+  "atlases": [
+    {
+      "id": "example",
+      "image": "atlas.svg",
+      "data": "atlas.json",
+      "size": [
+        128,
+        128
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "id": "terrain.floor",
+      "kind": "tile",
+      "sheet": "example",
+      "frame": "Terrain/Floor.png",
+      "size": [
+        64,
+        64
+      ],
+      "tileable": true
+    },
+    {
+      "id": "entity.potion",
+      "kind": "sprite",
+      "sheet": "example",
+      "frame": "Items/Potion.png",
+      "size": [
+        64,
+        64
+      ]
+    }
+  ],
+  "source": {
+    "provider": "handmade-fixture",
+    "model": "none",
+    "seed": 0,
+    "license": "CC0-1.0",
+    "createdAt": "2026-11-13T00:00:00Z"
+  }
+}
