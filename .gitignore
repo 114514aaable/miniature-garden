@@ -66,3 +66,13 @@ artdrop/refs/*
 # artdrop 备份（编码器会写）
 artdrop/backups/*
 !artdrop/backups/.gitkeep
+
+# artdrop 任务队列（只保留骨架）
+artdrop/queue/pending/*
+!artdrop/queue/pending/.gitkeep
+artdrop/queue/claimed/*
+!artdrop/queue/claimed/.gitkeep
+artdrop/queue/done/*
+!artdrop/queue/done/.gitkeep
+artdrop/queue/failed/*
+!artdrop/queue/failed/.gitkeep

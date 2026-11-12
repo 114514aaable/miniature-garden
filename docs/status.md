@@ -149,6 +149,10 @@ G1  假导演生成循环
 待做    编码器 tools/encode-assets.mjs（扫描树 → 分页 → 写回）
 ```
 
+## AI 交接协议（草案）
+
+设计文档：`docs/base/ai-bridge.md`；骨架：`artdrop/queue/`。文件队列 + 认领（rename 原子锁）+ 租约 + 回执；运行时仍然不调模型。
+
 ## 资产协议（artdrop v1，2026-11-13）
 
 ```
