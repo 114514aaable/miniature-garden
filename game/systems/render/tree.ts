@@ -98,10 +98,24 @@ export function parseAssetTree(raw: unknown, path = "$tree"): AssetTree {
 
     if (kind === "branch") {
       if (pageId !== null) throw new Error(`${trail.join(".")}：page 里不能再嵌 branch`);
+
+      // pages：一组页，不额外增加路径层级（多页时名字不变）
+      if (Array.isArray(node.pages)) {
+        for (const child of node.pages) {
+          walk(child, trail, pageId);
+        }
+      }
+
       const children = node.children;
-      if (!isRecord(children)) throw new Error(`${trail.join(".")}：branch 缺少 children`);
-      for (const [name, child] of Object.entries(children)) {
-        walk(child, [...trail, name], pageId);
+      if (children !== undefined) {
+        if (!isRecord(children)) throw new Error(`${trail.join(".")}：branch.children 需要对象`);
+        for (const [name, child] of Object.entries(children)) {
+          walk(child, [...trail, name], pageId);
+        }
+      }
+
+      if (node.pages === undefined && children === undefined) {
+        throw new Error(`${trail.join(".")}：branch 至少要 pages 或 children`);
       }
       return;
     }

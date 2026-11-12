@@ -94,6 +94,7 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
           // 坏图集跳过，对应实体回退字符
         }
       }
+      for (const parsed of atlases.values()) imageOf(parsed.image);
     }
 
     resize();

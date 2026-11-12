@@ -15,7 +15,7 @@ game/worlds/<pack>/art/assets/<name>.png    （PNG 原样复制，先当 file �
 - --apply 前先备份现有 tree + pages 到 artdrop/backups/encode-<时间>/。
 - 写失败从备份恢复。
 
-行数：353
+行数：351
 
 ## 接口
 
@@ -34,6 +34,7 @@ function encodeTree(inputDir, options = {})
 ## 依赖
 
 - [`game/systems/render/tree.ts`](game/systems/render/tree.md)
+- [`tools/png.mjs`](tools/png.md)
 
 ## 被引用
 

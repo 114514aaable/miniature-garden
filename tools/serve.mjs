@@ -2091,7 +2091,7 @@ const server = createServer(async (request, response) => {
           : extname(file) === ".png" ? "image/png"
           : extname(file) === ".jpg" || extname(file) === ".jpeg" ? "image/jpeg"
           : "application/octet-stream";
-        response.writeHead(200, { "content-type": type });
+        response.writeHead(200, { "content-type": type, "cache-control": "no-store" });
         response.end(data);
       } catch {
         response.writeHead(404);

@@ -55,14 +55,13 @@ function pack() {
 test("编码：SVG 按目录分页，PNG 保留为 file 叶子", () => {
   const encoded = encodeTree(source(), { pack: "test" });
 
-  assert.equal(encoded.pages.length, 2); // terrain / entity
-  assert.equal(encoded.copied.length, 1); // ui/potion.png
+  assert.equal(encoded.pages.length, 3); // terrain(SVG) / entity(SVG) / ui(PNG)
 
   const tree = parseAssetTree(encoded.tree);
   assert.ok(tree.leaves.has("terrain.floor"));
   assert.ok(tree.leaves.has("entity.rat.idle-1"));
   assert.ok(tree.leaves.has("entity.rat.idle-2"));
-  assert.ok(tree.files.has("ui.potion"));
+  assert.ok(tree.leaves.has("ui.potion"));
 
   const page = encoded.pages.find((item) => item.id === "terrain-1");
   assert.ok(page !== undefined);
@@ -76,13 +75,29 @@ test("apply：页图、PNG、树文件都落盘，并留备份", () => {
   const backupDir = join(TMP, "backups");
 
   const summary = applyEncoded(encoded, packDir, { backupDir });
-  assert.equal(summary.pages, 2);
-  assert.equal(summary.copied, 1);
+  assert.equal(summary.pages, 3);
   assert.ok(existsSync(join(packDir, "assets.tree.json")));
   assert.ok(existsSync(join(packDir, "art", "pages", "terrain-1.svg")));
-  assert.ok(existsSync(join(packDir, "art", "assets", "potion.png")));
+  assert.ok(existsSync(join(packDir, "art", "pages", "ui-r1.png")));
   assert.ok(existsSync(join(summary.backupDir, "report.json")));
 
   const tree = parseAssetTree(JSON.parse(readFileSync(join(packDir, "assets.tree.json"), "utf8")));
-  assert.ok(tree.files.has("ui.potion"));
+  assert.ok(tree.leaves.has("ui.potion"));
+});
+
+
+test("PNG 超过单页时拆页，路径不带 part 层级", async () => {
+  const dir = join(TMP, "split-src");
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(join(dir, "big"), { recursive: true });
+  const { encodePng } = await import("./png.mjs");
+  for (const name of ["a", "b"]) {
+    const rgba = Buffer.alloc(16 * 16 * 4, 255);
+    writeFileSync(join(dir, "big", name + ".png"), encodePng(16, 16, rgba));
+  }
+  const encoded = encodeTree(dir, { pack: "test", maxPage: 20 });
+  assert.equal(encoded.pages.length, 2);
+  const tree = parseAssetTree(encoded.tree);
+  assert.ok(tree.leaves.has("big.a"));
+  assert.ok(tree.leaves.has("big.b"));
 });

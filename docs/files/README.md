@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 128 个文件。
+共 129 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -132,6 +132,7 @@
 | `tools/pack-reader.mjs` | 读包工具（宿主侧）：把文件夹变成 PackContent。 | [md](tools/pack-reader.md) |
 | `tools/pages.mjs` | 两个页面：启动器和游戏。 | [md](tools/pages.md) |
 | `tools/play.mjs` | 从文件夹加载一个世界并画出来（宿主侧）。 | [md](tools/play.md) |
+| `tools/png.mjs` | 最小 PNG 编解码（只给离线编码器用，不进运行时）。 | [md](tools/png.md) |
 | `tools/serve.mjs` | 调试台 / 启动器（宿主侧）。 | [md](tools/serve.md) |
 | `tools/smoke.mjs` | HTTP 冒烟：真实起一个 serve，走「开局 → 动作 → 存档 → 读档 → 继续」。 | [md](tools/smoke.md) |
 | `tools/typecheck.mjs` | 离线类型检查。 | [md](tools/typecheck.md) |

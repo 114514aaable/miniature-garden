@@ -216,7 +216,7 @@ UI/<Name>.png
 
 - **调用名 = 路径**：`terrain.floor`、`entity.item_potion`。
 - 一个目录是「图集文件夹」还是「分支文件夹」由编码器决定：装得下就 `page`，装不下就 `branch` + 子页。
-- 多页：`pages[]` 可以有多张；叶子通过所在 `page` 节点确定页。
+- 多页：一个目录装不下时写成 `{ type: "branch", pages: [...] }`，**不增加路径层级**；叶子名字仍是 `group.name`。
 - `file` 叶子允许存在（热生成）：引擎按单文件 URL 读，编码后再改写为页内叶子。
 - 校验：page 引用存在、页内矩形不越界、路径唯一、`w/h` 为正整数。
 - 地形 id 仍然是 `terrain.<code>`；实体贴图走 `entity.<template id>`。
@@ -247,7 +247,7 @@ node tools/encode-assets.mjs artdrop/tree --pack base --apply
 2. SVG：读 `width/height/viewBox`，按货架算法分页，**矢量拼接**成页 SVG（不栅格化）。
 3. 一个 group 装得下一页 → 该目录是 `page`；装不下 → `branch` + `part-1…N` 子页。
 4. PNG：**原样复制**到 `art/assets/`，先作为 `file` 叶子（不栅格化、不重新编码）。
-5. 自检：生成的树必须通过 `parseAssetTree`（越界、引用、路径）。
+5. PNG：解码成 RGBA，按同样的货架算法拼成大页，再重新编码成 PNG。
 6. `--apply` 前备份现有 `assets.tree.json` + `art/pages/` 到 `artdrop/backups/encode-<时间>/`；
    写盘失败自动恢复；成功后写 `report.json`。
 
@@ -255,7 +255,8 @@ node tools/encode-assets.mjs artdrop/tree --pack base --apply
 
 - SVG 里的 `id`（渐变、defs）跨文件可能重名，编码器暂不重命名——同一个 group 里避免重复 id。
 - 页大小上限 2048；超过会拆页。
-- PNG 只做透传，不拼页（以后可以加栅格化/拼接）。
+- PNG 只支持 8 位、非隔行、RGB/RGBA；调色板/灰度/16 位会报错。
+- 其他格式（JPG/WebP）目前直接拒绝，不静默跳过。
 
 ---
 

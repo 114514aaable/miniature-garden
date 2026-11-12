@@ -572,7 +572,7 @@ game/systems/render/*（投影成画面数据）
   - `frameOf(atlas: Atlas, name: string) → AtlasFrame | undefined`
   - `interface AtlasFrame`
   - `interface Atlas`
-- **`game/systems/render/browser.ts`**（335 行）
+- **`game/systems/render/browser.ts`**（336 行）
   浏览器侧的渲染器：拿快照、自己跑 60fps、自己插值。
   - `attach(canvas: HTMLCanvasElement, options: ClientOptions) → Renderer`
   - `interface ClientState`
@@ -604,7 +604,7 @@ game/systems/render/*（投影成画面数据）
   - `interface SnapshotEntity`
   - `interface FrameSnapshot`
   - `interface Projector`
-- **`game/systems/render/tree.ts`**（192 行）
+- **`game/systems/render/tree.ts`**（206 行）
   资产树：一张（或多张）大图集 + 一个树文件。
   - `parseAssetTree(raw: unknown, path = "$tree") → AssetTree`
   - `treeAtlases(tree: AssetTree) → Map<string, unknown>`
@@ -751,11 +751,11 @@ game/systems/render/*（投影成画面数据）
   数据体检：数据化之后，规则要的字段，包里到底有没有。
 - **`tools/check-locale.mjs`**（99 行）
   语言包体检：包里每个 id 都应该有名字。
-- **`tools/encode-assets.mjs`**（353 行）
+- **`tools/encode-assets.mjs`**（351 行）
   编码器：把 artdrop 里的「树形文件夹」编译成 assets.tree.json + 页图。
   - `encodeTree(inputDir, options = {})`
   - `applyEncoded(encoded, packDir, options = {})`
-- **`tools/encode-assets.test.mjs`**（89 行）
+- **`tools/encode-assets.test.mjs`**（104 行）
   编码器：SVG 拼页、PNG 原样复制、写盘备份与恢复。
 - **`tools/gen-atlas-fixture.mjs`**（83 行）
   生成 F0 的测试图集：一张 SVG 图集 + TexturePacker JSON hash + assets 清单。
@@ -795,6 +795,11 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
+- **`tools/png.mjs`**（179 行）
+  最小 PNG 编解码（只给离线编码器用，不进运行时）。
+  - `decodePng(buffer, where = "png")`
+  - `encodePng(width, height, rgba)`
+  - `blit(dst, dstWidth, src, srcWidth, srcHeight, x, y)`
 - **`tools/serve.mjs`**（2344 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/smoke.mjs`**（160 行）

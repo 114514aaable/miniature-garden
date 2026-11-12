@@ -11,7 +11,7 @@ page    对应一张图集页，子节点是「页内矩形」
 { file, w, h }                 热生成：还没进图集的单文件
 调用名 = 路径（terrain.floor / entity.rat.idle）。
 
-行数：192
+行数：206
 
 ## 接口
 

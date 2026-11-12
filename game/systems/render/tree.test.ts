@@ -63,3 +63,29 @@ test("越界：报错", () => {
   bad.tree.children.terrain.children.floor.x = 100;
   assert.throws(() => parseAssetTree(bad), /超出图集页/);
 });
+
+
+test("branch.pages：多页不增加路径层级", () => {
+  const raw = {
+    version: 1,
+    pages: [
+      { id: "p0", image: "/a.svg", width: 64, height: 64 },
+      { id: "p1", image: "/b.svg", width: 64, height: 64 },
+    ],
+    tree: {
+      type: "branch",
+      children: {
+        terrain: {
+          type: "branch",
+          pages: [
+            { type: "page", page: "p0", children: { floor: { type: "leaf", x: 0, y: 0, w: 32, h: 32 } } },
+            { type: "page", page: "p1", children: { wall: { type: "leaf", x: 0, y: 0, w: 32, h: 32 } } },
+          ],
+        },
+      },
+    },
+  };
+  const tree = parseAssetTree(raw);
+  assert.deepEqual(spriteOf(tree, "terrain.floor"), { sheet: "p0", frame: "terrain.floor" });
+  assert.deepEqual(spriteOf(tree, "terrain.wall"), { sheet: "p1", frame: "terrain.wall" });
+});

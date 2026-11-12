@@ -33,6 +33,7 @@ import { extname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { parseAssetTree } from "../game/systems/render/tree.ts";
+import { blit, decodePng, encodePng } from "./png.mjs";
 
 const MAX_PAGE = 2048;
 const PADDING = 2;
@@ -160,8 +161,6 @@ export function encodeTree(inputDir, options = {}) {
   if (files.length === 0) throw new Error(`目录是空的：${inputDir}`);
 
   const groups = new Map();
-  const copied = [];
-
   for (const file of files) {
     const rel = relative(root, file).replaceAll("\\", "/");
     const group = groupOf(rel);
@@ -178,7 +177,8 @@ export function encodeTree(inputDir, options = {}) {
     const raster = [];
 
     for (const entry of list.sort((a, b) => a.rel.localeCompare(b.rel))) {
-      if (extname(entry.file).toLowerCase() === ".svg") {
+      const ext = extname(entry.file).toLowerCase();
+      if (ext === ".svg") {
         const text = readFileSync(entry.file, "utf8");
         const size = svgSize(text, entry.rel);
         vector.push({
@@ -187,22 +187,22 @@ export function encodeTree(inputDir, options = {}) {
           inner: svgInner(text),
           name: leafName(entry.rel, group),
         });
+      } else if (ext === ".png") {
+        const decoded = decodePng(readFileSync(entry.file), entry.rel);
+        raster.push({ ...entry, ...decoded, name: leafName(entry.rel, group) });
       } else {
-        const buffer = readFileSync(entry.file);
-        const size = pngSize(buffer, entry.rel);
-        raster.push({ ...entry, ...size, name: leafName(entry.rel, group), buffer });
+        throw new Error(`${entry.rel}：目前只支持 SVG / PNG`);
       }
     }
 
-    const packed = pack(vector, maxPage);
     const pageNodes = [];
 
-    for (const [index, page] of packed.entries()) {
+    // SVG：矢量拼页
+    for (const [index, page] of pack(vector, maxPage).entries()) {
       const pageId = safeName(`${group}-${index + 1}`);
-      const image = `/art/${packId}/pages/${pageId}.svg`;
       pages.push({
         id: pageId,
-        image,
+        image: `/art/${packId}/pages/${pageId}.svg`,
         width: Math.max(1, Math.min(maxPage, page.width)),
         height: Math.max(1, Math.min(maxPage, page.height)),
         content: renderPage(page, maxPage),
@@ -210,45 +210,47 @@ export function encodeTree(inputDir, options = {}) {
 
       const children = {};
       for (const item of page.items) {
-        children[item.name] = {
-          type: "leaf",
-          x: item.x,
-          y: item.y,
-          w: item.width,
-          h: item.height,
-        };
+        children[item.name] = { type: "leaf", x: item.x, y: item.y, w: item.width, h: item.height };
       }
       pageNodes.push({ type: "page", page: pageId, children });
     }
 
-    const fileLeaves = {};
-    for (const item of raster) {
-      const target = `assets/${safeName(item.name)}.png`;
-      copied.push({ from: item.file, toRelative: target, width: item.width, height: item.height });
-      fileLeaves[item.name] = {
-        type: "leaf",
-        file: target,
-        w: item.width,
-        h: item.height,
-      };
+    // PNG：解成 RGBA，拼页后重新编码
+    for (const [index, page] of pack(raster, maxPage).entries()) {
+      const pageId = safeName(`${group}-r${index + 1}`);
+      const width = Math.max(1, Math.min(maxPage, page.width));
+      const height = Math.max(1, Math.min(maxPage, page.height));
+      const canvas = Buffer.alloc(width * height * 4);
+      for (const item of page.items) {
+        blit(canvas, width, item.rgba, item.width, item.height, item.x, item.y);
+      }
+      pages.push({
+        id: pageId,
+        image: `/art/${packId}/pages/${pageId}.png`,
+        width,
+        height,
+        content: encodePng(width, height, canvas),
+      });
+
+      const children = {};
+      for (const item of page.items) {
+        children[item.name] = { type: "leaf", x: item.x, y: item.y, w: item.width, h: item.height };
+      }
+      pageNodes.push({ type: "page", page: pageId, children });
     }
 
-    if (pageNodes.length === 1 && Object.keys(fileLeaves).length === 0) {
+    if (pageNodes.length === 1) {
       treeChildren[group] = pageNodes[0];
     } else {
-      const children = {};
-      pageNodes.forEach((node, index) => {
-        children[`part-${index + 1}`] = node;
-      });
-      Object.assign(children, fileLeaves);
-      treeChildren[group] = { type: "branch", children };
+      // pages：不增加路径层级，名字保持 `group.name`
+      treeChildren[group] = { type: "branch", pages: pageNodes };
     }
   }
 
   const tree = { version: 1, pages: pages.map(({ content, ...page }) => page), tree: { type: "branch", children: treeChildren } };
   parseAssetTree(tree); // 自检：越界 / 引用错误在这里就炸
 
-  return { tree, pages, copied, pack: packId };
+  return { tree, pages, pack: packId };
 }
 
 function timestamp() {
@@ -274,12 +276,10 @@ export function applyEncoded(encoded, packDir, options = {}) {
   try {
     mkdirSync(pagesDir, { recursive: true });
     for (const page of encoded.pages) {
-      writeFileSync(join(pagesDir, `${page.id}.svg`), page.content, "utf8");
-    }
-
-    mkdirSync(join(packDir, "art", "assets"), { recursive: true });
-    for (const file of encoded.copied) {
-      cpSync(file.from, join(packDir, "art", file.toRelative));
+      const name = page.image.split("/").pop();
+      const target = join(pagesDir, name);
+      if (Buffer.isBuffer(page.content)) writeFileSync(target, page.content);
+      else writeFileSync(target, page.content, "utf8");
     }
 
     writeFileSync(treePath, JSON.stringify(encoded.tree, null, 2) + "\n", "utf8");
@@ -298,14 +298,14 @@ export function applyEncoded(encoded, packDir, options = {}) {
   writeFileSync(
     join(backupDir, "report.json"),
     JSON.stringify(
-      { at: new Date().toISOString(), pack: packId, pages: encoded.pages.map((p) => p.id), copied: encoded.copied.length },
+      { at: new Date().toISOString(), pack: packId, pages: encoded.pages.map((p) => p.id) },
       null,
       2,
     ) + "\n",
     "utf8",
   );
 
-  return { backupDir, pages: encoded.pages.length, copied: encoded.copied.length };
+  return { backupDir, pages: encoded.pages.length };
 }
 
 function parseArgs(argv) {
@@ -334,9 +334,7 @@ function main() {
   }
 
   const encoded = encodeTree(input, { pack: args.pack });
-  console.log(
-    `编码计划：${encoded.pages.length} 页 / ${encoded.copied.length} 个原样复制的 PNG`,
-  );
+  console.log(`编码计划：${encoded.pages.length} 页`);
   for (const page of encoded.pages) console.log(`  page ${page.id}  ${page.width}×${page.height}`);
 
   if (args.apply === false) {
