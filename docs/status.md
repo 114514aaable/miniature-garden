@@ -149,6 +149,10 @@ G1  假导演生成循环
 待做    编码器 tools/encode-assets.mjs（扫描树 → 分页 → 写回）
 ```
 
+## AI 职责树
+
+`docs/base/ai-roles.md`：对照游戏工作室（创意总监/设计/美术/QA），分出 L1 导演、L2 作者、L3 对话、L4 素材、L5 审计；AI 只有提议权，提交权在引擎，批准权在人。
+
 ## AI 交接协议（草案）
 
 设计文档：`docs/base/ai-bridge.md`；骨架：`artdrop/queue/`。文件队列 + 认领（rename 原子锁）+ 租约 + 回执；运行时仍然不调模型。
