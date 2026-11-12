@@ -56,7 +56,7 @@ export interface EntityStyle {
   /** 缩到右下角，避免和角色抢中心。 */
   readonly corner?: boolean;
   /** 有贴图就用贴图，否则用 glyph。 */
-  readonly sprite?: { readonly sheet: string; readonly index: number };
+  readonly sprite?: { readonly sheet?: string; readonly frame?: string; readonly index?: number };
 }
 
 export interface RenderStyle {
@@ -231,8 +231,14 @@ export function buildFrame(snapshot: FrameSnapshot, spec: FrameSpec): readonly D
     const centerY = round(screenY + itemY + (style.corner === true ? spec.tile * 0.72 : spec.tile / 2));
 
     // 有图集、组件里也点了名 → 画贴图；否则退回字符。
-    const sprite = entity.sprite as { sheet?: unknown; frame?: unknown; frames?: unknown; fps?: unknown } | undefined;
-    const frameName = frameNameOf(sprite, spec.now ?? 0);
+    const componentSprite = entity.sprite as { sheet?: unknown; frame?: unknown; frames?: unknown; fps?: unknown } | undefined;
+    let sprite = componentSprite;
+    let frameName = frameNameOf(componentSprite, spec.now ?? 0);
+    // 模板样式里的贴图是树资产，没有组件级 core.sprite
+    if (frameName === undefined && style.sprite !== undefined) {
+      sprite = style.sprite;
+      frameName = style.sprite.frame;
+    }
     const sheet = typeof sprite?.sheet === "string" ? sprite.sheet : "atlas";
     const atlas = atlasFor(spec, sheet);
     if (atlas !== null && frameName !== undefined) {

@@ -137,6 +137,18 @@ F14 许可矩阵 / README 数字 / CI（LICENSING 需要作者拍板）
 G1  假导演生成循环
 ```
 
+## 资产树（2026-11-13）
+
+```
+格式    assets.tree.json：pages[] + tree{branch/page/leaf}
+叶子    页内 {x,y,w,h} / 热生成 {file,w,h}
+调用名  路径 = terrain.floor / entity.item_potion
+读取    parseAssetTree → 页图集 + 语义 sprite
+        style.terrain 和 style.templates 都走树
+兼容    assets.json 仍在；树优先
+待做    编码器 tools/encode-assets.mjs（扫描树 → 分页 → 写回）
+```
+
 ## 资产协议（artdrop v1，2026-11-13）
 
 ```

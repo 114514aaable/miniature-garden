@@ -7,7 +7,7 @@
 好处是能单测：同样的快照 + 同样的样式，必须得到同样的指令。
 Canvas / SVG / 终端 只是这些命令的执行器。
 
-行数：302
+行数：308
 
 ## 接口
 
@@ -38,7 +38,7 @@ interface EntityStyle {
   readonly layer?: number;
   readonly scale?: number;
   readonly corner?: boolean;
-  readonly sprite?: { readonly sheet: string; readonly index: number };
+  readonly sprite?: { readonly sheet?: string; readonly frame?: string; readonly index?: number };
 }
 ```
 

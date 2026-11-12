@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "pages": [
+    {
+      "id": "base-main",
+      "image": "/art/base/pages/base-main.svg",
+      "width": 128,
+      "height": 128
+    }
+  ],
+  "tree": {
+    "type": "branch",
+    "children": {
+      "terrain": {
+        "type": "page",
+        "page": "base-main",
+        "children": {
+          "floor": { "type": "leaf", "x": 0, "y": 0, "w": 64, "h": 64 },
+          "wall": { "type": "leaf", "x": 64, "y": 0, "w": 64, "h": 64 },
+          "water": { "type": "leaf", "x": 0, "y": 64, "w": 64, "h": 64 }
+        }
+      },
+      "entity": {
+        "type": "page",
+        "page": "base-main",
+        "children": {
+          "item_potion": { "type": "leaf", "x": 64, "y": 64, "w": 64, "h": 64 }
+        }
+      }
+    }
+  }
+}

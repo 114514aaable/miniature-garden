@@ -213,3 +213,32 @@ test("实体带 core.sprite 时按 sheet 找多图集", () => {
   assert.ok(sprite !== undefined);
   assert.equal(sprite.kind === "sprite" ? sprite.sx : -1, 64);
 });
+
+
+test("模板样式里的 sprite 也能画（树资产）", () => {
+  const atlas = parseAtlas({
+    meta: { image: "/art/base/pages/base-main.svg" },
+    frames: { "entity.item_potion": { frame: { x: 64, y: 64, w: 64, h: 64 } } },
+  });
+  const styled = {
+    ...DEFAULT_STYLE,
+    templates: {
+      ...DEFAULT_STYLE.templates,
+      item_potion: {
+        glyph: "i",
+        color: "#fff",
+        sprite: { sheet: "base-main", frame: "entity.item_potion" },
+      },
+    },
+  };
+  const entities = [
+    { handle: 0, x: 0, y: 0, template: "item_potion", components: {} },
+  ];
+  const commands = buildFrame(
+    snapshot({ entities }),
+    spec({ style: styled, atlases: new Map([["base-main", atlas]]) }),
+  );
+  const sprite = commands.find((command) => command.kind === "sprite");
+  assert.ok(sprite !== undefined);
+  assert.equal(sprite.kind === "sprite" ? sprite.sx : -1, 64);
+});

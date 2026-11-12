@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 125 个文件。
+共 126 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -88,6 +88,7 @@
 | `game/systems/render/contract.ts` | 渲染契约：渲染器在启动时声明「我需要什么」。 | [md](game/systems/render/contract.md) |
 | `game/systems/render/draw.ts` | 绘制指令：把快照翻译成「画什么」。 | [md](game/systems/render/draw.md) |
 | `game/systems/render/project.ts` | 投影：按契约从世界生成一张「照片」。 | [md](game/systems/render/project.md) |
+| `game/systems/render/tree.ts` | 资产树：一张（或多张）大图集 + 一个树文件。 | [md](game/systems/render/tree.md) |
 | `game/systems/render/visual.ts` | 视觉投影：渲染位置永远从逻辑位置重算。 | [md](game/systems/render/visual.md) |
 | `game/systems/rules/aliases.ts` | 旧 tag 的别名表。 | [md](game/systems/rules/aliases.md) |
 | `game/systems/rules/base.ts` | base 包的规则：劈砍、蓄力劈砍。 | [md](game/systems/rules/base.md) |

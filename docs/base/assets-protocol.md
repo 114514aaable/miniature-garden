@@ -171,6 +171,64 @@ UI/<Name>.png
 `source` 必填：`provider` / `model` / `seed` / `license` / `createdAt`。
 `source.license` 缺失或为空 → 整批拒绝。
 
+### 4.6 资产树（目标形态，已支持读取）
+
+> `game/worlds/<pack>/assets.tree.json`。它是「大图集 + 树索引」：树只记录每个贴图在哪一页的哪个矩形，不再需要单文件。
+
+```json
+{
+  "version": 1,
+  "pages": [
+    { "id": "base-main", "image": "/art/base/pages/base-main.svg",
+      "width": 128, "height": 128 }
+  ],
+  "tree": {
+    "type": "branch",
+    "children": {
+      "terrain": {
+        "type": "page", "page": "base-main",
+        "children": {
+          "floor": { "type": "leaf", "x": 0, "y": 0, "w": 64, "h": 64 },
+          "wall":  { "type": "leaf", "x": 64, "y": 0, "w": 64, "h": 64 }
+        }
+      },
+      "entity": {
+        "type": "page", "page": "base-main",
+        "children": {
+          "item_potion": { "type": "leaf", "x": 64, "y": 64, "w": 64, "h": 64 }
+        }
+      }
+    }
+  }
+}
+```
+
+节点语义：
+
+| 节点 | 含义 |
+|---|---|
+| `branch` | 纯逻辑分组；子节点可以跨页 |
+| `page` | 对应一张图集页；`children` 只能是页内叶子 |
+| `leaf` | `{x,y,w,h}`：已编码的页内矩形 |
+| `leaf` | `{file,w,h}`：热生成的单文件，尚未进图集 |
+
+规则：
+
+- **调用名 = 路径**：`terrain.floor`、`entity.item_potion`。
+- 一个目录是「图集文件夹」还是「分支文件夹」由编码器决定：装得下就 `page`，装不下就 `branch` + 子页。
+- 多页：`pages[]` 可以有多张；叶子通过所在 `page` 节点确定页。
+- `file` 叶子允许存在（热生成）：引擎按单文件 URL 读，编码后再改写为页内叶子。
+- 校验：page 引用存在、页内矩形不越界、路径唯一、`w/h` 为正整数。
+- 地形 id 仍然是 `terrain.<code>`；实体贴图走 `entity.<template id>`。
+
+编码器（未实现，`tools/encode-assets.mjs`）负责：
+
+```
+扫描 artdrop 树 → 分页 → 生成 page 图 + 本树文件
+file 叶子 → 写入图集 → 改写成页内叶子
+输出到包根目录，原子替换
+```
+
 ---
 
 ## 5. 导入流程

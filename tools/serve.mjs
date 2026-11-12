@@ -34,6 +34,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, unl
 import { extname, isAbsolute, relative, resolve } from "node:path";
 import { createProjector } from "../game/systems/render/project.ts";
 import { DEFAULT_STYLE } from "../game/systems/render/draw.ts";
+import { parseAssetTree, spriteOf, treeAtlases } from "../game/systems/render/tree.ts";
 import { buildGraph } from "../game/engine/core/src/pack/graph.ts";
 import { DevLog, formatLine } from "../game/systems/log/devlog.ts";
 import { runPhases } from "../game/systems/tick/phases.ts";
@@ -147,6 +148,7 @@ function closureOf(rootId, byId) {
 function loadAssets(ordered) {
   const atlases = {};
   const assets = new Map();
+  const treeAssets = new Map();
 
   for (const content of ordered) {
     const packId = content.pack.id;
@@ -180,9 +182,33 @@ function loadAssets(ordered) {
       }
       assets.set(asset.id, { sheet: asset.sheet, frame: asset.frame });
     }
+
+    // 树文件：目录页 → 页图集；叶子 → 语义 sprite
+    const treePath = dir + "/assets.tree.json";
+    if (existsSync(treePath)) {
+      try {
+        const tree = parseAssetTree(JSON.parse(readFileSync(treePath, "utf8")));
+        for (const [id, atlas] of treeAtlases(tree)) {
+          atlases[id] = atlas;
+        }
+        for (const leaf of tree.leaves.values()) {
+          treeAssets.set(leaf.path, { sheet: leaf.page, frame: leaf.path });
+        }
+        for (const file of tree.files.values()) {
+          const sheet = "file:" + file.file;
+          atlases[sheet] = {
+            meta: { image: "/art/" + packId + "/" + file.file },
+            frames: { leaf: { frame: { x: 0, y: 0, w: file.w, h: file.h } } },
+          };
+          treeAssets.set(file.path, { sheet, frame: "leaf" });
+        }
+      } catch (error) {
+        console.warn("[assets] 资产树解析失败：" + messageOf(error));
+      }
+    }
   }
 
-  return { atlases, assets };
+  return { atlases, assets, treeAssets };
 }
 
 /** 把语义资产映射到 RenderStyle（目前只有地形）。 */
@@ -194,10 +220,20 @@ function styleFor(art, loaded) {
   };
 
   for (const terrain of loaded.terrains.values()) {
-    const asset = art.assets.get("terrain." + terrain.code);
+    const asset = art.treeAssets.get("terrain." + terrain.code) ?? art.assets.get("terrain." + terrain.code);
     if (asset !== undefined) {
       style.terrain[terrain.id] = {
         ...(style.terrain[terrain.id] ?? { fill: "#0d0f13" }),
+        sprite: { sheet: asset.sheet, frame: asset.frame },
+      };
+    }
+  }
+
+  for (const id of loaded.templates.ids()) {
+    const asset = art.treeAssets.get("entity." + id);
+    if (asset !== undefined) {
+      style.templates[id] = {
+        ...(style.templates[id] ?? { glyph: "?", color: "#d7dae0" }),
         sprite: { sheet: asset.sheet, frame: asset.frame },
       };
     }

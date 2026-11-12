@@ -587,7 +587,7 @@ game/systems/render/*（投影成画面数据）
   - `type EntityField`
   - `const MAX_COMPONENTS`
   - `const MAX_UI`
-- **`game/systems/render/draw.ts`**（302 行）
+- **`game/systems/render/draw.ts`**（308 行）
   绘制指令：把快照翻译成「画什么」。
   - `buildFrame(snapshot: FrameSnapshot, spec: FrameSpec) → readonly DrawCommand[]`
   - `frameNameOf(sprite: { frame?: unknown; frames?: unknown; fps?: unknown } | undefined, nowMs: number,) → string | undefined`
@@ -604,6 +604,15 @@ game/systems/render/*（投影成画面数据）
   - `interface SnapshotEntity`
   - `interface FrameSnapshot`
   - `interface Projector`
+- **`game/systems/render/tree.ts`**（192 行）
+  资产树：一张（或多张）大图集 + 一个树文件。
+  - `parseAssetTree(raw: unknown, path = "$tree") → AssetTree`
+  - `treeAtlases(tree: AssetTree) → Map<string, unknown>`
+  - `spriteOf(tree: AssetTree, path: string,)`
+  - `interface AssetPage`
+  - `interface TreeLeaf`
+  - `interface FileLeaf`
+  - `interface AssetTree`
 - **`game/systems/render/visual.ts`**（86 行）
   视觉投影：渲染位置永远从逻辑位置重算。
   - `clampDelta(now: number, last: number, previous: number) → number`
@@ -780,7 +789,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（2308 行）
+- **`tools/serve.mjs`**（2344 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/smoke.mjs`**（160 行）
   HTTP 冒烟：真实起一个 serve，走「开局 → 动作 → 存档 → 读档 → 继续」。
