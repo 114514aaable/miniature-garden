@@ -7,7 +7,7 @@
 好处是能单测：同样的快照 + 同样的样式，必须得到同样的指令。
 Canvas / SVG / 终端 只是这些命令的执行器。
 
-行数：269
+行数：302
 
 ## 接口
 
@@ -58,6 +58,7 @@ interface FrameSpec {
   readonly style: RenderStyle;
   readonly now?: number;
   readonly atlas?: Atlas;
+  readonly atlases?: ReadonlyMap<string, Atlas>;
 }
 ```
 
@@ -79,6 +80,7 @@ interface RenderStyle {
 interface TerrainStyle {
   readonly fill: string;
   readonly glyph?: string;
+  readonly sprite?: { readonly sheet: string; readonly frame: string };
 }
 ```
 
@@ -90,3 +92,4 @@ interface TerrainStyle {
 ## 被引用
 
 - [`game/systems/render/browser.ts`](game/systems/render/browser.md)
+- [`tools/serve.mjs`](tools/serve.md)

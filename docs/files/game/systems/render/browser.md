@@ -8,7 +8,7 @@
 把 visual.ts / draw.ts 编成 JS 送到浏览器，服务端和客户端共用同一份源码
 ——所以这里没有任何「镜像实现」。
 
-行数：321
+行数：335
 
 ## 接口
 
@@ -35,6 +35,7 @@ interface ClientState {
   readonly snapshot: FrameSnapshot;
   readonly style?: RenderStyle;
   readonly atlas?: unknown;
+  readonly atlases?: Readonly<Record<string, unknown>>;
 }
 ```
 

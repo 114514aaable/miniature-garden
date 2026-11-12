@@ -42,6 +42,8 @@ export interface TerrainStyle {
   readonly fill: string;
   /** 没有贴图时用字符兜底。 */
   readonly glyph?: string;
+  /** 有图集帧就画 tile；没有就用 fill。 */
+  readonly sprite?: { readonly sheet: string; readonly frame: string };
 }
 
 export interface EntityStyle {
@@ -76,6 +78,8 @@ export interface FrameSpec {
   readonly now?: number;
   /** 可选图集；没有就全用字符。 */
   readonly atlas?: Atlas;
+  /** 多图集：按 sheet id 选。 */
+  readonly atlases?: ReadonlyMap<string, Atlas>;
 }
 
 export const DEFAULT_STYLE: RenderStyle = {
@@ -139,6 +143,26 @@ export function buildFrame(snapshot: FrameSnapshot, spec: FrameSpec): readonly D
         h: bottom - top,
         color: style?.fill ?? spec.style.background,
       });
+
+      if (style?.sprite !== undefined) {
+        const atlas = atlasFor(spec, style.sprite.sheet);
+        const frame = atlas === null ? undefined : frameOf(atlas, style.sprite.frame);
+        if (atlas !== null && frame !== undefined) {
+          commands.push({
+            kind: "sprite",
+            x: left,
+            y: top,
+            w: right - left,
+            h: bottom - top,
+            image: atlas.image,
+            sx: frame.x,
+            sy: frame.y,
+            sw: frame.w,
+            sh: frame.h,
+            fallback: { text: style.glyph ?? " ", color: style.fill, size: Math.round(spec.tile * 0.6) },
+          });
+        }
+      }
 
       if (style?.glyph !== undefined) {
         commands.push({
@@ -207,10 +231,12 @@ export function buildFrame(snapshot: FrameSnapshot, spec: FrameSpec): readonly D
     const centerY = round(screenY + itemY + (style.corner === true ? spec.tile * 0.72 : spec.tile / 2));
 
     // 有图集、组件里也点了名 → 画贴图；否则退回字符。
-    const sprite = entity.sprite as { frame?: unknown; frames?: unknown; fps?: unknown } | undefined;
+    const sprite = entity.sprite as { sheet?: unknown; frame?: unknown; frames?: unknown; fps?: unknown } | undefined;
     const frameName = frameNameOf(sprite, spec.now ?? 0);
-    if (spec.atlas !== undefined && frameName !== undefined) {
-      const frame = frameOf(spec.atlas, frameName);
+    const sheet = typeof sprite?.sheet === "string" ? sprite.sheet : "atlas";
+    const atlas = atlasFor(spec, sheet);
+    if (atlas !== null && frameName !== undefined) {
+      const frame = frameOf(atlas, frameName);
       if (frame !== undefined) {
         commands.push({
           kind: "sprite",
@@ -218,7 +244,7 @@ export function buildFrame(snapshot: FrameSnapshot, spec: FrameSpec): readonly D
           y: round(screenY + itemY),
           w: spec.tile,
           h: spec.tile,
-          image: spec.atlas.image,
+          image: atlas.image,
           sx: frame.x,
           sy: frame.y,
           sw: frame.w,
@@ -240,6 +266,13 @@ export function buildFrame(snapshot: FrameSnapshot, spec: FrameSpec): readonly D
   }
 
   return commands;
+}
+
+function atlasFor(spec: FrameSpec, sheet: string): Atlas | null {
+  const named = spec.atlases?.get(sheet);
+  if (named !== undefined) return named;
+  // 兼容旧的单图集调用：只有一个 atlas 时不再挑名字
+  return spec.atlas ?? null;
 }
 
 function visible(x: number, y: number, tile: number, viewport: { width: number; height: number }): boolean {

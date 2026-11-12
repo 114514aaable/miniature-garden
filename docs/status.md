@@ -137,6 +137,18 @@ F14 许可矩阵 / README 数字 / CI（LICENSING 需要作者拍板）
 G1  假导演生成循环
 ```
 
+## 精灵贴图系统（F0，2026-11-12）
+
+```
+契约    base/assets.json：atlases + 语义 assets（terrain.<code> / entity.<id>）
+图集    base/art/atlas.svg + atlas.json（TexturePacker JSON hash，4 帧）
+服务端  buildSession 读 assets.json → snapshot 下发 style + atlases
+        地形按 terrain.<code> 映射到 sprite；图集图片换成 /art/... URL
+渲染    draw.ts 支持多图集（按 sheet 选）；地形有 sprite 就画 tile
+        实体 core.sprite 按 sheet/frame 解析，缺帧回退字符
+客户端  ClientState.atlases → parseAtlas → buildFrame
+```
+
 ## 同格物品（2026-11-12）
 
 ```

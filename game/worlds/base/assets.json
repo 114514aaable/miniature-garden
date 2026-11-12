@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "atlases": [
+    {
+      "id": "atlas",
+      "image": "/art/base/atlas.svg",
+      "data": "art/atlas.json"
+    }
+  ],
+  "assets": [
+    {
+      "id": "terrain.floor",
+      "kind": "tile",
+      "sheet": "atlas",
+      "frame": "Terrain/Floor.png"
+    },
+    {
+      "id": "terrain.wall",
+      "kind": "tile",
+      "sheet": "atlas",
+      "frame": "Terrain/Wall.png"
+    },
+    {
+      "id": "terrain.water",
+      "kind": "tile",
+      "sheet": "atlas",
+      "frame": "Terrain/Water.png"
+    },
+    {
+      "id": "entity.potion",
+      "kind": "sprite",
+      "sheet": "atlas",
+      "frame": "Items/Potion.png"
+    }
+  ]
+}

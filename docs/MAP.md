@@ -572,7 +572,7 @@ game/systems/render/*（投影成画面数据）
   - `frameOf(atlas: Atlas, name: string) → AtlasFrame | undefined`
   - `interface AtlasFrame`
   - `interface Atlas`
-- **`game/systems/render/browser.ts`**（321 行）
+- **`game/systems/render/browser.ts`**（335 行）
   浏览器侧的渲染器：拿快照、自己跑 60fps、自己插值。
   - `attach(canvas: HTMLCanvasElement, options: ClientOptions) → Renderer`
   - `interface ClientState`
@@ -587,7 +587,7 @@ game/systems/render/*（投影成画面数据）
   - `type EntityField`
   - `const MAX_COMPONENTS`
   - `const MAX_UI`
-- **`game/systems/render/draw.ts`**（269 行）
+- **`game/systems/render/draw.ts`**（302 行）
   绘制指令：把快照翻译成「画什么」。
   - `buildFrame(snapshot: FrameSnapshot, spec: FrameSpec) → readonly DrawCommand[]`
   - `frameNameOf(sprite: { frame?: unknown; frames?: unknown; fps?: unknown } | undefined, nowMs: number,) → string | undefined`
@@ -742,6 +742,8 @@ game/systems/render/*（投影成画面数据）
   数据体检：数据化之后，规则要的字段，包里到底有没有。
 - **`tools/check-locale.mjs`**（99 行）
   语言包体检：包里每个 id 都应该有名字。
+- **`tools/gen-atlas-fixture.mjs`**（83 行）
+  生成 F0 的测试图集：一张 SVG 图集 + TexturePacker JSON hash + assets 清单。
 - **`tools/gen-body-art.mjs`**（97 行）
   一次性脚本：生成人形立绘的占位部件（SVG）+ rig 布局。
 - **`tools/gen-docs.mjs`**（188 行）
@@ -771,7 +773,7 @@ game/systems/render/*（投影成画面数据）
   - `const PAGES`
 - **`tools/play.mjs`**（88 行）
   从文件夹加载一个世界并画出来（宿主侧）。
-- **`tools/serve.mjs`**（2237 行）
+- **`tools/serve.mjs`**（2308 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/smoke.mjs`**（160 行）
   HTTP 冒烟：真实起一个 serve，走「开局 → 动作 → 存档 → 读档 → 继续」。

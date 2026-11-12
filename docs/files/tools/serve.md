@@ -10,7 +10,7 @@
 node tools/serve.mjs                     # 启动器：列出 worlds/ 下的世界
 node tools/serve.mjs worlds/a worlds/b   # 直接进某个世界（开发用）
 
-行数：2237
+行数：2308
 
 ## 接口
 
@@ -44,6 +44,7 @@ node tools/serve.mjs worlds/a worlds/b   # 直接进某个世界（开发用）
 - [`game/systems/host/rules.ts`](game/systems/host/rules.md)
 - [`game/systems/host/writes.ts`](game/systems/host/writes.md)
 - [`game/systems/log/devlog.ts`](game/systems/log/devlog.md)
+- [`game/systems/render/draw.ts`](game/systems/render/draw.md)
 - [`game/systems/render/project.ts`](game/systems/render/project.md)
 - [`game/systems/rules/aliases.ts`](game/systems/rules/aliases.md)
 - [`game/systems/rules/index.ts`](game/systems/rules/index.md)

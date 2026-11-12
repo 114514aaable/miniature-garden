@@ -31,6 +31,8 @@ export interface ClientState {
   readonly style?: RenderStyle;
   /** 原始图集 JSON（可选）。 */
   readonly atlas?: unknown;
+  /** 多图集：sheet id → 原始 JSON。 */
+  readonly atlases?: Readonly<Record<string, unknown>>;
 }
 
 export interface ClientOptions {
@@ -64,6 +66,7 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
 
   let state: ClientState | null = null;
   let atlas: Atlas | null = null;
+  let atlases = new Map<string, Atlas>();
   let last = 0;
   let previous = 0;
   let running = true;
@@ -81,6 +84,16 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
     }
     if (next.atlas !== undefined && next.atlas !== null) {
       atlas = parseAtlas(next.atlas);
+    }
+    if (next.atlases !== undefined && next.atlases !== null) {
+      atlases = new Map();
+      for (const [id, raw] of Object.entries(next.atlases)) {
+        try {
+          atlases.set(id, parseAtlas(raw));
+        } catch {
+          // 坏图集跳过，对应实体回退字符
+        }
+      }
     }
 
     resize();
@@ -176,6 +189,7 @@ export function attach(canvas: HTMLCanvasElement, options: ClientOptions): Rende
           style: state.style ?? DEFAULT_STYLE,
           now,
           ...(atlas === null ? {} : { atlas }),
+          ...(atlases.size === 0 ? {} : { atlases }),
         },
       );
 

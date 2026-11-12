@@ -33,6 +33,7 @@ import { Scheduler } from "../game/engine/core/src/rules/scheduler.ts";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { extname, isAbsolute, relative, resolve } from "node:path";
 import { createProjector } from "../game/systems/render/project.ts";
+import { DEFAULT_STYLE } from "../game/systems/render/draw.ts";
 import { buildGraph } from "../game/engine/core/src/pack/graph.ts";
 import { DevLog, formatLine } from "../game/systems/log/devlog.ts";
 import { runPhases } from "../game/systems/tick/phases.ts";
@@ -142,6 +143,69 @@ function closureOf(rootId, byId) {
 
 /** 列世界：只列「根包」——没有被别的包依赖的那些。 */
 /** 扫所有包的 rig（立绘分层数据）。 */
+/** 读每个包的 assets.json，解析 atlas，返回可下发的样式与图集。 */
+function loadAssets(ordered) {
+  const atlases = {};
+  const assets = new Map();
+
+  for (const content of ordered) {
+    const packId = content.pack.id;
+    const dir = "game/worlds/" + packId;
+    let manifest;
+    try {
+      manifest = JSON.parse(readFileSync(dir + "/assets.json", "utf8"));
+    } catch {
+      continue;
+    }
+
+    const atlasList = Array.isArray(manifest.atlases) ? manifest.atlases : [];
+    for (const entry of atlasList) {
+      if (typeof entry.id !== "string" || typeof entry.data !== "string" || typeof entry.image !== "string") {
+        continue;
+      }
+      try {
+        const raw = JSON.parse(readFileSync(dir + "/" + entry.data, "utf8"));
+        // 浏览器只能拿 URL：把图集里的图片路径换成服务端地址
+        if (typeof raw.meta !== "object" || raw.meta === null) raw.meta = {};
+        raw.meta.image = entry.image;
+        atlases[entry.id] = raw;
+      } catch (error) {
+        console.warn("[assets] 读不到图集 " + entry.id + "：" + messageOf(error));
+      }
+    }
+
+    for (const asset of Array.isArray(manifest.assets) ? manifest.assets : []) {
+      if (typeof asset.id !== "string" || typeof asset.sheet !== "string" || typeof asset.frame !== "string") {
+        continue;
+      }
+      assets.set(asset.id, { sheet: asset.sheet, frame: asset.frame });
+    }
+  }
+
+  return { atlases, assets };
+}
+
+/** 把语义资产映射到 RenderStyle（目前只有地形）。 */
+function styleFor(art, loaded) {
+  const style = {
+    ...DEFAULT_STYLE,
+    terrain: { ...DEFAULT_STYLE.terrain },
+    templates: { ...DEFAULT_STYLE.templates },
+  };
+
+  for (const terrain of loaded.terrains.values()) {
+    const asset = art.assets.get("terrain." + terrain.code);
+    if (asset !== undefined) {
+      style.terrain[terrain.id] = {
+        ...(style.terrain[terrain.id] ?? { fill: "#0d0f13" }),
+        sprite: { sheet: asset.sheet, frame: asset.frame },
+      };
+    }
+  }
+
+  return style;
+}
+
 function scanRigs() {
   const rigs = {};
   for (const name of readdirSync("game/worlds")) {
@@ -425,7 +489,7 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
       needs: {
         spaces: "current",
         camera: true,
-        entityFields: ["pos", "template"],
+        entityFields: ["pos", "template", "sprite"],
         components: [
           { name: "core.health", required: false },
           { name: "core.container", required: false },
@@ -433,6 +497,7 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
           { name: "core.pending", required: false },
           { name: "core.body", required: false },
           { name: "core.item", required: false },
+          { name: "core.sprite", required: false },
           { name: "core.disposition", required: false },
           { name: "core.dialog", required: false },
           { name: "core.persistence", required: false },
@@ -461,8 +526,13 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
     }
   }
 
+  const art = loadAssets(ordered);
+  const style = styleFor(art, loaded);
+
   return {
     loaded,
+    art,
+    style,
     passage,
     store,
     link,
@@ -584,6 +654,8 @@ function snapshot(message = "") {
       })),
       entities: frame.entities,
     },
+    style: session.style,
+    atlases: session.art.atlases,
     hud: playerHud(),
     tick: session.store.now(),
     hash: session.store.headHash,

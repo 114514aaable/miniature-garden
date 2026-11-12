@@ -167,3 +167,49 @@ test("同格多件物品散开，最上面那件留在中心", () => {
   // 第二件（handle 1）是最后放下的，画在 corner 位置
   assert.equal(commands[1].kind === "text" ? commands[1].x : -1, 23);
 });
+
+
+const ATLAS_RAW = {
+  meta: { image: "/art/base/atlas.svg" },
+  frames: {
+    "Terrain/Floor.png": { frame: { x: 0, y: 0, w: 64, h: 64 } },
+    "Items/Potion.png": { frame: { x: 64, y: 64, w: 64, h: 64 } },
+  },
+};
+
+test("地形有 sprite 时画 tile，而不是只有底色", () => {
+  const atlas = parseAtlas(ATLAS_RAW);
+  const styled = {
+    ...DEFAULT_STYLE,
+    terrain: { 3: { fill: "#111", sprite: { sheet: "atlas", frame: "Terrain/Floor.png" } } },
+  };
+  const commands = buildFrame(
+    snapshot(),
+    spec({ style: styled, atlases: new Map([["atlas", atlas]]) }),
+  );
+  const tiles = commands.filter((command) => command.kind === "sprite");
+  // 地形是 [3,3,3,3,1,3]：5 个 floor 有 sprite，1 个 wall 没有
+  assert.equal(tiles.length, 5);
+  assert.equal(tiles[0].kind === "sprite" ? tiles[0].image : "", "/art/base/atlas.svg");
+});
+
+test("实体带 core.sprite 时按 sheet 找多图集", () => {
+  const atlas = parseAtlas(ATLAS_RAW);
+  const entities = [
+    {
+      handle: 0,
+      x: 0,
+      y: 0,
+      template: "item_potion",
+      sprite: { sheet: "atlas", frame: "Items/Potion.png" },
+      components: {},
+    },
+  ];
+  const commands = buildFrame(
+    snapshot({ entities }),
+    spec({ atlases: new Map([["atlas", atlas]]) }),
+  );
+  const sprite = commands.find((command) => command.kind === "sprite");
+  assert.ok(sprite !== undefined);
+  assert.equal(sprite.kind === "sprite" ? sprite.sx : -1, 64);
+});
