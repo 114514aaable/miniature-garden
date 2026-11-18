@@ -640,14 +640,23 @@ game/systems/render/*（投影成画面数据）
   - `interface PassageTemplate`
   - `interface Passage`
   - `const SURFACES`
-- **`game/systems/scene/dialog.ts`**（148 行）
+- **`game/systems/scene/dialog.ts`**（162 行）
   对话框场景。
   - `parseDialogScript(raw: JsonValue) → DialogScript`
   - `createDialogScene(script: DialogScript) → Scene`
   - `interface DialogChoice`
   - `interface DialogNode`
   - `interface DialogScript`
-  - `interface DialogView`
+- **`game/systems/scene/dialogue/contract.ts`**（35 行）
+  对话的契约类型。
+  - `interface DialogChoiceView`
+  - `interface DialogueView`
+  - `type PlayerInput`
+- **`game/systems/scene/dialogue/session.ts`**（158 行）
+  一次对话的会话状态。
+  - `interface TranscriptEntry`
+  - `interface DialogueSessionOptions`
+  - `interface DialogueSessionState`
 - **`game/systems/scene/scene.ts`**（171 行）
   场景：世界现在处于哪种「玩法状态」。
   - `sceneFromComponent(value: JsonValue | undefined) → SceneLayer`
@@ -703,7 +712,7 @@ game/systems/render/*（投影成画面数据）
 
 ### 页面脚本 tools/client
 
-- **`tools/client/game.js`**（986 行）
+- **`tools/client/game.js`**（997 行）
   import { api } from '/client/shared.js';
 - **`tools/client/hud/aim.js`**（62 行）
   瞄准高亮：记住「鼠标在哪、当前选了什么技能」，随时可以重算。

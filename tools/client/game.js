@@ -495,9 +495,11 @@ function renderDialog(state) {
     return;
   }
 
-  const choices = (scene.view.choices || []).map((label, index) =>
-    button((index + 1) + ' ' + label, () => sceneCommand('choice' + (index + 1))),
-  );
+  const choices = (scene.view.choices || []).map((choice, index) => {
+    const label = typeof choice === 'string' ? choice : choice.label;
+    const id = typeof choice === 'string' ? 'c' + (index + 1) : choice.id;
+    return button((index + 1) + ' ' + label, () => sceneCommand('choice:' + id));
+  });
 
   const body = col({ gap: 8 },
     text(scene.view.text || '', { policy: 'fixed' }),
@@ -876,7 +878,16 @@ window.addEventListener('keydown', (event) => {
   // 场景在跑（对话）：数字键选选项、Esc 离开
   if (lastState !== null && lastState.scene && lastState.scene.id !== 'explore') {
     const pick = event.code.match(/^Digit([1-9])$/);
-    if (pick !== null) { sceneCommand('choice' + pick[1]); return; }
+    if (pick !== null) {
+      const choice = lastState.scene && lastState.scene.view
+        ? (lastState.scene.view.choices || [])[Number(pick[1]) - 1]
+        : undefined;
+      if (choice !== undefined) {
+        const id = typeof choice === 'string' ? 'c' + pick[1] : choice.id;
+        sceneCommand('choice:' + id);
+      }
+      return;
+    }
     return;
   }
 

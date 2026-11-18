@@ -199,6 +199,15 @@ G1  假导演生成循环
 
 完整设计：`docs/mods/body-parts.md`（定位为可选 mod；核心只提供组件/效果/写拦截/死亡广播）。
 
+## 对话重构 E0/E1（2026-11-19）
+
+```
+E0  选项逻辑身份 choiceId（旧 choice1..9 仍兼容）
+E1  DialogueSession：conversationId / turnId / transcript / snapshot-restore
+    存档中途读档能回到同一句（HTTP 实测）
+    客户端按钮与数字键都发 choice:<id>
+```
+
 ## 部位立绘（进行中）
 
 ```

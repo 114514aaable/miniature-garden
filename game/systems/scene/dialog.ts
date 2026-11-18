@@ -4,28 +4,37 @@
 /**
  * 对话框场景。
  *
- * 它是场景（换掉输入与渲染），但**长得像背包**：一块面板、几行字、几个选项。
- *
  * 数据是「节点图」：
  *
  * ```json
  * { "id": "salt_01", "start": "hi",
  *   "nodes": {
- *     "hi":  { "text": "要买盐吗？", "choices": [ { "text": "要", "next": "buy" }, { "text": "不要", "end": true } ] },
- *     "buy": { "text": "拿好。",     "choices": [ { "text": "再见", "end": true } ] }
+ *     "hi":  { "speaker": "salt", "text": "要买盐吗？",
+ *              "choices": [ { "id": "buy", "text": "要", "next": "buy" },
+ *                           { "id": "leave", "text": "不要", "end": true } ] },
+ *     "buy": { "text": "拿好。", "choices": [ { "id": "bye", "text": "再见", "end": true } ] }
  *   } }
  * ```
  *
- * 输入固定是 `choice1..choice9` + `close`——**选项数量由当前节点决定**，
- * 场景自己判断越界（发超出范围的 choice 会被当无效）。
+ * E0：选项有了逻辑身份 `id`，不再用显示顺序当 key。
+ * E1：当前节点、turnId、transcript 都在 DialogueSession 里，存档能恢复。
+ *
+ * 输入：
+ *   `choice:<id>`   按逻辑身份选（新客户端）
+ *   `choice1..9`    旧客户端兼容，按当前显示顺序映射
+ *   `close`         离开
  */
 
 import { type JsonValue } from "../../engine/core/src/time.ts";
 import { type Scene, type SceneContext, type SceneResult } from "./scene.ts";
+import { DialogueSession } from "./dialogue/session.ts";
+import { type DialogueView } from "./dialogue/contract.ts";
 
 const MAX_CHOICES = 9;
 
 export interface DialogChoice {
+  /** 逻辑身份；不写时解析成 c1..cN。 */
+  readonly id: string;
   readonly text: string;
   readonly next?: string;
   readonly end?: boolean;
@@ -34,20 +43,14 @@ export interface DialogChoice {
 export interface DialogNode {
   readonly text: string;
   readonly choices: readonly DialogChoice[];
+  /** 说话人（模板 id）。 */
+  readonly speaker?: string;
 }
 
 export interface DialogScript {
   readonly id: string;
   readonly start: string;
   readonly nodes: Readonly<Record<string, DialogNode>>;
-}
-
-/** 客户端要渲染的东西。 */
-export interface DialogView {
-  readonly text: string;
-  readonly choices: readonly string[];
-  /** 说话人（模板 id，客户端查名字）。 */
-  readonly speaker?: string;
 }
 
 export function parseDialogScript(raw: JsonValue): DialogScript {
@@ -67,16 +70,34 @@ export function parseDialogScript(raw: JsonValue): DialogScript {
     if (typeof value !== "object" || value === null || Array.isArray(value)) continue;
     const node = value as Record<string, JsonValue>;
     const text = typeof node.text === "string" ? node.text : "";
-    const choices = Array.isArray(node.choices)
-      ? node.choices
-          .filter((choice): choice is Record<string, JsonValue> => typeof choice === "object" && choice !== null)
-          .map((choice) => ({
-            text: typeof choice.text === "string" ? choice.text : "…",
-            ...(typeof choice.next === "string" ? { next: choice.next } : {}),
-            ...(choice.end === true ? { end: true } : {}),
-          }))
-      : [];
-    nodes[key] = { text, choices };
+    const speaker = typeof node.speaker === "string" ? node.speaker : undefined;
+
+    const seen = new Set<string>();
+    const choices: DialogChoice[] = [];
+    for (const [index, rawChoice] of (Array.isArray(node.choices) ? node.choices : []).entries()) {
+      if (typeof rawChoice !== "object" || rawChoice === null) continue;
+      const choice = rawChoice as Record<string, JsonValue>;
+      const choiceId = typeof choice.id === "string" && choice.id.length > 0
+        ? choice.id
+        : `c${index + 1}`;
+      if (seen.has(choiceId)) {
+        throw new Error(`对话 ${id} 的节点 ${key} 选项 id 重复：${choiceId}`);
+      }
+      seen.add(choiceId);
+
+      choices.push({
+        id: choiceId,
+        text: typeof choice.text === "string" ? choice.text : "…",
+        ...(typeof choice.next === "string" ? { next: choice.next } : {}),
+        ...(choice.end === true ? { end: true } : {}),
+      });
+    }
+
+    nodes[key] = {
+      text,
+      choices,
+      ...(speaker === undefined ? {} : { speaker }),
+    };
   }
 
   return { id, start, nodes };
@@ -85,30 +106,32 @@ export function parseDialogScript(raw: JsonValue): DialogScript {
 /**
  * 造一个对话场景。
  *
- * 注意：当前节点存在闭包里，**没有进 core.scene**——所以存档不会恢复「说到第几句」。
- * 第一版接受这个限制（场景层只保证「在对话里」，不保证「说到哪」）。
+ * 状态归 DialogueSession；场景只负责把命令翻译成选择、把结果翻译成 SceneResult。
  */
 export function createDialogScene(script: DialogScript): Scene {
-  let nodeId = script.start;
+  const session = new DialogueSession(script);
 
   return {
     id: "dialog",
-    input: [...Array.from({ length: MAX_CHOICES }, (_, i) => `choice${i + 1}`), "close"],
+
+    get input(): readonly string[] {
+      const ids = session.choices().map((choice) => `choice:${choice.id}`);
+      // 旧客户端还会发 choice1..9；保留一个版本
+      const legacy = Array.from({ length: MAX_CHOICES }, (_, index) => `choice${index + 1}`);
+      return [...ids, "close", ...legacy];
+    },
 
     handle(command: string, _context: SceneContext): SceneResult {
       if (command === "close") {
         return { next: { op: "pop" } };
       }
 
-      const node = script.nodes[nodeId];
-      if (node === undefined) {
-        return { next: { op: "pop" } };
-      }
+      const choice = command.startsWith("choice:")
+        ? session.choose(command.slice("choice:".length))
+        : session.chooseLegacy(Number(command.replace("choice", "")) - 1);
 
-      const index = Number(command.replace("choice", "")) - 1;
-      const choice = node.choices[index];
-      if (choice === undefined) {
-        // 越界：不崩、不静默切场景，留给宿主提示
+      // 越界/未知：不崩、不静默切场景，留给宿主提示
+      if (choice === null) {
         return { effects: [] };
       }
 
@@ -116,31 +139,22 @@ export function createDialogScene(script: DialogScript): Scene {
         return { next: { op: "pop" } };
       }
 
-      if (script.nodes[choice.next] === undefined) {
-        throw new Error(`对话 ${script.id} 指向了不存在的节点：${choice.next}`);
-      }
-
-      nodeId = choice.next;
       return { effects: [] };
     },
 
-    /** 存档：只记当前节点 id。 */
+    /** 存档：节点 + turnId + transcript。 */
     snapshot(): JsonValue {
-      return { node: nodeId };
+      return session.snapshot();
     },
 
-    /** 读档：回到那一句。 */
+    /** 读档：兼容旧存档的 { node }。 */
     restore(state: JsonValue): void {
-      const data = typeof state === "object" && state !== null ? (state as Record<string, JsonValue>) : {};
-      if (typeof data.node === "string" && script.nodes[data.node] !== undefined) {
-        nodeId = data.node;
-      }
+      session.restore(state);
     },
 
     /** 给客户端渲染用的视图。 */
     describe(): JsonValue {
-      const node = script.nodes[nodeId] ?? { text: "", choices: [] };
-      const view: DialogView = { text: node.text, choices: node.choices.map((choice) => choice.text) };
+      const view: DialogueView = session.view();
       return view as unknown as JsonValue;
     },
   };
