@@ -826,6 +826,9 @@ function pushScene(id, params) {
   if (id !== "dialog") {
     return { ok: false, error: "第一版只支持 dialog 场景" };
   }
+  if (params.actor === undefined && session.playerHandle !== null) {
+    params = { ...params, actor: session.playerHandle };
+  }
   const scriptId = String(params.script ?? "");
   let scene;
   try {

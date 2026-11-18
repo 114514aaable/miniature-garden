@@ -125,5 +125,6 @@ function verifyChain(events: readonly LogEntry[]): number
 - [`game/systems/render/project.ts`](game/systems/render/project.md)
 - [`game/systems/rules/base.ts`](game/systems/rules/base.md)
 - [`game/systems/scene/dialog.ts`](game/systems/scene/dialog.md)
+- [`game/systems/scene/dialogue/effects.ts`](game/systems/scene/dialogue/effects.md)
 - [`game/systems/scene/dialogue/session.ts`](game/systems/scene/dialogue/session.md)
 - [`game/systems/scene/scene.ts`](game/systems/scene/scene.md)

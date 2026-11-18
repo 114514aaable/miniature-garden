@@ -107,7 +107,10 @@ test("旧命令 choice1..9 仍可用（按显示顺序）", () => {
 });
 
 test("结束选项弹出场景", () => {
-  assert.deepEqual(scene().handle("choice:c2", { now: 1, params: {} }), { next: { op: "pop" } });
+  assert.deepEqual(scene().handle("choice:c2", { now: 1, params: {} }), {
+    effects: [],
+    next: { op: "pop" },
+  });
 });
 
 test("未知 choiceId：什么也不做，不崩", () => {
@@ -150,4 +153,62 @@ test("指向不存在的节点会抛错（不静默）", () => {
     } as never),
   );
   assert.throws(() => broken.handle("choice:c1", { now: 1, params: {} }), /不存在的节点/);
+});
+
+
+test("选项效果：$speaker 在运行期替换成句柄", () => {
+  const dialog = createDialogScene(
+    parseDialogScript({
+      id: "fx",
+      start: "a",
+      nodes: {
+        a: {
+          text: "",
+          choices: [
+            {
+              id: "pay",
+              text: "付钱",
+              end: true,
+              effects: [
+                { kind: "patch", handle: "$speaker", component: "core.health", data: { hp: 99 } },
+              ],
+            },
+          ],
+        },
+      },
+    } as never),
+  );
+
+  const result = dialog.handle("choice:pay", { now: 1, params: { speaker: 4096, actor: 0 } });
+  assert.ok(result.effects && result.effects.length === 1);
+  assert.equal((result.effects[0] as { handle: number }).handle, 4096);
+  assert.deepEqual(result.next, { op: "pop" });
+});
+
+test("选项效果：非法效果在加载期报错", () => {
+  assert.throws(
+    () =>
+      parseDialogScript({
+        id: "bad",
+        start: "a",
+        nodes: {
+          a: { text: "", choices: [{ id: "x", text: "", end: true, effects: [{ kind: "explode" }] }] },
+        },
+      } as never),
+    /不是合法效果/,
+  );
+});
+
+test("requires 尚未支持：显式报错，不静默忽略", () => {
+  assert.throws(
+    () =>
+      parseDialogScript({
+        id: "req",
+        start: "a",
+        nodes: {
+          a: { text: "", choices: [{ id: "x", text: "", end: true, requires: { item: "salt" } }] },
+        },
+      } as never),
+    /requires 尚未支持/,
+  );
 });

@@ -66,6 +66,7 @@ interface WorldState {
 - [`game/engine/core/src/rules/sum.ts`](game/engine/core/src/rules/sum.md)
 - [`game/systems/host/effects.ts`](game/systems/host/effects.md)
 - [`game/systems/host/writes.ts`](game/systems/host/writes.md)
+- [`game/systems/scene/dialogue/effects.ts`](game/systems/scene/dialogue/effects.md)
 - [`game/systems/scene/scene.ts`](game/systems/scene/scene.md)
 - [`tools/play.mjs`](tools/play.md)
 - [`tools/serve.mjs`](tools/serve.md)

@@ -640,7 +640,7 @@ game/systems/render/*（投影成画面数据）
   - `interface PassageTemplate`
   - `interface Passage`
   - `const SURFACES`
-- **`game/systems/scene/dialog.ts`**（162 行）
+- **`game/systems/scene/dialog.ts`**（185 行）
   对话框场景。
   - `parseDialogScript(raw: JsonValue) → DialogScript`
   - `createDialogScene(script: DialogScript) → Scene`
@@ -652,6 +652,12 @@ game/systems/render/*（投影成画面数据）
   - `interface DialogChoiceView`
   - `interface DialogueView`
   - `type PlayerInput`
+- **`game/systems/scene/dialogue/effects.ts`**（156 行）
+  剧本里的效果：只允许现有六种 Effect，句柄可以用占位符。
+  - `parseScriptEffects(raw: unknown, where: string) → readonly JsonValue[]`
+  - `resolveScriptEffects(effects: readonly JsonValue[] | undefined, params: SceneParams,) → Effect[]`
+  - `interface SceneParams`
+  - `type EffectPlaceholder`
 - **`game/systems/scene/dialogue/session.ts`**（158 行）
   一次对话的会话状态。
   - `interface TranscriptEntry`
@@ -809,7 +815,7 @@ game/systems/render/*（投影成画面数据）
   - `decodePng(buffer, where = "png")`
   - `encodePng(width, height, rgba)`
   - `blit(dst, dstWidth, src, srcWidth, srcHeight, x, y)`
-- **`tools/serve.mjs`**（2344 行）
+- **`tools/serve.mjs`**（2347 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/smoke.mjs`**（160 行）
   HTTP 冒烟：真实起一个 serve，走「开局 → 动作 → 存档 → 读档 → 继续」。

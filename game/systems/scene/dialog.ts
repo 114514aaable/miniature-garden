@@ -29,6 +29,7 @@ import { type JsonValue } from "../../engine/core/src/time.ts";
 import { type Scene, type SceneContext, type SceneResult } from "./scene.ts";
 import { DialogueSession } from "./dialogue/session.ts";
 import { type DialogueView } from "./dialogue/contract.ts";
+import { parseScriptEffects, resolveScriptEffects, type SceneParams } from "./dialogue/effects.ts";
 
 const MAX_CHOICES = 9;
 
@@ -38,6 +39,8 @@ export interface DialogChoice {
   readonly text: string;
   readonly next?: string;
   readonly end?: boolean;
+  /** 选中后触发的效果；句柄可用 $actor / $speaker。 */
+  readonly effects?: readonly JsonValue[];
 }
 
 export interface DialogNode {
@@ -45,6 +48,8 @@ export interface DialogNode {
   readonly choices: readonly DialogChoice[];
   /** 说话人（模板 id）。 */
   readonly speaker?: string;
+  /** 这一拍想做什么（给演员的潜台词）。 */
+  readonly goal?: string;
 }
 
 export interface DialogScript {
@@ -71,6 +76,7 @@ export function parseDialogScript(raw: JsonValue): DialogScript {
     const node = value as Record<string, JsonValue>;
     const text = typeof node.text === "string" ? node.text : "";
     const speaker = typeof node.speaker === "string" ? node.speaker : undefined;
+    const goal = typeof node.goal === "string" ? node.goal : undefined;
 
     const seen = new Set<string>();
     const choices: DialogChoice[] = [];
@@ -85,11 +91,17 @@ export function parseDialogScript(raw: JsonValue): DialogScript {
       }
       seen.add(choiceId);
 
+      if (choice.requires !== undefined) {
+        throw new Error(`对话 ${id} 节点 ${key} 选项 ${choiceId}：requires 尚未支持（E2b）`);
+      }
+      const effects = parseScriptEffects(choice.effects, `对话 ${id} 节点 ${key} 选项 ${choiceId}.effects`);
+
       choices.push({
         id: choiceId,
         text: typeof choice.text === "string" ? choice.text : "…",
         ...(typeof choice.next === "string" ? { next: choice.next } : {}),
         ...(choice.end === true ? { end: true } : {}),
+        ...(effects.length === 0 ? {} : { effects }),
       });
     }
 
@@ -97,6 +109,7 @@ export function parseDialogScript(raw: JsonValue): DialogScript {
       text,
       choices,
       ...(speaker === undefined ? {} : { speaker }),
+      ...(goal === undefined ? {} : { goal }),
     };
   }
 
@@ -121,7 +134,7 @@ export function createDialogScene(script: DialogScript): Scene {
       return [...ids, "close", ...legacy];
     },
 
-    handle(command: string, _context: SceneContext): SceneResult {
+    handle(command: string, context: SceneContext): SceneResult {
       if (command === "close") {
         return { next: { op: "pop" } };
       }
@@ -135,11 +148,21 @@ export function createDialogScene(script: DialogScript): Scene {
         return { effects: [] };
       }
 
+      const raw = typeof context.params === "object" && context.params !== null && !Array.isArray(context.params)
+        ? (context.params as Record<string, JsonValue>)
+        : {};
+      const params: SceneParams = {
+        ...(typeof raw.actor === "number" ? { actor: raw.actor } : {}),
+        ...(typeof raw.speaker === "number" ? { speaker: raw.speaker } : {}),
+      };
+
+      const effects = resolveScriptEffects(choice.effects, params);
+
       if (choice.end === true || choice.next === undefined) {
-        return { next: { op: "pop" } };
+        return { effects, next: { op: "pop" } };
       }
 
-      return { effects: [] };
+      return { effects };
     },
 
     /** 存档：节点 + turnId + transcript。 */

@@ -20,7 +20,7 @@ E1：当前节点、turnId、transcript 都在 DialogueSession 里，存档能�
 `choice1..9`    旧客户端兼容，按当前显示顺序映射
 `close`         离开
 
-行数：162
+行数：185
 
 ## 接口
 
@@ -38,6 +38,7 @@ interface DialogChoice {
   readonly text: string;
   readonly next?: string;
   readonly end?: boolean;
+  readonly effects?: readonly JsonValue[];
 }
 ```
 
@@ -48,6 +49,7 @@ interface DialogNode {
   readonly text: string;
   readonly choices: readonly DialogChoice[];
   readonly speaker?: string;
+  readonly goal?: string;
 }
 ```
 
@@ -71,6 +73,7 @@ function parseDialogScript(raw: JsonValue): DialogScript
 
 - [`game/engine/core/src/time.ts`](game/engine/core/src/time.md)
 - [`game/systems/scene/dialogue/contract.ts`](game/systems/scene/dialogue/contract.md)
+- [`game/systems/scene/dialogue/effects.ts`](game/systems/scene/dialogue/effects.md)
 - [`game/systems/scene/dialogue/session.ts`](game/systems/scene/dialogue/session.md)
 - [`game/systems/scene/scene.ts`](game/systems/scene/scene.md)
 

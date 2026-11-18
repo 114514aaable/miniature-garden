@@ -199,7 +199,14 @@ G1  假导演生成循环
 
 完整设计：`docs/mods/body-parts.md`（定位为可选 mod；核心只提供组件/效果/写拦截/死亡广播）。
 
-## 对话重构 E0/E1（2026-11-19）
+## 对话重构 E0/E1/E2a（2026-11-19）
+
+```
+E0  选项逻辑身份 choiceId（旧 choice1..9 仍兼容）
+E1  DialogueSession：conversationId / turnId / transcript / snapshot-restore
+E2a 剧本字段：speaker / goal；选项 effects（$actor/$speaker 占位符）
+    加载期校验六种 Effect；requires 显式报错，等 E2b
+```
 
 ```
 E0  选项逻辑身份 choiceId（旧 choice1..9 仍兼容）

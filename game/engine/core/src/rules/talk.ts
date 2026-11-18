@@ -58,6 +58,6 @@ export function talkHandler(params: JsonValue, context: EvaluateContext): JsonVa
   return {
     ok: true,
     effects: [],
-    scene: { op: "push", id: "dialog", params: { script, speaker: Number(p.target) } },
+    scene: { op: "push", id: "dialog", params: { script, speaker: Number(p.target), actor: Number(p.actor) } },
   };
 }

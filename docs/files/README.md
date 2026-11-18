@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 131 个文件。
+共 132 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -96,6 +96,7 @@
 | `game/systems/rules/passage.ts` | 通行：物种 × 地形 的对接结果。 | [md](game/systems/rules/passage.md) |
 | `game/systems/scene/dialog.ts` | 对话框场景。 | [md](game/systems/scene/dialog.md) |
 | `game/systems/scene/dialogue/contract.ts` | 对话的契约类型。 | [md](game/systems/scene/dialogue/contract.md) |
+| `game/systems/scene/dialogue/effects.ts` | 剧本里的效果：只允许现有六种 Effect，句柄可以用占位符。 | [md](game/systems/scene/dialogue/effects.md) |
 | `game/systems/scene/dialogue/session.ts` | 一次对话的会话状态。 | [md](game/systems/scene/dialogue/session.md) |
 | `game/systems/scene/scene.ts` | 场景：世界现在处于哪种「玩法状态」。 | [md](game/systems/scene/scene.md) |
 | `game/systems/tick/phases.ts` | 每 tick 的阶段表。 | [md](game/systems/tick/phases.md) |
