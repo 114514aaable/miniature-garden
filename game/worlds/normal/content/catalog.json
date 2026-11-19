@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "root": "node.salt",
+  "nodes": [
+    {
+      "id": "node.salt",
+      "parent": null,
+      "kind": "liveness",
+      "title": "盐港码头",
+      "entry": "nodes/node.salt/manifest.json",
+      "children": []
+    }
+  ]
+}

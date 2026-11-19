@@ -15,7 +15,8 @@
     "check:locale": "node tools/check-locale.mjs",
     "build:web": "node tools/build-web.mjs",
     "smoke": "node tools/smoke.mjs",
-    "check": "npm run typecheck && npm test && npm run check:client && npm run check:data && npm run check:locale && npm run build:web"
+    "check": "npm run typecheck && npm test && npm run check:client && npm run check:data && npm run check:locale && npm run check:content && npm run build:web",
+    "check:content": "node tools/check-content.mjs"
   },
   "devDependencies": {
     "typescript": "5.6.3"

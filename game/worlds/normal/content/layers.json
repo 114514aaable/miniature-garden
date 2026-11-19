@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "layers": [
+    {
+      "id": "liveness",
+      "version": 1,
+      "status": "active",
+      "description": "现在/现场：场景、选项、效果"
+    },
+    {
+      "id": "world",
+      "version": 1,
+      "status": "reserved",
+      "description": "世界/地理/势力（以后）"
+    },
+    {
+      "id": "combat",
+      "version": 1,
+      "status": "reserved",
+      "description": "战斗（以后）"
+    }
+  ]
+}

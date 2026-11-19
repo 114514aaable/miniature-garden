@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 133 个文件。
+共 135 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -72,6 +72,7 @@
 | `game/engine/core/types/node-shim.d.ts` | 临时的 node 类型声明。 | [md](game/engine/core/types/node-shim.d.md) |
 | `game/systems/camera/camera.ts` | 相机：把「看哪儿」从渲染里拆出来。 | [md](game/systems/camera/camera.md) |
 | `game/systems/config/config.ts` | 界面配置：所有「可能想调」的东西集中在这里。 | [md](game/systems/config/config.md) |
+| `game/systems/content/tree.ts` | 内容树：目录 + 层注册表 + 节点清单。 | [md](game/systems/content/tree.md) |
 | `game/systems/host/advance.ts` | 推进：把世界推到目标 tick，同时产帧。 | [md](game/systems/host/advance.md) |
 | `game/systems/host/base-rules.ts` | 基础数据写规则：核心血量的 hp 夹在 0..max，写到 0 视为致死。 | [md](game/systems/host/base-rules.md) |
 | `game/systems/host/effects.ts` | 宿主的「效果入口」：规则 / 场景产出的效果，统一从这里落进 store。 | [md](game/systems/host/effects.md) |
@@ -108,6 +109,7 @@
 | `tools/build-web.mjs` | 把 TS 转成浏览器能跑的 JS（构建产物放 web/）。 | [md](tools/build-web.md) |
 | `tools/check-client.mjs` | 页面脚本的「有没有调用不存在的函数」检查。 | [md](tools/check-client.md) |
 | `tools/check-client.test.mjs` | 客户端检查器的自测：CSS / 正则不算函数调用，真缺失要报。 | [md](tools/check-client.test.md) |
+| `tools/check-content.mjs` | 校验内容树：catalog + layers + 每个节点的 manifest/层文件。 | [md](tools/check-content.md) |
 | `tools/check-data.mjs` | 数据体检：数据化之后，规则要的字段，包里到底有没有。 | [md](tools/check-data.md) |
 | `tools/check-locale.mjs` | 语言包体检：包里每个 id 都应该有名字。 | [md](tools/check-locale.md) |
 | `tools/client/game.js` |  | [md](tools/client/game.md) |

@@ -199,6 +199,15 @@ G1  假导演生成循环
 
 完整设计：`docs/mods/body-parts.md`（定位为可选 mod；核心只提供组件/效果/写拦截/死亡广播）。
 
+## 内容树读取骨架（2026-11-20）
+
+```
+normal/content/  catalog.json + layers.json + nodes/node.salt/
+第一层 liveness（现在/现场）
+systems/content/tree.ts  解析 + 校验（catalog/层/清单/场景图）
+tools/check-content.mjs  接入 npm run check
+```
+
 ## 内容树（设计，2026-11-19）
 
 `docs/base/content-tree.md`：节点 = 小包；目录树组织、流程图走向、层负责扩展。第一版只做 `core.scene` 一层，层注册表预留 world/combat/mod。

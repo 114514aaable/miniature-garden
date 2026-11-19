@@ -120,6 +120,7 @@ function verifyChain(events: readonly LogEntry[]): number
 - [`game/engine/core/src/traversal/filter.ts`](game/engine/core/src/traversal/filter.md)
 - [`game/engine/core/src/traversal/select.ts`](game/engine/core/src/traversal/select.md)
 - [`game/engine/core/src/traversal/shapes.ts`](game/engine/core/src/traversal/shapes.md)
+- [`game/systems/content/tree.ts`](game/systems/content/tree.md)
 - [`game/systems/intel/facts.ts`](game/systems/intel/facts.md)
 - [`game/systems/log/devlog.ts`](game/systems/log/devlog.md)
 - [`game/systems/render/project.ts`](game/systems/render/project.md)

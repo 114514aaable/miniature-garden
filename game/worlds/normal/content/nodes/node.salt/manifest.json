@@ -1,0 +1,26 @@
+{
+  "protocol": 1,
+  "id": "node.salt",
+  "version": "1.0.0",
+  "revision": 1,
+  "kind": "liveness",
+  "title": "盐港码头",
+  "layers": {
+    "liveness": "scene.json"
+  },
+  "requires": {
+    "flags": [],
+    "items": []
+  },
+  "provides": {
+    "flags": []
+  },
+  "assets": [
+    "entity.npc_salt"
+  ],
+  "license": "CC-BY-SA-4.0",
+  "source": {
+    "provider": "human",
+    "createdAt": "2026-11-20T00:00:00Z"
+  }
+}

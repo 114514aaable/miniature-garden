@@ -486,6 +486,20 @@ game/systems/render/*（投影成画面数据）
   - `interface ClickPolicy`
   - `interface Config`
   - `const DEFAULT_CONFIG`
+- **`game/systems/content/tree.ts`**（313 行）
+  内容树：目录 + 层注册表 + 节点清单。
+  - `parseContentCatalog(raw: unknown, path = "$catalog") → ContentCatalog`
+  - `parseLayerRegistry(raw: unknown, path = "$layers") → LayerRegistry`
+  - `parseNodeManifest(raw: unknown, path = "$manifest") → NodeManifest`
+  - `validateNode(manifest: NodeManifest, registry: LayerRegistry, layerData: Readonly<Record<string, unknown>>,) → NodeValidation`
+  - `interface ContentCatalogNode`
+  - `interface ContentCatalog`
+  - `interface LayerDef`
+  - `interface LayerRegistry`
+  - `interface ConditionalItems`
+  - `interface NodeManifest`
+  - `interface NodeValidation`
+  - `type LayerStatus`
 - **`game/systems/host/advance.ts`**（89 行）
   推进：把世界推到目标 tick，同时产帧。
   - `advanceTo(host: AdvanceHost, target: number) → void`
@@ -767,6 +781,8 @@ game/systems/render/*（投影成画面数据）
   - `const FILES`
 - **`tools/check-client.test.mjs`**（57 行）
   客户端检查器的自测：CSS / 正则不算函数调用，真缺失要报。
+- **`tools/check-content.mjs`**（110 行）
+  校验内容树：catalog + layers + 每个节点的 manifest/层文件。
 - **`tools/check-data.mjs`**（147 行）
   数据体检：数据化之后，规则要的字段，包里到底有没有。
 - **`tools/check-locale.mjs`**（99 行）

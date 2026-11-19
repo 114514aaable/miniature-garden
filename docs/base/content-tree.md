@@ -2,7 +2,7 @@
 
 > 定位：世界内容的最小单位不是「一个巨包」，而是**节点**。
 > 目录树负责组织，流程图负责走向，**层**负责扩展。
-> 第一版只实现一层 `core.scene`，但骨架按「任意层」设计。
+> 第一版只实现一层 `liveness`（现在/现场），但骨架按「任意层」设计。
 
 ---
 
@@ -33,7 +33,7 @@ content/
 └─ nodes/
    └─ node.salt/
       ├─ manifest.json          节点元数据 + 层文件表
-      ├─ scene.json             第一层：core.scene
+      ├─ scene.json             第一层：liveness
       └─ assets.json            语义资产引用（可选）
 ```
 
@@ -53,7 +53,7 @@ content/
     {
       "id": "node.salt",
       "parent": null,
-      "kind": "core.scene",
+      "kind": "liveness",
       "title": "盐港码头",
       "entry": "nodes/node.salt/manifest.json",
       "children": []
@@ -82,10 +82,10 @@ content/
   "id": "node.salt",
   "version": "1.0.0",
   "revision": 1,
-  "kind": "core.scene",
+  "kind": "liveness",
   "title": "盐港码头",
   "layers": {
-    "core.scene": "scene.json"
+    "liveness": "scene.json"
   },
   "requires": {
     "flags": [],
@@ -104,7 +104,7 @@ content/
 ```
 
 - `layers` 是「层 id → 文件」。
-- 第一版只认 `core.scene`；其它层保留、校验、但不执行。
+- 第一版只认 `liveness`；其它层保留、校验、但不执行。
 - `requires` / `provides` 先只做包级条件。
 
 ---
@@ -118,18 +118,18 @@ content/
   "version": 1,
   "layers": [
     {
-      "id": "core.scene",
+      "id": "liveness",
       "version": 1,
       "status": "active",
       "description": "场景/对话/选项/效果"
     },
     {
-      "id": "core.world",
+      "id": "world",
       "version": 1,
       "status": "reserved"
     },
     {
-      "id": "core.combat",
+      "id": "combat",
       "version": 1,
       "status": "reserved"
     }
@@ -150,7 +150,7 @@ mod 层       必须注册；没注册就只存不跑
 
 ---
 
-## 6 第一层：core.scene
+## 6 第一层：liveness
 
 第一版只做这一层，把现有对话脚本变成节点数据。
 
@@ -192,7 +192,7 @@ mod 层       必须注册；没注册就只存不跑
 节点里多 goal / effects / requires（逐步）
 ```
 
-**运行时先把 core.scene 编译成现有 DialogScript，再接 DialogueSession。**
+**运行时先把 liveness 编译成现有 DialogScript，再接 DialogueSession。**
 
 ---
 
@@ -257,7 +257,7 @@ mod 层       必须注册；没注册就只存不跑
 
 | 现有 | 内容树里的位置 |
 |---|---|
-| `worlds/<pack>/dialogs/*.json` | `core.scene` 层的输入 |
+| `worlds/<pack>/dialogs/*.json` | `liveness` 层的输入 |
 | `parseDialogScript` | 层编译器（先兼容旧格式） |
 | `DialogueSession` | 运行状态，不写回节点 |
 | `assets.tree.json` | 包里的 `assets[]` 引用它 |
@@ -268,7 +268,7 @@ mod 层       必须注册；没注册就只存不跑
 ## 11 第一版范围
 
 ```
-做：catalog + manifest + layers 注册表 + core.scene + 包级 requires
+做：catalog + manifest + layers 注册表 + liveness + 包级 requires
 不做：覆盖层、combat/world 层、节点间 flow、编辑器、懒加载缓存
 ```
 
@@ -279,10 +279,10 @@ mod 层       必须注册；没注册就只存不跑
 ## 12 待拍板
 
 ```
-Q1 第一层就叫 core.scene，可以吗？
+Q1 第一层就叫 liveness，可以吗？
 Q2 未知层：保留 + 警告，还是直接拒绝？
     我建议保留 + 警告（前向兼容）
 Q3 节点不可变 + revision，确认吗？
 Q4 旧 dialogs/*.json：保留兼容，还是迁移成节点后删除？
-    我建议先双轨，等 core.scene 稳定再迁移
+    我建议先双轨，等 liveness 稳定再迁移
 ```

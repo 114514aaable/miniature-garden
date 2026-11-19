@@ -80,5 +80,6 @@ function parseDialogScript(raw: JsonValue): DialogScript
 
 ## 被引用
 
+- [`game/systems/content/tree.ts`](game/systems/content/tree.md)
 - [`game/systems/scene/dialogue/session.ts`](game/systems/scene/dialogue/session.md)
 - [`tools/serve.mjs`](tools/serve.md)
