@@ -10,7 +10,7 @@
 node tools/serve.mjs                     # 启动器：列出 worlds/ 下的世界
 node tools/serve.mjs worlds/a worlds/b   # 直接进某个世界（开发用）
 
-行数：2368
+行数：2384
 
 ## 接口
 
@@ -53,6 +53,7 @@ node tools/serve.mjs worlds/a worlds/b   # 直接进某个世界（开发用）
 - [`game/systems/scene/dialog.ts`](game/systems/scene/dialog.md)
 - [`game/systems/scene/scene.ts`](game/systems/scene/scene.md)
 - [`game/systems/tick/phases.ts`](game/systems/tick/phases.md)
+- [`tools/content-loader.mjs`](tools/content-loader.md)
 - [`tools/pack-reader.mjs`](tools/pack-reader.md)
 - [`tools/pages.mjs`](tools/pages.md)
 - [`tools/worldgen-structures.mjs`](tools/worldgen-structures.md)

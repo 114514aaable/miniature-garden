@@ -787,6 +787,13 @@ game/systems/render/*（投影成画面数据）
   数据体检：数据化之后，规则要的字段，包里到底有没有。
 - **`tools/check-locale.mjs`**（99 行）
   语言包体检：包里每个 id 都应该有名字。
+- **`tools/content-loader.mjs`**（132 行）
+  内容树的宿主侧加载器：读文件、调用纯校验、返回可运行节点。
+  - `loadPackContent(packDir)`
+  - `loadPacksContent(packDirs)`
+  - `loadWorldsContent(worldsDir = "game/worlds")`
+- **`tools/content-loader.test.mjs`**（22 行）
+  内容树加载器：真实节点 + 编译出的 liveness 场景。
 - **`tools/encode-assets.mjs`**（351 行）
   编码器：把 artdrop 里的「树形文件夹」编译成 assets.tree.json + 页图。
   - `encodeTree(inputDir, options = {})`
@@ -836,9 +843,9 @@ game/systems/render/*（投影成画面数据）
   - `decodePng(buffer, where = "png")`
   - `encodePng(width, height, rgba)`
   - `blit(dst, dstWidth, src, srcWidth, srcHeight, x, y)`
-- **`tools/serve.mjs`**（2368 行）
+- **`tools/serve.mjs`**（2384 行）
   调试台 / 启动器（宿主侧）。
-- **`tools/smoke.mjs`**（160 行）
+- **`tools/smoke.mjs`**（173 行）
   HTTP 冒烟：真实起一个 serve，走「开局 → 动作 → 存档 → 读档 → 继续」。
 - **`tools/typecheck.mjs`**（82 行）
   离线类型检查。

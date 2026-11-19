@@ -98,6 +98,19 @@ async function main() {
     const act = await post("/api/act", { dir: "d" });
     if (act.json.snapshot === undefined) fail("/api/act 没有 snapshot", act.json);
 
+    // 3.5 内容树：打开 liveness 节点并选一次（normal 才有）
+    if (playable.id === "normal") {
+      const opened = await post("/api/scene", { op: "push", id: "dialog", params: { node: "node.salt" } });
+      if (opened.json.scene?.view?.choices?.[0]?.id !== "buy") {
+        fail("/api/scene 打不开内容节点 node.salt", opened.json);
+      }
+      const chosen = await post("/api/scene/command", { command: "choice:buy" });
+      if (chosen.json.scene?.view?.turnId !== 2) {
+        fail("内容节点选项没有推进 turn", chosen.json);
+      }
+      await post("/api/scene/command", { command: "close" });
+    }
+
     // 4 存一个带非法文件名符号的名字
     const saveName = "smoke/存档?";
     const save = await post("/api/save", { name: saveName });

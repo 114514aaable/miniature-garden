@@ -4,7 +4,7 @@
 > 只写机器能确定的东西（导出、依赖、被引用、测试）。
 > 「为什么这么写」见 [areas](../areas) 与 [systems](../systems)。
 
-共 135 个文件。
+共 137 个文件。
 
 | 文件 | 一句话 | 说明 |
 |---|---|---|
@@ -121,6 +121,8 @@
 | `tools/client/shared.js` | 页面共用：错误提示 + API 调用。 | [md](tools/client/shared.md) |
 | `tools/client/windows/inventory.js` | 背包窗口。 | [md](tools/client/windows/inventory.md) |
 | `tools/client/windows/settings.js` | 设置窗口（窗口层）。 | [md](tools/client/windows/settings.md) |
+| `tools/content-loader.mjs` | 内容树的宿主侧加载器：读文件、调用纯校验、返回可运行节点。 | [md](tools/content-loader.md) |
+| `tools/content-loader.test.mjs` | 内容树加载器：真实节点 + 编译出的 liveness 场景。 | [md](tools/content-loader.test.md) |
 | `tools/encode-assets.mjs` | 编码器：把 artdrop 里的「树形文件夹」编译成 assets.tree.json + 页图。 | [md](tools/encode-assets.md) |
 | `tools/encode-assets.test.mjs` | 编码器：SVG 拼页、PNG 原样复制、写盘备份与恢复。 | [md](tools/encode-assets.test.md) |
 | `tools/gen-atlas-fixture.mjs` | 生成 F0 的测试图集：一张 SVG 图集 + TexturePacker JSON hash + assets 清单。 | [md](tools/gen-atlas-fixture.md) |

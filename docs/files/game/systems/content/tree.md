@@ -128,3 +128,4 @@ function validateNode( manifest: NodeManifest, registry: LayerRegistry, layerDat
 ## 被引用
 
 - [`tools/check-content.mjs`](tools/check-content.md)
+- [`tools/content-loader.mjs`](tools/content-loader.md)

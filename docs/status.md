@@ -199,13 +199,14 @@ G1  假导演生成循环
 
 完整设计：`docs/mods/body-parts.md`（定位为可选 mod；核心只提供组件/效果/写拦截/死亡广播）。
 
-## 内容树读取骨架（2026-11-20）
+## 内容树读取骨架 + 运行时（2026-11-20）
 
 ```
 normal/content/  catalog.json + layers.json + nodes/node.salt/
 第一层 liveness（现在/现场）
 systems/content/tree.ts  解析 + 校验（catalog/层/清单/场景图）
 tools/check-content.mjs  接入 npm run check
+/api/scene {node:"node.salt"} 直接演出；smoke 覆盖
 ```
 
 ## 内容树（设计，2026-11-19）

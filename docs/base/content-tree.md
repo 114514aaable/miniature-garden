@@ -286,3 +286,25 @@ Q3 节点不可变 + revision，确认吗？
 Q4 旧 dialogs/*.json：保留兼容，还是迁移成节点后删除？
     我建议先双轨，等 liveness 稳定再迁移
 ```
+
+
+---
+
+## 13 实现状态（2026-11-20）
+
+```
+已实现
+  catalog / layers / manifest 解析与校验
+  liveness 场景编译（parseDialogScript）
+  normal/content 第一个节点 node.salt
+  tools/check-content.mjs（接入 npm run check）
+  tools/content-loader.mjs：按包加载
+  运行时：/api/scene {node:"node.salt"} 可直接演出
+  存档/读档：带 node 参数的对话层可恢复
+  smoke 覆盖：打开节点 → 选 buy → turn=2 → 关闭
+
+未实现
+  节点间 flow / 覆盖层 / world·combat 层
+  运行时懒加载（当前启动时全读）
+  旧 dialogs 迁移到 content
+```

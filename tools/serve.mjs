@@ -34,6 +34,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, unl
 import { extname, isAbsolute, relative, resolve } from "node:path";
 import { createProjector } from "../game/systems/render/project.ts";
 import { DEFAULT_STYLE } from "../game/systems/render/draw.ts";
+import { loadPacksContent } from "./content-loader.mjs";
 import { parseAssetTree, spriteOf, treeAtlases } from "../game/systems/render/tree.ts";
 import { buildGraph } from "../game/engine/core/src/pack/graph.ts";
 import { DevLog, formatLine } from "../game/systems/log/devlog.ts";
@@ -562,11 +563,16 @@ function buildSession(ordered, disabled = new Set(), seed = 0, runInit = true, o
     }
   }
 
+  const content = loadPacksContent(ordered.map((item) => "game/worlds/" + item.pack.id));
+  for (const error of content.errors) console.warn("[content] " + error);
+  for (const warning of content.warnings) console.warn("[content] " + warning);
+
   const art = loadAssets(ordered);
   const style = styleFor(art, loaded);
 
   return {
     loaded,
+    content,
     art,
     style,
     passage,
@@ -822,6 +828,17 @@ function loadDialogScript(scriptId) {
 }
 
 /** 压一个场景上去。 */
+function dialogSceneFor(params) {
+  if (typeof params.node === "string" && params.node.length > 0) {
+    const node = session.content?.nodes.get(params.node);
+    if (node === undefined || node.scene === undefined) {
+      throw new Error("内容节点没有 liveness 场景：" + params.node);
+    }
+    return createDialogScene(node.scene);
+  }
+  return loadDialogScript(String(params.script ?? ""));
+}
+
 function pushScene(id, params) {
   if (id !== "dialog") {
     return { ok: false, error: "第一版只支持 dialog 场景" };
@@ -829,10 +846,9 @@ function pushScene(id, params) {
   if (params.actor === undefined && session.playerHandle !== null) {
     params = { ...params, actor: session.playerHandle };
   }
-  const scriptId = String(params.script ?? "");
   let scene;
   try {
-    scene = loadDialogScript(scriptId);
+    scene = dialogSceneFor(params);
   } catch (error) {
     return { ok: false, error: "读不到对话脚本：" + messageOf(error) };
   }
@@ -1861,7 +1877,7 @@ function loadGame(id, name) {
     for (const layer of data.scene) {
       if (layer.id === "dialog") {
         try {
-          session.scenes.register(loadDialogScript(String(layer.params?.script ?? "")));
+          session.scenes.register(dialogSceneFor(layer.params ?? {}));
         } catch {
           continue;
         }
