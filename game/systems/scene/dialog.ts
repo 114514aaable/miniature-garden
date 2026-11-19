@@ -30,6 +30,7 @@ import { type Scene, type SceneContext, type SceneResult } from "./scene.ts";
 import { DialogueSession } from "./dialogue/session.ts";
 import { type DialogueView } from "./dialogue/contract.ts";
 import { parseScriptEffects, resolveScriptEffects, type SceneParams } from "./dialogue/effects.ts";
+import { type DialogueActor, ScriptedActor } from "./dialogue/actor.ts";
 
 const MAX_CHOICES = 9;
 
@@ -121,7 +122,7 @@ export function parseDialogScript(raw: JsonValue): DialogScript {
  *
  * 状态归 DialogueSession；场景只负责把命令翻译成选择、把结果翻译成 SceneResult。
  */
-export function createDialogScene(script: DialogScript): Scene {
+export function createDialogScene(script: DialogScript, actor: DialogueActor = new ScriptedActor()): Scene {
   const session = new DialogueSession(script);
 
   return {
@@ -134,20 +135,27 @@ export function createDialogScene(script: DialogScript): Scene {
       return [...ids, "close", ...legacy];
     },
 
-    handle(command: string, context: SceneContext): SceneResult {
+    async handle(command: string, context: SceneContext): Promise<SceneResult> {
       if (command === "close") {
         return { next: { op: "pop" } };
       }
 
-      const choice = command.startsWith("choice:")
-        ? session.choose(command.slice("choice:".length))
-        : session.chooseLegacy(Number(command.replace("choice", "")) - 1);
+      const input = command.startsWith("choice:")
+        ? ({ kind: "choice", choiceId: command.slice("choice:".length) } as const)
+        : command.match(/^choice[1-9]$/) !== null
+          ? ({ kind: "choice", choiceId: session.choices()[Number(command.replace("choice", "")) - 1]?.id ?? "" } as const)
+          : null;
 
-      // 越界/未知：不崩、不静默切场景，留给宿主提示
-      if (choice === null) {
+      if (input === null) return { effects: [] };
+
+      const submitted = await session.submitAsync(input, actor);
+
+      // 忙 / 取消 / 演员没选：不崩，留给宿主提示
+      if (submitted === null) {
         return { effects: [] };
       }
 
+      const choice = submitted.choice;
       const raw = typeof context.params === "object" && context.params !== null && !Array.isArray(context.params)
         ? (context.params as Record<string, JsonValue>)
         : {};
@@ -163,6 +171,14 @@ export function createDialogScene(script: DialogScript): Scene {
       }
 
       return { effects };
+    },
+
+    busy(): boolean {
+      return session.isPending();
+    },
+
+    cancel(): void {
+      session.cancel();
     },
 
     /** 存档：节点 + turnId + transcript。 */

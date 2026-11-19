@@ -321,6 +321,7 @@ function render(state) {
 }
 
 let lastState = null;
+let scenePending = false;
 
 /** 背包窗口：实现搬到了 windows/inventory.js。 */
 let inventoryWindow = null;
@@ -498,11 +499,14 @@ function renderDialog(state) {
   const choices = (scene.view.choices || []).map((choice, index) => {
     const label = typeof choice === 'string' ? choice : choice.label;
     const id = typeof choice === 'string' ? 'c' + (index + 1) : choice.id;
-    return button((index + 1) + ' ' + label, () => sceneCommand('choice:' + id));
+    return button((index + 1) + ' ' + label, () => {
+      if (!scenePending) sceneCommand('choice:' + id);
+    });
   });
 
   const body = col({ gap: 8 },
     text(scene.view.text || '', { policy: 'fixed' }),
+    ...(scenePending ? [text('（对方在想…）', { policy: 'fixed' })] : []),
     row({ gap: 6, 'flex-wrap': 'wrap' }, ...choices),
     row({ gap: 6, justify: 'end' }, button('离开 Esc', () => sceneCommand('close'))),
   );
@@ -513,7 +517,18 @@ function renderDialog(state) {
 }
 
 async function sceneCommand(command) {
-  render(await api('/api/scene/command', { command }));
+  if (scenePending) return;
+  scenePending = true;
+  if (lastState !== null) renderDialog(lastState);
+  try {
+    const state = await api('/api/scene/command', { command });
+    render(state);
+  } finally {
+    scenePending = false;
+    if (lastState !== null && lastState.scene && lastState.scene.id === 'dialog') {
+      renderDialog(lastState);
+    }
+  }
 }
 
 

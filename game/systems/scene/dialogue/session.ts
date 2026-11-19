@@ -17,6 +17,7 @@ import {
   type DialogueView,
   type PlayerInput,
 } from "./contract.ts";
+import { type DialogueActor, type DialogueActorResult, ScriptedActor } from "./actor.ts";
 import {
   type DialogChoice,
   type DialogNode,
@@ -45,6 +46,8 @@ export class DialogueSession {
   readonly conversationId: string;
   private nodeId: string;
   private turnId = 1;
+  private version = 0;
+  private pending = false;
   private transcript: TranscriptEntry[] = [];
   private readonly transcriptLimit: number;
 
@@ -105,12 +108,59 @@ export class DialogueSession {
     return this.choose(choice.id);
   }
 
+  /** 有没有一次异步提案在路上。 */
+  isPending(): boolean {
+    return this.pending;
+  }
+
+  /** 取消当前提案：旧响应回来时版本不匹配，会被丢弃。 */
+  cancel(): void {
+    this.version += 1;
+    this.pending = false;
+  }
+
   /** 统一入口：按钮、自由文本、关闭。E1 只处理 choice/close。 */
   submit(input: PlayerInput): DialogChoice | null {
     if (input.kind === "close") return null;
     if (input.kind === "choice") return this.choose(input.choiceId);
     // 自由文本在 E5 接；现在按「无匹配」处理
     return null;
+  }
+
+  /**
+   * 异步提交：演员可以先想一会儿。
+   * 返回 null 表示「忙 / 被取消 / 演员没选」；调用方决定怎么反馈。
+   */
+  async submitAsync(
+    input: PlayerInput,
+    actor: DialogueActor = new ScriptedActor(),
+    options: { readonly signal?: AbortSignal } = {},
+  ): Promise<{ choice: DialogChoice; result: DialogueActorResult } | null> {
+    if (input.kind === "close") return null;
+    if (this.pending) return null;
+
+    const version = this.version;
+    const turnId = this.turnId;
+    const nodeId = this.nodeId;
+    this.pending = true;
+
+    try {
+      const result = await actor.respond(
+        { conversationId: this.conversationId, turnId, nodeId, input },
+        options,
+      );
+
+      // 期间被取消 / 被别的输入推进 → 旧响应作废
+      if (version !== this.version || turnId !== this.turnId) return null;
+
+      const choiceId = result.choiceId ?? (input.kind === "choice" ? input.choiceId : undefined);
+      if (choiceId === undefined) return null;
+
+      const choice = this.choose(choiceId);
+      return choice === null ? null : { choice, result };
+    } finally {
+      if (version === this.version) this.pending = false;
+    }
   }
 
   snapshot(): JsonValue {

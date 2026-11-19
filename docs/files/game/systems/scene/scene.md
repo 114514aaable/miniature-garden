@@ -9,7 +9,7 @@
 核心原则：**场景返回「意图」，宿主负责执行。**
 和规则返回 effects 是同一个模式——可测、可回放、不产生隐式状态。
 
-行数：171
+行数：185
 
 ## 接口
 
@@ -21,7 +21,9 @@ interface Scene {
   readonly input: readonly string[];
   onEnter?(context: SceneContext): readonly Effect[];
   onExit?(context: SceneContext): readonly Effect[];
-  handle(command: string, context: SceneContext): SceneResult;
+  handle(command: string, context: SceneContext): SceneResult | Promise<SceneResult>;
+  busy?(): boolean;
+  cancel?(): void;
   describe?(): JsonValue;
   snapshot?(): JsonValue;
   restore?(state: JsonValue): void;

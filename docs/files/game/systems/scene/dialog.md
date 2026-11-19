@@ -20,14 +20,14 @@ E1：当前节点、turnId、transcript 都在 DialogueSession 里，存档能�
 `choice1..9`    旧客户端兼容，按当前显示顺序映射
 `close`         离开
 
-行数：185
+行数：201
 
 ## 接口
 
 ### 函数 `createDialogScene`
 
 ```ts
-function createDialogScene(script: DialogScript): Scene
+function createDialogScene(script: DialogScript, actor: DialogueActor = new ScriptedActor()): Scene
 ```
 
 ### 接口 `DialogChoice`
@@ -72,6 +72,7 @@ function parseDialogScript(raw: JsonValue): DialogScript
 ## 依赖
 
 - [`game/engine/core/src/time.ts`](game/engine/core/src/time.md)
+- [`game/systems/scene/dialogue/actor.ts`](game/systems/scene/dialogue/actor.md)
 - [`game/systems/scene/dialogue/contract.ts`](game/systems/scene/dialogue/contract.md)
 - [`game/systems/scene/dialogue/effects.ts`](game/systems/scene/dialogue/effects.md)
 - [`game/systems/scene/dialogue/session.ts`](game/systems/scene/dialogue/session.md)

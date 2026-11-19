@@ -46,4 +46,5 @@ type PlayerInput = | { readonly kind: "choice"; readonly choiceId: string } | { 
 ## 被引用
 
 - [`game/systems/scene/dialog.ts`](game/systems/scene/dialog.md)
+- [`game/systems/scene/dialogue/actor.ts`](game/systems/scene/dialogue/actor.md)
 - [`game/systems/scene/dialogue/session.ts`](game/systems/scene/dialogue/session.md)

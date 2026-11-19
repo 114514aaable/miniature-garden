@@ -44,7 +44,11 @@ export interface Scene {
   readonly input: readonly string[];
   onEnter?(context: SceneContext): readonly Effect[];
   onExit?(context: SceneContext): readonly Effect[];
-  handle(command: string, context: SceneContext): SceneResult;
+  handle(command: string, context: SceneContext): SceneResult | Promise<SceneResult>;
+  /** 有异步提案在路上：宿主应拒绝其它动作。 */
+  busy?(): boolean;
+  /** 取消当前异步提案（不弹场景，由宿主决定）。 */
+  cancel?(): void;
   /** 给客户端的渲染数据（形状由场景自己决定）。 */
   describe?(): JsonValue;
   /** 存档时要记住的内部状态（比如对话说到第几句）。 */
@@ -149,13 +153,23 @@ export class SceneStack {
     }
   }
 
-  /** 把一次输入交给栈顶，返回它的意图。 */
-  handle(command: string, now: number): SceneResult {
+  /** 把一次输入交给栈顶，返回它的意图（可能是异步的）。 */
+  handle(command: string, now: number): SceneResult | Promise<SceneResult> {
     const scene = this.top();
     if (!scene.input.includes(command)) {
       throw new Error(`场景 ${scene.id} 不认识命令：${command}`);
     }
     return scene.handle(command, { now, params: this.topLayer().params });
+  }
+
+  /** 栈顶有没有异步提案在路上。 */
+  busy(): boolean {
+    return this.top().busy?.() === true;
+  }
+
+  /** 取消栈顶的异步提案。 */
+  cancel(): void {
+    this.top().cancel?.();
   }
 }
 

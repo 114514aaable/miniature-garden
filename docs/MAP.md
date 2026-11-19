@@ -640,13 +640,18 @@ game/systems/render/*（投影成画面数据）
   - `interface PassageTemplate`
   - `interface Passage`
   - `const SURFACES`
-- **`game/systems/scene/dialog.ts`**（185 行）
+- **`game/systems/scene/dialog.ts`**（201 行）
   对话框场景。
   - `parseDialogScript(raw: JsonValue) → DialogScript`
-  - `createDialogScene(script: DialogScript) → Scene`
+  - `createDialogScene(script: DialogScript, actor: DialogueActor = new ScriptedActor()) → Scene`
   - `interface DialogChoice`
   - `interface DialogNode`
   - `interface DialogScript`
+- **`game/systems/scene/dialogue/actor.ts`**（42 行）
+  对话演员的端口。
+  - `interface DialogueActorRequest`
+  - `interface DialogueActorResult`
+  - `interface DialogueActor`
 - **`game/systems/scene/dialogue/contract.ts`**（35 行）
   对话的契约类型。
   - `interface DialogChoiceView`
@@ -658,12 +663,12 @@ game/systems/render/*（投影成画面数据）
   - `resolveScriptEffects(effects: readonly JsonValue[] | undefined, params: SceneParams,) → Effect[]`
   - `interface SceneParams`
   - `type EffectPlaceholder`
-- **`game/systems/scene/dialogue/session.ts`**（158 行）
+- **`game/systems/scene/dialogue/session.ts`**（208 行）
   一次对话的会话状态。
   - `interface TranscriptEntry`
   - `interface DialogueSessionOptions`
   - `interface DialogueSessionState`
-- **`game/systems/scene/scene.ts`**（171 行）
+- **`game/systems/scene/scene.ts`**（185 行）
   场景：世界现在处于哪种「玩法状态」。
   - `sceneFromComponent(value: JsonValue | undefined) → SceneLayer`
   - `interface SceneResult`
@@ -718,7 +723,7 @@ game/systems/render/*（投影成画面数据）
 
 ### 页面脚本 tools/client
 
-- **`tools/client/game.js`**（997 行）
+- **`tools/client/game.js`**（1012 行）
   import { api } from '/client/shared.js';
 - **`tools/client/hud/aim.js`**（62 行）
   瞄准高亮：记住「鼠标在哪、当前选了什么技能」，随时可以重算。
@@ -815,7 +820,7 @@ game/systems/render/*（投影成画面数据）
   - `decodePng(buffer, where = "png")`
   - `encodePng(width, height, rgba)`
   - `blit(dst, dstWidth, src, srcWidth, srcHeight, x, y)`
-- **`tools/serve.mjs`**（2347 行）
+- **`tools/serve.mjs`**（2368 行）
   调试台 / 启动器（宿主侧）。
 - **`tools/smoke.mjs`**（160 行）
   HTTP 冒烟：真实起一个 serve，走「开局 → 动作 → 存档 → 读档 → 继续」。

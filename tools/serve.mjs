@@ -841,11 +841,30 @@ function pushScene(id, params) {
   return { ok: true };
 }
 
+/** 对话正在等异步提案：其它动作应拒绝。 */
+function dialogueBusy() {
+  return session !== null && session.scenes.busy() === true;
+}
+
+function sendBusy(response) {
+  response.writeHead(409, { "content-type": "application/json; charset=utf-8" });
+  response.end(JSON.stringify({ error: "dialogue_busy" }));
+}
+
 /** 把一个命令交给场景，并执行它返回的意图。 */
-function sceneCommand(command) {
+async function sceneCommand(command) {
+  if (session.scenes.busy()) {
+    if (command === "close") {
+      session.scenes.cancel();
+      session.scenes.pop();
+      return { ok: true };
+    }
+    return { ok: false, error: "对话进行中" };
+  }
+
   let result;
   try {
-    result = session.scenes.handle(command, session.store.now());
+    result = await session.scenes.handle(command, session.store.now());
   } catch (error) {
     return { ok: false, error: messageOf(error) };
   }
@@ -2218,6 +2237,7 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.method === "POST" && request.url === "/api/act") {
+      if (dialogueBusy()) { sendBusy(response); return; }
       const { dir } = await readBody(request);
       sendJson(response, act(String(dir)));
       return;
@@ -2277,7 +2297,7 @@ const server = createServer(async (request, response) => {
 
     if (request.method === "POST" && request.url === "/api/scene/command") {
       const { command } = await readBody(request);
-      const result = sceneCommand(String(command));
+      const result = await sceneCommand(String(command));
       sendJson(response, snapshot(result.ok === true ? "继续" : "不行：" + result.error));
       return;
     }
@@ -2300,6 +2320,7 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.method === "POST" && request.url === "/api/skill") {
+      if (dialogueBusy()) { sendBusy(response); return; }
       const { tag, x, y, item } = await readBody(request);
       sendJson(response, useSkill(
         String(tag),

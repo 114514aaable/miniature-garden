@@ -9,7 +9,7 @@
 - snapshot/restore 完整，存档能回到同一句
 E0/E1 只做同步选择；异步/提案/校验在 E3/E4 加，不改这个状态形状。
 
-行数：158
+行数：208
 
 ## 接口
 
@@ -46,6 +46,7 @@ interface TranscriptEntry {
 
 - [`game/engine/core/src/time.ts`](game/engine/core/src/time.md)
 - [`game/systems/scene/dialog.ts`](game/systems/scene/dialog.md)
+- [`game/systems/scene/dialogue/actor.ts`](game/systems/scene/dialogue/actor.md)
 - [`game/systems/scene/dialogue/contract.ts`](game/systems/scene/dialogue/contract.md)
 
 ## 被引用
